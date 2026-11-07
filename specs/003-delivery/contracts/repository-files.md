@@ -52,4 +52,4 @@ These blob IDs must be equal, pair by pair (`git rev-parse HEAD:<path>`; plan it
 
 ## What this spec adds, and nothing more (FR-030, SC-007)
 
-Compared with the tip of `002-file-runner`'s implementation, this spec's commits touch only `README.md`, `.github/workflows/ci.yml`, `Dockerfile`, `.gitattributes`, `Gemfile.lock` (platforms), `bin/run` (mode only, if needed) and documents under `docs/` and `specs/`. No file under `lib/`, `spec/` or `data/` changes.
+Compared with the tip of `002-file-runner`'s implementation, this spec's commits touch only `README.md`, `.github/workflows/ci.yml`, `Dockerfile`, `.gitattributes`, `Gemfile.lock` (platforms), `bin/run` (its Git mode and, if missing or different, its first line `#!/usr/bin/env ruby`; nothing else; spec item 16) and documents under `docs/` and `specs/`. No file under `lib/`, `spec/` or `data/` changes.
