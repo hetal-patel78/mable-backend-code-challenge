@@ -3,12 +3,14 @@
 Solution for the Mable back-end take-home challenge (`docs/challenge/MABLE_BACK_END_CODE_TEST.md`): load the starting account balances for one company from a CSV file, then apply one day's transfers from a second CSV file, never letting an account balance go below $0.
 
 ## Source of truth
-- **`docs/design-analysis/design-decisions.md`** will define all behaviour and design once the design analysis has produced it. Until then, nothing about the solution is decided. Implement exactly what the decisions say.
+- **`docs/design-analysis/design-decisions.md`** defines all behaviour and design. Implement exactly what the decisions say.
 - If two decisions conflict, or a case is not covered by a decision and is more than a small decision under "Current stage", **stop and ask the developer**. Never invent behaviour.
 - Every decision gets a stable ID (`DEC-nn`). Reference the ID in a code comment or test name where it makes the link clearer. In documents, link it as `design-decisions.md#dec-nn`, for example `design-decisions.md#dec-04`.
 
 ## Current stage
-**Design analysis.** The developer's handwritten analysis has been reviewed and the findings raised (D: definite gaps, J: judgement calls, X: possible extras), followed by clarifications (C). The developer has answered all of them, and the answers are stored in `docs/design-analysis/clarifications/`. Next, they are consolidated into `design-decisions.md`.
+**Design analysis.** The developer has answered every finding and clarification in the review sheet (D: definite gaps, J: judgement calls, X: possible extras, C: clarifications), and the answers are saved in `docs/design-analysis/clarifications/`. The answers were challenged once more, as big findings (B) decided by the developer and small findings (S) decided by the assistant and agreed by the developer. `design-decisions.md` is written from all of them as the single source of truth, and the developer has agreed every assistant's pick in it. The solution design starts only when the developer says so.
+
+**Language and version:** Ruby, the latest 3.4.x release, tested with RSpec.
 
 Design decisions belong to the developer. Once the design analysis has started, small decisions (edge cases, validation details, wording, test cases) may be made by the assistant when they are consistent with the developer's answers: record each in `design-decisions.md` with its reason and the rejected options, mark it as the assistant's pick, and list them for the developer to review. Anything that changes the design, conflicts with the developer's answers, or adds scope must be asked.
 
