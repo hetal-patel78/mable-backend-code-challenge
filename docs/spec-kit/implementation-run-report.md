@@ -15,7 +15,7 @@ Started by [P24](../prompts/prompts-spec-creation-phase.md#p24), from the branch
 | 1. Start | Done |
 | 2. Constitution | Done |
 | 3. Specs | Done |
-| 4. Clarify, plan and tasks | Incomplete: 001 2 rounds, 002 1 round, 003 12 rounds; no spec reached 0 defects; no branch pushed |
+| 4. Clarify, plan and tasks | Done: 001 7 rounds (2 earlier, 5 continuation), 002 10 rounds (1 earlier, 9 continuation), 003 26 rounds (12 earlier, 14 continuation); each ended on a round with 0 defects. 001-domain pushed; 002-file-runner and 003-delivery not pushed |
 | 5. Cross-check | Not started |
 | 6. Scripted checks | Not started |
 | 7. Merge and push | Not started |
@@ -23,13 +23,27 @@ Started by [P24](../prompts/prompts-spec-creation-phase.md#p24), from the branch
 
 ### Check results
 
-Step 4 reviews. Every round is by an independent Claude Opus 5.5 agent that did not write or fix the spec.
+Step 4 reviews. Every round is by an independent Claude Opus 5.5 agent that did not write or fix the spec. Continuation rounds are numbered after each spec's earlier rounds, with the continuation number in brackets.
 
 | Spec | Round | Reviewer | Defects found | Result |
 |---|---|---|---|---|
 | 001-domain | 1 | Claude Opus 5.5 (independent) | 7 (2 medium, 5 low) | All 7 fixed |
-| 001-domain | 2 | Claude Opus 5.5 (independent) | 3 (1 high, 1 medium, 1 low) | 2 fixed; R2-01 (high) open |
-| 002-file-runner | 1 | Claude Opus 5.5 (independent) | 7 (1 high, 1 medium, 5 low) | 6 fixed; R1-01 partly fixed, the DEC-36 conflict is open |
+| 001-domain | 2 | Claude Opus 5.5 (independent) | 3 (1 high, 1 medium, 1 low) | 2 fixed; R2-01 (high) was not a defect (see below) |
+| 001-domain | 3 (continuation 1) | Claude Opus 5.5 (independent) | 1 (high) | Fixed |
+| 001-domain | 4 (continuation 2) | Claude Opus 5.5 (independent) | 3 (1 medium, 2 low) | Fixed |
+| 001-domain | 5 (continuation 3) | Claude Opus 5.5 (independent) | 1 (medium) | Fixed |
+| 001-domain | 6 (continuation 4) | Claude Opus 5.5 (independent) | 1 (low) | Fixed |
+| 001-domain | 7 (continuation 5) | Claude Opus 5.5 (independent) | 0 | Converged |
+| 002-file-runner | 1 | Claude Opus 5.5 (independent) | 7 (1 high, 1 medium, 5 low) | 6 fixed; R1-01 (DEC-36 conflict) was not a defect (see below) |
+| 002-file-runner | 2 (continuation 1) | Claude Opus 5.5 (independent) | 7 (1 high, 3 medium, 3 low) | Fixed |
+| 002-file-runner | 3 (continuation 2) | Claude Opus 5.5 (independent) | 3 (2 high, 1 low) | Fixed |
+| 002-file-runner | 4 (continuation 3) | Claude Opus 5.5 (independent) | 3 (1 medium, 2 low) | Fixed |
+| 002-file-runner | 5 (continuation 4) | Claude Opus 5.5 (independent) | 2 (2 low) | Fixed |
+| 002-file-runner | 6 (continuation 5) | Claude Opus 5.5 (independent) | 3 (1 high, 2 medium) | Fixed |
+| 002-file-runner | 7 (continuation 6) | Claude Opus 5.5 (independent) | 3 (3 medium) | Fixed |
+| 002-file-runner | 8 (continuation 7) | Claude Opus 5.5 (independent) | 3 (2 medium, 1 low) | Fixed |
+| 002-file-runner | 9 (continuation 8) | Claude Opus 5.5 (independent) | 1 (medium) | Fixed |
+| 002-file-runner | 10 (continuation 9) | Claude Opus 5.5 (independent) | 0 | Converged |
 | 003-delivery | 1 | Claude Opus 5.5 (independent) | 5 (4 medium, 1 low) | 5 fixed |
 | 003-delivery | 2 | Claude Opus 5.5 (independent) | 3 (1 medium, 2 low) | 3 fixed |
 | 003-delivery | 3 | Claude Opus 5.5 (independent) | 5 (1 high, 1 medium, 3 low) | 5 fixed |
@@ -41,9 +55,25 @@ Step 4 reviews. Every round is by an independent Claude Opus 5.5 agent that did 
 | 003-delivery | 9 | Claude Opus 5.5 (independent) | 1 (medium) | Fixed |
 | 003-delivery | 10 | Claude Opus 5.5 (independent) | 1 (low) | Fixed |
 | 003-delivery | 11 | Claude Opus 5.5 (independent) | 1 (low) | Fixed |
-| 003-delivery | 12 | Claude Opus 5.5 (independent) | 2 (1 medium, 1 low) | Fixed; not re-reviewed |
+| 003-delivery | 12 | Claude Opus 5.5 (independent) | 2 (1 medium, 1 low) | Fixed; re-reviewed in continuation 1 |
+| 003-delivery | 13 (continuation 1) | Claude Opus 5.5 (independent) | 5 (1 medium, 4 low) | Fixed |
+| 003-delivery | 14 (continuation 2) | Claude Opus 5.5 (independent) | 2 (1 medium, 1 low) | Fixed |
+| 003-delivery | 15 (continuation 3) | Claude Opus 5.5 (independent) | 1 (medium) | Fixed |
+| 003-delivery | 16 (continuation 4) | Claude Opus 5.5 (independent) | 1 (low) | Fixed |
+| 003-delivery | 17 (continuation 5) | Claude Opus 5.5 (independent) | 1 (high) | Fixed |
+| 003-delivery | 18 (continuation 6) | Claude Opus 5.5 (independent) | 3 (1 medium, 2 low) | Fixed |
+| 003-delivery | 19 (continuation 7) | Claude Opus 5.5 (independent) | 1 (low) | Fixed |
+| 003-delivery | 20 (continuation 8) | Claude Opus 5.5 (independent) | 1 (low) | Fixed |
+| 003-delivery | 21 (continuation 9) | Claude Opus 5.5 (independent) | 1 (medium) | Fixed |
+| 003-delivery | 22 (continuation 10) | Claude Opus 5.5 (independent) | 1 (low) | Fixed |
+| 003-delivery | 23 (continuation 11) | Claude Opus 5.5 (independent) | 2 (1 medium, 1 low) | Fixed |
+| 003-delivery | 24 (continuation 12) | Claude Opus 5.5 (independent) | 1 (low) | Fixed |
+| 003-delivery | 25 (continuation 13) | Claude Opus 5.5 (independent) | 1 (low) | Fixed |
+| 003-delivery | 26 (continuation 14) | Claude Opus 5.5 (independent) | 0 | Converged |
 
-No spec reached a round with 0 defects, and no spec branch was pushed.
+Each spec ended on a round with 0 defects. The `001-domain` branch was pushed. `002-file-runner` and `003-delivery` were not pushed; pushing needs the developer's approval.
+
+RuboCop `Metrics/BlockLength` against spec files, the blocker in the earlier 001 and 002 rounds, was not a defect: rubocop-rspec's default config already excludes spec files, so no DEC-36 change was needed.
 
 ### Decided in the run
 
@@ -159,13 +189,24 @@ None.
   - AC-03.2 and T040 now state the domain outcome, and the domain API table has its blank line restored.
   - `lib/domain/errors.rb` now has a task.
   - Task references to AC-05.3 are corrected.
-  - Not fixed: R2-01 (RuboCop `Metrics/BlockLength` against spec files) needs the developer's change to DEC-36.
+  - Removed the false RuboCop `Metrics/BlockLength` claim from research R3 (see Check results).
+  - Task T040 and the DEC-13 edge-case row now test AC-04.1, AC-04.3, AC-05.1, AC-05.2 and both unknown-account cases.
+  - Plan decisions and design overview record the AccountNumber name, as brief rule 5 requires where page 10 leaves a name open.
+  - Quickstart step 3's expected end of the `bundle exec rspec` output corrected.
+  - AC-03.3's third scenario, its edge case and its related task corrected.
+  - Money's `text` member matches across the data model, tasks T018 and T023, plan D5 and research R7.
 - **002-file-runner**
-  - The false RuboCop limit claim in research R8 is removed. The conflict with DEC-36 is still open.
+  - The false RuboCop limit claim in research R8 is removed; no DEC-36 change is needed.
   - AC-08.3, AC-09.7 and US5 now state the standard output, error and exit code, and T061 matches.
   - The DisplayPath rule is the same in FR-029, the edge cases, plan P10, the data model and the command-line contract.
   - T070's line count, the US6 build-order sentence and the checklist's item count are corrected.
   - The test helper signatures in research R9 match tasks T019 and T021.
+  - Research R1, plan P11 and the components contract agree on the row-by-row read, line-number handling for multi-line examples and what the parts expect of each other.
+  - The `run_scenario` defaults (T021, AC-01.3 to AC-01.10) match the tasks that use them, and the fake reader and unreadable-file tests (T019, T028, T038) agree.
+  - Plan P19, its source tree and the end-to-end tasks agree on where the five runs live; scenarios that must run through the runner (AC-08.4, AC-09.5, AC-09.7) are corrected, per brief rule 4.
+  - Plan P24's phase rule, the phase checkpoints (after T017 and T078) and the test order in Phases 3, 4, 5 and 7 (T031, T045, T052, T073) now follow constitution IV and brief rule 5; T059 no longer rescues `TotalChanged` in a `before` block.
+  - US5 scenarios 1 and 6, the AC-09.5 variants, the AC-08.3 third argument and the AC-08.4 scenarios now state standard output, error and exit code, and their tasks match.
+  - The components contract's loading table (two rows) and the checklist's item count are corrected.
 - **003-delivery**
   - Windows check commands: byte-for-byte stream comparison, `$env:CHECKS`, `$REPO`, `$LASTEXITCODE`, clone paths and output redirection.
   - Docker checks: the README-command check (C-41), C-29 run as written, the Dockerfile first-line check, the C-21 redirect, the fresh-checkout folders, and the expected output folder.
@@ -175,6 +216,16 @@ None.
   - Check counts in the plan match `quickstart.md`, and the commands for C-01, C-28, C-40 and C-42 are corrected.
   - Tasks: phase checkpoints, the Spec Kit task ID format, the Phase 9 order, the T006 vs FR-030 mismatch, and the coverage update wording in T050.
   - Repository files: the pushed `main` must be tracked, and the contract's "nothing more" list matches the spec.
+  - `bin/run` shebang, LF line endings, the `.gitattributes` rule and the renormalise step in T006 are consistent across FR-018, the data model, the research, Decided item 16 and tasks T004 to T008 and T058.
+  - The `bin/run` edge case ("on Linux, macOS and in Docker") and Decided item 16 corrected.
+  - C-29, US5 scenario 2 and T047 cover the README's two- and three-argument forms.
+  - FR-021 and the CI workflow contract (step 1, the "must not" list, plan item 3) and US4 scenario 3 agree on the steps the workflow may contain.
+  - C-05 and FR-016 match NFR-04's standard-library limit for the program itself.
+  - The repository-files contract's "nothing more" list and the plan's Scale/Scope match FR-030 and SC-007.
+  - The spec's "Sources and ownership" (Builds on) and the plan's scope wording are corrected.
+  - Plan, research and checklist state the spec's item counts correctly; the rejected alternatives in plan item 3 and research R-2 and R-5 are corrected, including R-5's CI matrix citation.
+  - US2 scenario 4 and US4 scenario 2 now state standard output, error and exit code.
+  - Quickstart expected texts and checks C-21, C-23 and C-26 compare a run's output the same way.
 
 ### Left for the developer
 
