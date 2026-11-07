@@ -23,7 +23,7 @@ To compare a run with the report: take `<run time>` from the name of the file th
 
 | ID | Check | Command | Expected | Refs |
 |---|---|---|---|---|
-| C-01 | `bin/run` is executable, starts with the Ruby line and is LF; every text file is stored LF | `git ls-files -s bin/run`; `head -1 bin/run`; `git ls-files --eol \| grep 'i/crlf'` | `100755`; `#!/usr/bin/env ruby`; the grep prints nothing | FR-018; DEC-22, DEC-04 |
+| C-01 | `bin/run` is executable, starts with the Ruby line and is LF; every text file is stored LF | `git ls-files -s bin/run`; `git show :bin/run | head -1`; `git ls-files --eol \| grep 'i/crlf'` | `100755`; `#!/usr/bin/env ruby`; the grep prints nothing | FR-018; DEC-22, DEC-04 |
 | C-02 | `.gitattributes` is the one line | `od -c .gitattributes` | exactly `bin/run text eol=lf\n` | FR-018 |
 | C-03 | `Gemfile.lock` platforms, versions unchanged | `git show :Gemfile.lock \| sed -n '/^PLATFORMS/,/^$/p'`; `git diff <001 lock commit> -- Gemfile.lock` | the six platforms of [repository-files.md](contracts/repository-files.md#gemfilelock); the diff touches only platforms | FR-017; DEC-01 |
 | C-04 | One Ruby version in `.ruby-version` and the Dockerfile | `test "$(head -1 Dockerfile \| tr -d '\r')" = "FROM ruby:$(tr -d '\r' < .ruby-version)"` (or `...-bookworm`, plan item 7) | exit status 0; `.ruby-version` is the latest 3.4.x release | FR-015, SC-005; DEC-01 |
