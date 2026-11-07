@@ -559,7 +559,16 @@ At the end of a completed run the program checks that the total of all balances 
    - Every line, the last one included, ends with a line feed (LF) only, on every operating system.
    - With no third argument, the file is `output/final_balances_YYYY-MM-DD_HHMMSS.csv`, named from the local date and time the run started (24-hour clock): for the run time 2026-11-07 14:30:05, `FinalBalancesCsvWriter.default_path` gives `output/final_balances_2026-11-07_143005.csv`.
    - With a third argument, that path is used as given, and any missing folders on it are created: `bin/run balances.csv transfers.csv out/new/day1.csv` with no `out/` folder creates `out/new/day1.csv`, and the last report line is `Output file: out/new/day1.csv`; standard error (nothing); exit status 0 (the transfers file of AC-01.1).
-   - Feeding the output file of AC-08.2 back in as the balances file loads the three accounts with balances `0.00`, `80.00` and `70.00` (DEC-27).
+   - Feeding the output file of AC-08.2 back in as the balances file loads the three accounts with balances `0.00`, `80.00` and `70.00` (DEC-27). **Given** `balances.csv` holding the three lines of AC-08.2's output file and this `transfers.csv`:
+
+     ```
+     1212343433335665,1111234522226789,10.00
+     ```
+
+     **When** `bin/run balances.csv transfers.csv` runs at the run time 2026-11-07 14:30:05, **Then**:
+     - Standard output: Template A with `1212343433335665 -> 1111234522226789  10.00` and the balances `10.00`, `70.00`, `70.00` **(derived)**.
+     - Standard error: (nothing)
+     - Exit status: 0
 3. **AC-08.4 The output path is shown relative to where the command was run** (FR-08; DEC-26).
    - **Given** the sample files, **When** `../bin/run` runs with no arguments from the project's `docs` folder, **Then** the last report line is `Output file: ../output/final_balances_2026-11-07_143005.csv`.
    - **And when** a third argument names a file outside the current folder, such as `/tmp/day1.csv`, the last line shows the full path: `Output file: /tmp/day1.csv`.
@@ -676,7 +685,7 @@ A user runs `bin/run` with 0, 2 or 3 positional arguments. The runner checks the
    - Log lines show 12 asterisks and the last 4 characters: `************6789`. A value that is not a valid account number is masked the same way (`12345` becomes `*2345`), and a value of 4 characters or fewer, including an empty value, becomes `****`.
    - The report, the error messages and the output file show full account numbers. Error log lines show no account numbers at all.
 7. **AC-09.7 Every run starts from the balances file** (FR-09; DEC-02, DEC-03, DEC-27).
-   - **Given** the sample files, **When** `bin/run` runs twice, one second apart, **Then** both runs give the same report and the same final balances, and each writes its own file (`..._143005.csv` and `..._143006.csv`). Nothing in the report, the logs or the output names a company.
+   - **Given** the sample files, **When** `bin/run` runs twice, one second apart, **Then** both runs give the same report and the same final balances, and each writes its own file (`..._143005.csv` and `..._143006.csv`). For both runs: standard output is AC-08.1's report apart from the `Output file:` line, which shows the run's own file; standard error (nothing); exit status 0. Nothing in the report, the logs or the output names a company.
    - Test (decided in the run, item 4): `FinalBalancesCsvWriter.default_path` gives `output/final_balances_2026-11-07_143005.csv` and `output/final_balances_2026-11-07_143006.csv` for run times one second apart; two runner runs on the same sample files, with the two output paths, give identical standard output apart from the `Output file:` line and identical output files.
 8. **AC-09.8 Exit status** (FR-09; DEC-25).
    - 0 for every completed run, even if some or all transfers were rejected (AC-02.3, AC-08.2).
@@ -705,7 +714,7 @@ The page 2 scenarios of FR-03 to FR-06 are owned by `001-domain`. This spec runs
    | AC-03.3 | `9999888877776666,9999888877776666,5.00` | R: `  Line 1  rejected  9999888877776666 -> 9999888877776666  5.00  same_account` **(derived)** | `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************6666 -> ************6666 5.00 same_account` **(derived)** |
 
    - **AC-03.2** (a rejected transfer changes nothing and the run continues) is shown by every R row above and in FR-04 to FR-06 (both balances unchanged in the final balances), and by AC-08.2 (the row after a rejected one is processed; exit status 0).
-   - The order in which `ProcessDailyTransfer` builds the values, both `AccountNumber`s before the `Money`, is owned here (FR-012 below); it gives `invalid_account_number` for `12345,1212343433335665,abc`.
+   - The order in which `ProcessDailyTransfer` builds the values, both `AccountNumber`s before the `Money`, is owned here (FR-014 below); it gives `invalid_account_number` for `12345,1212343433335665,abc`.
 2. **FR-04** (owned by `001`; DEC-10, DEC-13):
 
    | Criterion | Row | Standard output | Standard error |
@@ -820,7 +829,7 @@ Each has a planned test (DEC-34); the level is given in brackets.
 - Missing folders on the output path are created (DEC-27) [integration; AC-08.3].
 - A missing folder on the output path that cannot be created (a file stands where the folder should be): `OutputNotWritable`, no output file (DEC-25, DEC-27; clarified, item 21) [integration].
 - The output file uses LF only, the last line included, on every operating system (page 2 pick 17) [integration].
-- The output path is shown relative to the current folder, with `../` when above it, or in full when outside it (DEC-26) [integration; AC-08.4].
+- The output path is shown relative to the current folder when the file is in or below it, with exactly one leading `../` when below its parent folder, and otherwise in full (DEC-26; plan P10) [integration; AC-08.4].
 - Both input files missing and the output file existing: three `Error:` lines in the order balances, transfers, output, and one log line (DEC-23, DEC-25) [integration; AC-09.3].
 - An input file that exists but cannot be opened (DEC-23) [integration; AC-09.3a].
 - 1 argument, 4 or more arguments, `-h` and `--help`: usage message, no log line (DEC-22) [integration; end-to-end with 1 argument; AC-09.2].
@@ -879,7 +888,7 @@ Each has a planned test (DEC-34); the level is given in brackets.
 
 - **FR-027** (FR-08; DEC-21, DEC-26): `ReportPrinter` MUST print the report on standard output from a `DayResult`, in five parts in this order, separated by one empty line, with two spaces between the parts of a line and money with exactly 2 decimal places: (1) `Transfers` then, per row, `  Line <N>  applied  <from> -> <to>  <amount>` or `  Line <N>  rejected  <from> -> <to>  <amount as written>  <reason code>`, or for a row with the wrong number of fields `  Line <N>  rejected  malformed_row: <K> fields, expected 3`; (2) `Summary` then `  Processed: <p>`, `  Applied: <a>`, `  Rejected: <r>`, then `    <reason code>: <count>` for each reason that occurred in DEC-19 order, then `  Total before: <total>` and `  Total after: <total>`; (3) only when every row was rejected, `Warning: All transfers were rejected; check this is the right file.`; (4) `Final balances` then `  <full account number>  <balance>` per account in load order; (5) `Output file: <path>`.
 - **FR-028** (FR-08; DEC-06, DEC-26; page 2 picks 10, 11): in the report, an empty value MUST be shown as `""`; a rejected header-looking row MUST show `: This looks like a header row; files must not have a header.` after its reason code, or `. This looks like a header row; files must not have a header.` after `malformed_row: <K> fields, expected 3`. Account numbers MUST be shown in full.
-- **FR-029** (FR-08; DEC-26; page 6 pick 41): `ReportPrinter` MUST show the output path relative to the current folder (with `../` steps when the file is below a parent of it), or in full when the file is outside it. It MUST NOT write to standard error or decide when to print.
+- **FR-029** (FR-08; DEC-26; page 6 pick 41): `ReportPrinter` MUST show the output path relative to the current folder when the file is in or below the current folder, or below its parent folder (exactly one leading `../`), and otherwise in full (plan P10). It MUST NOT write to standard error or decide when to print.
 - **FR-030** (FR-01, FR-02, FR-09; page 2 pick 15): every file path in a message or log line MUST be shown by the same rule as the output path in the report (decided in the run, item 12).
 
 **The runner ([FR-09](../../docs/solution-design/02-functional-requirements.md#fr-09-the-runner))**
