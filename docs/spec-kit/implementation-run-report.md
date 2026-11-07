@@ -8,6 +8,8 @@ Back to [project instructions](../../CLAUDE.md).
 
 Started by [P24](../prompts/prompts-spec-creation-phase.md#p24), from the branch `spec-kit-setup`. Every review in Part 1 (each per-spec review round, the cross-check and the review before `main` is pushed) is done by an independent Claude Opus 5.5 agent that did not write or fix what it reviews ([P25](../prompts/prompts-spec-creation-phase.md#p25)); the reviewer model is recorded for each round.
 
+**Status: Specification ready for review.**
+
 ### Status
 
 | Step | State |
@@ -18,8 +20,8 @@ Started by [P24](../prompts/prompts-spec-creation-phase.md#p24), from the branch
 | 4. Clarify, plan and tasks | Done: 001 7 rounds (2 earlier, 5 continuation), 002 10 rounds (1 earlier, 9 continuation), 003 26 rounds (12 earlier, 14 continuation); each ended on a round with 0 defects. All three spec branches pushed: 001-domain, 002-file-runner, 003-delivery |
 | 5. Cross-check | Done: 3 rounds (round 1 found 1 medium defect, round 2 found 2 low, round 3 found 0 and was clean) |
 | 6. Scripted checks | Done: 3 rounds (round 1 failed 3 checks, round 2 failed 1, round 3 passed all 7) |
-| 7. Merge and push | Not started |
-| 8. Stop | Not started |
+| 7. Merge and push | Done: the three spec branches merged into `spec-kit-specs` with their small commits kept (no squash), `spec-kit-specs` pushed, and `main` pushed after an independent review by Claude Opus 5.5 approved it |
+| 8. Stop | Done: Specification ready for review |
 
 ### Check results
 
@@ -108,6 +110,8 @@ Step 6 scripted checks. The table shows the final round (round 3). Round 1 faile
 | 003-delivery | 1 | 0 | 0 | 3 | 5 |
 | 003-delivery | 2 | 0 | 0 | 1 | 4 |
 | 003-delivery | 3 | 0 | 0 | 1 | 4 |
+
+Step 7 review before pushing main: An independent Claude Opus 5.5 agent that did not write or fix the changes reviewed everything going to `main` and approved it.
 
 ### Decided in the run
 
@@ -216,7 +220,7 @@ Step 6 scripted checks. The table shows the final round (round 3). Round 1 faile
 
 ### Changed in the run
 
-None.
+None. An early review claimed RuboCop could not reach zero offences under DEC-36; that was false, because rubocop-rspec's default configuration already excludes spec files from Metrics/BlockLength, so DEC-36 was not changed.
 
 ### Fixed in review
 
@@ -245,7 +249,6 @@ None.
   - Plan P24's phase rule, the phase checkpoints (after T017 and T078) and the test order in Phases 3, 4, 5 and 7 (T031, T045, T052, T073) now follow constitution IV and brief rule 5; T059 no longer rescues `TotalChanged` in a `before` block.
   - US5 scenarios 1 and 6, the AC-09.5 variants, the AC-08.3 third argument and the AC-08.4 scenarios now state standard output, error and exit code, and their tasks match.
   - The components contract's loading table (two rows) and the checklist's item count are corrected.
-  - Pre-merge review: the Phase dependencies section of tasks.md now says Phase 5 follows Phase 4, as T056 needs; the 002 entries under "Decided in the run" match the final spec and plan P-items (paths, end-to-end runs, spec file names, DayResult, helpers).
 - **003-delivery**
   - Windows check commands: byte-for-byte stream comparison, `$env:CHECKS`, `$REPO`, `$LASTEXITCODE`, clone paths and output redirection.
   - Docker checks: the README-command check (C-41), C-29 run as written, the Dockerfile first-line check, the C-21 redirect, the fresh-checkout folders, and the expected output folder.
@@ -265,13 +268,21 @@ None.
   - Plan, research and checklist state the spec's item counts correctly; the rejected alternatives in plan item 3 and research R-2 and R-5 are corrected, including R-5's CI matrix citation.
   - US2 scenario 4 and US4 scenario 2 now state standard output, error and exit code.
   - Quickstart expected texts and checks C-21, C-23 and C-26 compare a run's output the same way.
-  - Pre-merge review: the clean checkout is one description everywhere (a fresh clone of the pushed branch into a new empty folder outside the working repository, with `$BRANCH` and `$SRC` in quickstart C-08, C-13, C-26, the Docker checkout and tasks); the 003 entries under "Decided in the run" match the final spec and plan (no `.gitattributes`, `CMD ["ruby", "bin/run"]`).
 - **Cross-check**
   - The Gemfile.lock platform list in 001 plan D14 and in 003's Decided list now agree (X1).
   - 001 no longer gives a run outcome for a scenario that no spec runs, since its spec says every run outcome goes through the 002 runner (XC2-01).
   - 003's example Ruby version is now 3.4.12, the version 001 pins in plan D1 and task T001 (XC2-02).
+- **Before merge**
+  - The Phase dependencies section of tasks.md now says Phase 5 follows Phase 4, as T056 needs (002).
+  - The clean checkout is one description everywhere: a fresh clone of the pushed branch into a new empty folder outside the working repository, with `$BRANCH` and `$SRC` in quickstart C-08, C-13, C-26, the Docker checkout and tasks (003). The 003 entries under "Decided in the run" match the final spec and plan (no `.gitattributes`, `CMD ["ruby", "bin/run"]`).
+  - The entries under "Decided in the run" in this report are brought in line with the final plans for 001, 002 and 003.
 
 ### Left for the developer
+
+1. Review the specs, plans and tasks, and every item under "Decided in the run" (the assistant's picks).
+2. 002 plan P29: `CsvRows` reads with `CSV.open` and `csv.shift` instead of the `CSV.foreach` named in DEC-32, because `CSV.foreach` gives neither the line number (DEC-07) nor the raw line (DEC-05). It still reads one row at a time, so no "Run change:" was made; confirm the mechanism.
+3. 001 plan D1 pins Ruby 3.4.12, the latest 3.4.x when the plan was written.
+4. Part 2 (implementation) is next.
 
 Medium and low `/speckit-analyze` issues left after round 3, not changed in this run:
 
