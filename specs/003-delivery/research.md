@@ -30,7 +30,7 @@ Phase 0 of the [plan](plan.md). The spec has no `NEEDS CLARIFICATION` item: its 
 
 - **Decision**: `.github/workflows/ci.yml`, named `CI`, `on: push` with no branch filter, one job `checks` on `ubuntu-latest`, steps: `actions/checkout@v5`; `ruby/setup-ruby@v1` with no inputs; `bundle install` with `BUNDLE_FROZEN: "true"`; `bundle exec rspec`; `bundle exec rubocop` (plan items 3 and 4). See [contracts/ci-workflow.md](contracts/ci-workflow.md).
 - **Rationale**: [DEC-36](../../docs/design-analysis/design-decisions.md#dec-36) says RSpec and RuboCop run on every push; page 10 pick 50 sets one job on the latest Ubuntu runner with Ruby from `.ruby-version`. Each command is its own step, and a step fails the job when its command exits non-zero, so a failing check fails the run without any extra setting (US4 scenario 2). With no `ruby-version` input, `ruby/setup-ruby` reads `.ruby-version`.
-- **Alternatives considered**: `bundler-cache: true` (installs in deployment mode into `vendor/bundle` and adds caching nobody asked for; plan item 6 already gives a plain frozen install); a pull-request trigger (not asked); an OS or Ruby matrix, a coverage minimum (page 4, out of scope).
+- **Alternatives considered**: `bundler-cache: true` (installs in deployment mode into `vendor/bundle` and adds caching nobody asked for; plan item 6 already gives a plain frozen install); a pull-request trigger (not asked); an OS or Ruby-version matrix (page 9 "Portability and CI", page 10 pick 50); a coverage minimum (page 4, out of scope).
 
 ## R-6 The Dockerfile
 
