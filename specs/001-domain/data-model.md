@@ -53,7 +53,7 @@ classDiagram
 | `text` | String | The text as written; for a computed value, the same as `to_s` |
 | `to_s` | String | Exactly 2 decimal places, no leading zeros before the units digit (R6) |
 | `+`, `-` | `Money` | Exact sum or difference, as a computed `Money` |
-| `<=>` (with `Comparable`), `==`, `eql?`, `hash` | | By value only, so `-0` equals `0` (R7) |
+| `<=>` (with `Comparable`), `==`, `eql?`, `hash` | | By value only, so `-0` equals `0` (R7); `hash` is `value.zero? ? BigDecimal('0').hash : value.hash`, so `-0` and `0` hash alike |
 | `negative?` | Boolean | A minus sign was written, or the value is below 0 (R7) |
 | `positive?` | Boolean | The value is above 0 |
 

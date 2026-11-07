@@ -69,7 +69,7 @@ The company asks for an amount to move from one of its accounts to another. When
      - Standard error: (nothing)
      - Exit status: 0
 2. **AC-03.2 A rejected transfer changes nothing and the run continues** (FR-03; DEC-14, DEC-18).
-   - **Given** the three accounts above, **When** a transfer is refused for any of the domain reasons (`InvalidAmount`, `SameAccount`, `UnknownAccount`, `InsufficientFunds`), **Then** both accounts keep their balances, the total stays 150.00, and the next transfer can be applied (domain outcome). `TransferService` finds both accounts before it withdraws, and deposits only after the withdrawal succeeded, so nothing is ever undone.
+   - **Given** the three accounts above, **When** a transfer is refused for any of the domain reasons (`InvalidAccountNumber`, `InvalidAmount`, `SameAccount`, `UnknownAccount`, `InsufficientFunds`), **Then** both accounts keep their balances, the total stays 150.00, and the next transfer can be applied (domain outcome). `TransferService` finds both accounts before it withdraws, and deposits only after the withdrawal succeeded, so nothing is ever undone.
    - Run outcome, for any transfer rejected for any of the six reasons in AC-03.3:
      - Standard output: the report in the FR-08 layout, listing the row as `rejected` with its reason code, and the final balances unchanged.
      - Standard error: the row's warn line, `W, [<timestamp> #<pid>]  WARN -- : Line N rejected: ...` with its reason code (FR-09, owned by `002`).
@@ -99,7 +99,10 @@ The company asks for an amount to move from one of its accounts to another. When
 
 4. **Two equal transfers are both applied** (FR-03; DEC-16).
    - **Given** the three accounts above, **When** two `Transfer`s from `1111234522226789` to `0000123412341234` of `20.00` are applied one after the other, **Then** both are applied and the balances are 60.00, 50.00 and 40.00 (domain outcome). There is no duplicate check.
-   - Run outcome: covered by AC-07.1 on page 2 (FR-07, owned by `002`); standard output ends with the final balances `  1111234522226789  60.00`, `  1212343433335665  50.00`, `  0000123412341234  40.00`, and the exit status is 0.
+   - Run outcome: covered by AC-07.1 on page 2 (FR-07, owned by `002`); line 1 (`0000123412341234,1212343433335665,20.00`) is rejected as `insufficient_funds`.
+     - Standard output contains `Final balances`, `  1111234522226789  60.00`, `  1212343433335665  50.00`, `  0000123412341234  40.00`.
+     - Standard error: `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************1234 -> ************5665 20.00 insufficient_funds` **(derived)**.
+     - Exit status: 0
 
 5. **The outcome of a transfers row is one `TransferResult`** (FR-03 domain part; FR-08 owned by `002`; DEC-19, DEC-06).
    - **Given** a line number, the row's values as written (after trimming) and the outcome, **When** a `TransferResult` is built, **Then** it says whether it was applied, gives no reason code when applied and exactly one of the six reason codes when rejected, and returns its line number and values unchanged. A rejected header-looking row also carries the header hint `This looks like a header row; files must not have a header.` (domain outcome).
@@ -175,8 +178,13 @@ Only accounts from the balances file exist. A transfer to or from any other vali
      - Exit status: 0
 3. **Both accounts unknown** (FR-05; DEC-17, page 7.6).
    - **Given** a repository that holds neither account, **When** a `Transfer` from `9999888877776666` to `8888777766665555` of `10.00` is applied, **Then** `UnknownAccount` is raised naming the from account, `account 9999888877776666 is not loaded`, because the from account is looked up first (domain outcome). The reason code is `unknown_account` whichever side is unknown.
+   - Run outcome, with `transfers.csv` holding `9999888877776666,8888777766665555,10.00`:
+     - Standard output contains `  Line 1  rejected  9999888877776666 -> 8888777766665555  10.00  unknown_account` **(derived)**.
+     - Standard error: `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************6666 -> ************5555 10.00 unknown_account` **(derived)**, then the all-rejected warn line.
+     - Exit status: 0
 4. **`find` never creates an account** (FR-05; DEC-17, DEC-31).
    - **Given** an empty repository, **When** `find` is called with `9999888877776666`, **Then** it raises `UnknownAccount`, and afterwards `include?` for that number is false and `all` is empty (domain outcome).
+   - Run outcome: none of its own (covered by AC-05.1).
 
 ---
 
@@ -331,7 +339,7 @@ A developer (or reviewer) clones the project, installs its gems, runs the tests 
 Each is covered by a domain unit test in this spec (DEC-34):
 
 - A transfer that leaves exactly $0.00 is applied; one cent more is refused (DEC-13; AC-04.1, AC-04.2).
-- A rejected transfer leaves both balances unchanged, for each of `InvalidAmount`, `SameAccount`, `UnknownAccount` and `InsufficientFunds` (DEC-18; AC-03.2).
+- A rejected transfer leaves both balances unchanged, for each of `InvalidAccountNumber`, `InvalidAmount`, `SameAccount`, `UnknownAccount` and `InsufficientFunds` (DEC-18; AC-03.2).
 - A transfer naming an unknown account and asking for more than any balance gets `UnknownAccount`, because both lookups come before the withdrawal (DEC-18, DEC-19).
 - A transfer from an account to itself with an amount of 0 gets `InvalidAmount`, because the amount is checked before the accounts (DEC-19).
 - A transfer from an account to itself that is also not loaded gets `SameAccount`, because `Transfer` refuses it before any lookup (DEC-19).

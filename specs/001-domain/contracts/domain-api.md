@@ -51,7 +51,6 @@ Code files are under `lib/domain/` and load their own dependencies. A caller req
 | `repository.all` | the accounts in load order | |
 | `TransferService.new(repository)` | a service | |
 | `service.apply(transfer)` | nil | `UnknownAccount` (from first, then to); `InsufficientFunds`; both balances unchanged |
-
 | `DuplicateAccount.new(account_number).message` | `account <number> appears more than once` | (the error object, not raised; plan D21) |
 
 In the messages, `<text>` is the value as given, `<number>` the full account number, and `<amount>` and `<balance>` are written with exactly 2 decimal places (`Money#to_s`).
