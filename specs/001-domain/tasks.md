@@ -224,16 +224,14 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
   - applied: `1111234522226789` to `1212343433335665` `30.00` gives `70.00 80.00 0.00` (AC-03.1; DEC-13);
   - `apply` returns nil (D12);
   - exactly $0: `1111234522226789` to `1212343433335665` `100.00` gives `0.00 150.00 0.00` (AC-04.2; DEC-13 edge case);
-  - below $0 by one cent: `100.01` raises `InsufficientFunds`, `account 1111234522226789 cannot pay 100.01 from a balance of 100.00` (AC-04.1; DEC-13 edge case);
+  - below $0 by one cent: `100.01` raises `InsufficientFunds`, checked by its class only; the message is checked in T025 (AC-04.1; DEC-13 edge case);
   - after that refusal, the balances are `100.00 50.00 0.00`, so nothing was deposited (AC-04.1; DEC-18; D18);
-  - an account at $0.00: `0000123412341234` to `1111234522226789` `0.01` raises `InsufficientFunds`, `account 0000123412341234 cannot pay 0.01 from a balance of 0.00` (AC-04.3; DEC-10);
-  - after that refusal, the balances are unchanged (AC-04.3; DEC-18);
-  - unknown to account: `1111234522226789` to `9999888877776666` `10.00` raises `UnknownAccount`, `account 9999888877776666 is not loaded` (AC-05.1; DEC-17);
+  - an account at $0.00: `0000123412341234` to `1111234522226789` `0.01` leaves the balances unchanged after `attempt(InsufficientFunds)`; the refusal and its message are tested in T025 (AC-04.3; DEC-18);
+  - unknown to account: `1111234522226789` to `9999888877776666` `10.00` raises `UnknownAccount`, checked by its class only; the message is checked in T035 (AC-05.1; DEC-17);
   - after that refusal, the balances are unchanged, so nothing was withdrawn (AC-05.1; DEC-18 edge case; D18);
   - after that refusal, `all` holds only the three loaded account numbers (AC-05.1; DEC-17);
-  - unknown from account: `9999888877776666` to `1111234522226789` `10.00` raises `UnknownAccount`, `account 9999888877776666 is not loaded` (AC-05.2; DEC-17);
-  - after that refusal, the balances are unchanged (AC-05.2; DEC-18);
-  - both unknown: `9999888877776666` to `8888777766665555` `10.00` raises `UnknownAccount` naming the from account, `account 9999888877776666 is not loaded` (US3 scenario 3; DEC-17 edge case; spec item 10);
+  - unknown from account: `9999888877776666` to `1111234522226789` `10.00` raises `UnknownAccount` and the balances are unchanged afterwards (AC-05.2; DEC-17, DEC-18);
+  - both unknown: `9999888877776666` to `8888777766665555` `10.00` raises `UnknownAccount` that names the from account, checked with `raise_error(UnknownAccount, /9999888877776666/)`, which proves the from account is looked up first (US3 scenario 3; DEC-17 edge case; spec item 10);
   - unknown account and too much money: `9999888877776666` to `1111234522226789` `1000000.00` raises `UnknownAccount`, not `InsufficientFunds`, because both lookups come before the withdrawal (AC-03.3; DEC-18, DEC-19 edge case);
   - refused while building the transfer: after `attempt(InvalidAmount) { service.apply(transfer(amount: '0')) }` the balances are unchanged, after `attempt(SameAccount) { service.apply(transfer(to: '1111234522226789')) }` the balances are unchanged, and after `attempt(InvalidAccountNumber) { service.apply(transfer(from: '12345')) }` the balances are `100.00 50.00 0.00` (AC-03.2; DEC-18 edge case);
   - the total stays the same after every refusal: after one refused transfer of each of `InvalidAccountNumber`, `InvalidAmount`, `SameAccount`, `UnknownAccount` and `InsufficientFunds`, the balances add up to `150.00` (AC-03.2; SC-002);
@@ -285,12 +283,12 @@ Every edge case in the [spec](spec.md#edge-cases) that falls in this spec's scop
 
 | Edge case | DEC | Test in |
 |---|---|---|
-| A transfer that leaves exactly $0.00 is applied; one cent more is refused | DEC-13 | T025 (`Account`), T040 (service) |
+| A transfer that leaves exactly $0.00 is applied; one cent more is refused | DEC-13 | T025 (`Account`, once, with the message); T040 proves only the unchanged balances at service level |
 | A rejected transfer leaves both balances unchanged, for `InvalidAccountNumber`, `InvalidAmount`, `SameAccount`, `UnknownAccount` and `InsufficientFunds` | DEC-18 | T040 |
 | An unknown account with more than any balance gets `UnknownAccount` | DEC-18, DEC-19 | T040 |
 | A transfer to itself with an amount of 0 gets `InvalidAmount` | DEC-19 | T012 |
 | A transfer to itself that is not loaded gets `SameAccount` | DEC-19 | T012 |
-| Both accounts unknown: `UnknownAccount` names the from account | DEC-17 | T040 |
+| Both accounts unknown: `UnknownAccount` names the from account | DEC-17 | T040 (lookup order; the message form is tested in T035) |
 | `-0` and `-0.00` are negative: refused as an amount and as an opening balance; equal to `0` as `Money` | DEC-09 | T012, T013, T011 |
 | A computed `Money` is negative only below 0 | DEC-09 | T021 |
 | A `malformed_row` result keeps every field, fewer or more than 3 | DEC-19 | T041 |

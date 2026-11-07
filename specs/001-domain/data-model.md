@@ -41,7 +41,7 @@ classDiagram
 | `==`, `eql?`, `hash` | | Equal when the text is equal |
 
 - Validation: "exactly 16 characters, each a digit 0 to 9" (FR-001). No check digit; no masking (FR-002).
-- Frozen once built (D19).
+- Frozen once built (D19). The member names are decided in plan.md D23.
 
 ### `Money` (value)
 

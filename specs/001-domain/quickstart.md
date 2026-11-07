@@ -14,7 +14,7 @@ How to check that `001-domain` is done. It proves User Story 7 directly and ever
 |---|---|---|---|
 | 1 | `ruby -v` | `ruby 3.4.12...` | DEC-01, FR-036 |
 | 2 | `bundle install` | Installs the versions in the committed `Gemfile.lock`; the `Gemfile` names only `csv`, `bigdecimal`, `logger`, `rspec`, `simplecov`, `rubocop` and `rubocop-rspec`; `git status` shows no change to `Gemfile.lock` | US7 scenario 1; DEC-01, DEC-36, FR-037 |
-| 3 | `bundle exec rspec` | Every example passes; the output lists each example as a sentence (documentation format) and ends with `Randomized with seed <n>`; `coverage/index.html` is written; no minimum coverage fails the run | US7 scenario 2; US1 to US6; DEC-34, DEC-36, FR-039, FR-040, SC-001 to SC-004 |
+| 3 | `bundle exec rspec` | Every example passes; the output lists each example as a sentence (documentation format) and prints `Randomized with seed <n>`; SimpleCov then reports that `coverage/index.html` was written; no minimum coverage fails the run | US7 scenario 2; US1 to US6; DEC-34, DEC-36, FR-039, FR-040, SC-001 to SC-004 |
 | 4 | `bundle exec rspec` twice more | Passes each time with a different seed | SC-008 |
 | 5 | `bundle exec rspec --seed <n>` with a seed from step 3 | Passes in the same order, so a failing order can be repeated | DEC-34 |
 | 6 | `bundle exec rubocop` | `no offenses detected` | US7 scenario 3; NFR-05, FR-031, SC-005 |
