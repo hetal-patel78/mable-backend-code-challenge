@@ -28,7 +28,7 @@ To compare a run with the report: take `<run time>` from the name of the file th
 | C-03 | `Gemfile.lock` platforms, versions unchanged | `git show :Gemfile.lock \| sed -n '/^PLATFORMS/,/^$/p'`; `git diff <001 lock commit> -- Gemfile.lock` | the six platforms of [repository-files.md](contracts/repository-files.md#gemfilelock); the diff touches only platforms | FR-017; DEC-01 |
 | C-04 | One Ruby version in `.ruby-version` and the Dockerfile | `test "$(head -1 Dockerfile \| tr -d '\r')" = "FROM ruby:$(tr -d '\r' < .ruby-version)"` (or `...-bookworm`, plan item 7) | exit status 0; `.ruby-version` is the latest 3.4.x release | FR-015, SC-005; DEC-01 |
 | C-05 | Only the named gems | `grep -E "^\s*gem " Gemfile` | `csv`, `bigdecimal`, `logger`, `rspec`, `simplecov`, `rubocop`, `rubocop-rspec`, nothing else | FR-016; DEC-01 |
-| C-40 | Input files are read only through Ruby's CSV library (design review) | `grep -rn "File.read\|IO.read\|readlines\|each_line" lib/`; read the readers in `lib/infrastructure` | the grep finds no reading of an input file; the readers open the files as `bom\|utf-8` through CSV (`002` FR-001), so CRLF, a missing final newline and a byte-order mark give the same result (the last proved by `002`'s fixture test) | FR-019; NFR-04; DEC-04, DEC-22 |
+| C-40 | Input files are read only through Ruby's CSV library (design review) | `grep -rn -e 'File.read' -e 'IO.read' -e 'readlines' -e 'each_line' lib/`; read the readers in `lib/infrastructure` | the grep finds no reading of an input file; the readers open the files as `bom\|utf-8` through CSV (`002` FR-001), so CRLF, a missing final newline and a byte-order mark give the same result (the last proved by `002`'s fixture test) | FR-019; NFR-04; DEC-04, DEC-22 |
 
 ## CI (User Story 4)
 

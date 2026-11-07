@@ -102,4 +102,4 @@ Read the finished README against each item; every item must be "present". The se
 | R-11 | Storage, production items, known limitations | FR-011 | (a), (b) and the nine limitations present |
 | R-12 | Coverage line, `coverage/index.html`, no minimum | FR-012 | Present; figure equals C-33 |
 | R-13 | "How this was built": AI assistant, four steps with links, `docs/prompts/` | FR-013 | Present; links resolve |
-| R-14 | Layout table, challenge link, no "Status" or "To be added", no company whose balances are processed | FR-014 | Present; `grep -n "To be added\|## Status"` finds nothing |
+| R-14 | Layout table, challenge link, no "Status" or "To be added", no company whose balances are processed | FR-014 | Present; `grep -n -e 'To be added' -e '## Status' README.md` finds nothing |

@@ -44,7 +44,7 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 ### Implementation
 
 - [ ] T005 Create `.gitattributes` at the repository root holding exactly the one line `bin/run text eol=lf`, ending with LF, and nothing else (FR-018; DEC-22; spec Clarifications).
-- [ ] T006 Run `git add --renormalize bin/run`. If C-01 showed a mode other than `100755`, run `git update-index --chmod=+x bin/run` (content unchanged; plan item 14). If C-01 listed a file with `i/crlf`, renormalize that file to LF in the index (FR-018; DEC-22, DEC-04; plan item 13).
+- [ ] T006 Run `git add --renormalize bin/run`. If C-01 showed a mode other than `100755`, run `git update-index --chmod=+x bin/run` (content unchanged; plan item 14). If C-01 listed `bin/run`, or a file this spec owns under `docs/` or `specs/`, with `i/crlf`, renormalize that file to LF in the index (FR-018; DEC-22, DEC-04; plan item 13). An `i/crlf` file under `lib/`, `spec/`, `data/` or another spec's files is reported as a cross-spec finding and fixed in `001-domain` or `002-file-runner`, not here (FR-030; C-34). An `i/crlf` file under `docs/challenge/` is reported as a blocker, because `docs/challenge/` is never edited.
 - [ ] T007 Run `bundle lock --add-platform ruby x64-mingw-ucrt x86_64-linux aarch64-linux x86_64-darwin arm64-darwin` at `$REPO`, then `git diff Gemfile.lock`: only the `PLATFORMS` section (and, where Bundler lists a gem per platform, new lines for the same versions) may change; no gem version changes (FR-017; DEC-01; plan item 2). Do not change `Gemfile` (FR-016, checked by C-05).
 - [ ] T008 Re-run C-01, C-02, C-03 and C-05 (all pass), then `bundle exec rspec` and `bundle exec rubocop` (still passing); record the results and commit `.gitattributes`, `Gemfile.lock` and, if changed, `bin/run`'s mode, by explicit path.
 
@@ -191,7 +191,7 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 ## Phase 9: Polish and cross-cutting checks
 
 - [ ] T056 Record the success criteria in the run report from the results above: SC-001 (3 of 3 platforms, or which are left for the developer), SC-002, SC-003 (14 of 14), SC-004, SC-005, SC-006 and SC-007 (spec Success Criteria).
-- [ ] T057 Run C-40, the design review of how the input files are read: `grep -rn "File.read\|IO.read\|readlines\|each_line" lib/` finds no reading of an input file, and the readers in `lib/infrastructure` open the files as `bom|utf-8` through Ruby's CSV library (`002` FR-001); record the result in the run report (FR-019; NFR-04; DEC-04, DEC-22).
+- [ ] T057 Run C-40, the design review of how the input files are read: `grep -rn -e 'File.read' -e 'IO.read' -e 'readlines' -e 'each_line' lib/` finds no reading of an input file, and the readers in `lib/infrastructure` open the files as `bom|utf-8` through Ruby's CSV library (`002` FR-001); record the result in the run report (FR-019; NFR-04; DEC-04, DEC-22).
 - [ ] T058 On the final `main` commit, confirm `bundle exec rspec` passes in random order and `bundle exec rubocop` reports no offences, and that no file under `lib/`, `bin/` (other than `bin/run`'s mode), `spec/` or `data/` was changed by this spec (FR-030; constitution III and IV).
 
 ---
