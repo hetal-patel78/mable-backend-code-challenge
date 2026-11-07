@@ -8,7 +8,7 @@ Back to [project instructions](../../CLAUDE.md).
 
 Started by [P24](../prompts/prompts-spec-creation-phase.md#p24), from the branch `spec-kit-setup`. Every review in Part 1 (each per-spec review round, the cross-check and the review before `main` is pushed) is done by an independent Claude Opus 5.5 agent that did not write or fix what it reviews ([P25](../prompts/prompts-spec-creation-phase.md#p25)); the reviewer model is recorded for each round.
 
-**Status: Specification ready for review.**
+**Status: Specification complete; step 7 (push of `spec-kit-specs` and `main`) pending the independent review.**
 
 ### Status
 
@@ -20,8 +20,8 @@ Started by [P24](../prompts/prompts-spec-creation-phase.md#p24), from the branch
 | 4. Clarify, plan and tasks | Done: 001 7 rounds (2 earlier, 5 continuation), 002 10 rounds (1 earlier, 9 continuation), 003 26 rounds (12 earlier, 14 continuation); each ended on a round with 0 defects. All three spec branches pushed: 001-domain, 002-file-runner, 003-delivery |
 | 5. Cross-check | Done: 3 rounds (round 1 found 1 medium defect, round 2 found 2 low, round 3 found 0 and was clean) |
 | 6. Scripted checks | Done: 3 rounds (round 1 failed 3 checks, round 2 failed 1, round 3 passed all 7) |
-| 7. Merge and push | Done: the three spec branches merged into `spec-kit-specs` with their small commits kept (no squash), `spec-kit-specs` pushed, and `main` pushed after an independent review by Claude Opus 5.5 approved it |
-| 8. Stop | Done: Specification ready for review |
+| 7. Merge and push | In progress: the three spec branches merged into `spec-kit-specs` with their small commits kept (no squash). `spec-kit-specs` is not yet pushed, and `main` is not pushed until an independent review by Claude Opus 5.5 approves it (round 1 found 1 medium defect, fixed) |
+| 8. Stop | Pending: after step 7 completes |
 
 ### Check results
 
@@ -111,7 +111,11 @@ Step 6 scripted checks. The table shows the final round (round 3). Round 1 faile
 | 003-delivery | 2 | 0 | 0 | 1 | 4 |
 | 003-delivery | 3 | 0 | 0 | 1 | 4 |
 
-Step 7 review before pushing main: An independent Claude Opus 5.5 agent that did not write or fix the changes reviewed everything going to `main` and approved it.
+Step 7 review before pushing `main`. Every round is by an independent Claude Opus 5.5 agent that did not write or fix the changes. Brief step 7 pushes `spec-kit-specs` first and then `main` after this review approves. At the time of round 1, `spec-kit-specs` was not pushed and `origin/main` was unchanged; each push and the approval are recorded here only once they happen.
+
+| Round | Reviewer | Defects found | Result |
+|---|---|---|---|
+| 1 | Claude Opus 5.5 (opus), independent | 1 (medium: this report stated the step 7 pushes and an approval before they happened) | Fixed; awaiting round 2 |
 
 ### Decided in the run
 
