@@ -81,7 +81,9 @@ The scan found three questions worth asking; every other category was already cl
 
 ### `/speckit-plan` (001-domain)
 
-Pending.
+```text
+Plan specs/001-domain. The technical context is already fixed by design-decisions.md and page 5: Ruby 3.4.x, Bundler, RSpec (random order), RuboCop with rubocop-rspec, SimpleCov; the folder layout on page 5; class names and members on page 6 and in the page 10 glossary. Nothing else is added. Pick any name page 10 leaves open and list it under "Decided in the run" in the plan. Fill the constitution check against .specify/memory/constitution.md.
+```
 
 ### `/speckit-tasks` (001-domain)
 
