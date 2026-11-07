@@ -87,7 +87,7 @@ The company asks for an amount to move from one of its accounts to another. When
 
    - **Given** `1111234522226789`, `1111234522226789` and `0`, **When** the `Transfer` is built, **Then** it raises `InvalidAmount` with the message `amount "0" must be greater than 0.00`, not `SameAccount`, because the amount is checked first (domain outcome; DEC-19, page 6 `Transfer`).
    - **Given** `9999888877776666`, `9999888877776666` and `5.00`, and a repository that does not hold `9999888877776666`, **When** the `Transfer` is built, **Then** it raises `SameAccount` with the message `account 9999888877776666 cannot transfer to itself` before any lookup, so the reason is not `unknown_account` (domain outcome).
-   - **Given** a `Transfer` from an account that is not loaded and an amount larger than any balance, **When** it is applied, **Then** `UnknownAccount` is raised, not `InsufficientFunds`, because both lookups run before the withdrawal (domain outcome; DEC-18).
+   - **Given** a `Transfer` from `1111234522226789` (balance 100.00) to `9999888877776666`, which is not loaded, of `1000000.00`, **When** it is applied, **Then** `UnknownAccount` is raised, not `InsufficientFunds`, because both lookups run before the withdrawal, and the balances are unchanged (domain outcome; DEC-18).
    - The first example on page 2, `12345,1212343433335665,abc`, depends on the order in which `ProcessDailyTransfer` builds the values (both `AccountNumber`s before the `Money`, page 7.1); that order is owned by `002`. The domain part is that `AccountNumber` raises `InvalidAccountNumber` for `12345` whatever the amount is.
    - Run outcomes (each row alone in `transfers.csv`; every transfer is rejected, so the all-rejected warning follows):
 
@@ -346,7 +346,7 @@ Each is covered by a domain unit test in this spec (DEC-34):
 
 - A transfer that leaves exactly $0.00 is applied; one cent more is refused (DEC-13; AC-04.1, AC-04.2).
 - A rejected transfer leaves both balances unchanged, for each of `InvalidAccountNumber`, `InvalidAmount`, `SameAccount`, `UnknownAccount` and `InsufficientFunds` (DEC-18; AC-03.2).
-- A transfer naming an unknown account and asking for more than any balance gets `UnknownAccount`, because both lookups come before the withdrawal (DEC-18, DEC-19).
+- A transfer from a known account without enough money to an unknown account gets `UnknownAccount`, because both lookups come before the withdrawal (DEC-18, DEC-19).
 - A transfer from an account to itself with an amount of 0 gets `InvalidAmount`, because the amount is checked before the accounts (DEC-19).
 - A transfer from an account to itself that is also not loaded gets `SameAccount`, because `Transfer` refuses it before any lookup (DEC-19).
 - Both accounts unknown: `UnknownAccount` names the from account (DEC-17).

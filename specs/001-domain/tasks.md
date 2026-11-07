@@ -232,7 +232,7 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
   - after that refusal, `all` holds only the three loaded account numbers (AC-05.1; DEC-17);
   - unknown from account: `9999888877776666` to `1111234522226789` `10.00` raises `UnknownAccount` and the balances are unchanged afterwards (AC-05.2; DEC-17, DEC-18);
   - both unknown: `9999888877776666` to `8888777766665555` `10.00` raises `UnknownAccount` that names the from account, checked with `raise_error(UnknownAccount, /9999888877776666/)`, which proves the from account is looked up first (US3 scenario 3; DEC-17 edge case; spec item 10);
-  - unknown account and too much money: `9999888877776666` to `1111234522226789` `1000000.00` raises `UnknownAccount`, not `InsufficientFunds`, because both lookups come before the withdrawal (AC-03.3; DEC-18, DEC-19 edge case);
+  - unknown to account and too much money: `1111234522226789` to `9999888877776666` `1000000.00` raises `UnknownAccount`, not `InsufficientFunds`, because both lookups come before the withdrawal (AC-03.3; DEC-18, DEC-19 edge case);
   - refused while building the transfer: after `attempt(InvalidAmount) { service.apply(transfer(amount: '0')) }` the balances are unchanged, after `attempt(SameAccount) { service.apply(transfer(to: '1111234522226789')) }` the balances are unchanged, and after `attempt(InvalidAccountNumber) { service.apply(transfer(from: '12345')) }` the balances are `100.00 50.00 0.00` (AC-03.2; DEC-18 edge case);
   - the total stays the same after every refusal: after one refused transfer of each of `InvalidAccountNumber`, `InvalidAmount`, `SameAccount`, `UnknownAccount` and `InsufficientFunds`, the balances add up to `150.00` (AC-03.2; SC-002);
   - after a refusal, the next transfer is applied: a refused `100.01` followed by `30.00` gives `70.00 80.00 0.00` (AC-03.2; DEC-14);
@@ -285,7 +285,7 @@ Every edge case in the [spec](spec.md#edge-cases) that falls in this spec's scop
 |---|---|---|
 | A transfer that leaves exactly $0.00 is applied; one cent more is refused | DEC-13 | T025 (`Account`, once, with the message); T040 proves only the unchanged balances at service level |
 | A rejected transfer leaves both balances unchanged, for `InvalidAccountNumber`, `InvalidAmount`, `SameAccount`, `UnknownAccount` and `InsufficientFunds` | DEC-18 | T040 |
-| An unknown account with more than any balance gets `UnknownAccount` | DEC-18, DEC-19 | T040 |
+| A known from account without enough money and an unknown to account gets `UnknownAccount` | DEC-18, DEC-19 | T040 |
 | A transfer to itself with an amount of 0 gets `InvalidAmount` | DEC-19 | T012 |
 | A transfer to itself that is not loaded gets `SameAccount` | DEC-19 | T012 |
 | Both accounts unknown: `UnknownAccount` names the from account | DEC-17 | T040 (lookup order; the message form is tested in T035) |
