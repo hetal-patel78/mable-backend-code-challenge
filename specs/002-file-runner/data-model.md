@@ -6,7 +6,7 @@ Phase 1 of the [plan](plan.md). Names and meanings are those of [page 6](../../d
 
 ```mermaid
 classDiagram
-    Runner ..> DisplayPath : shows every path
+    Runner ..> DisplayPath : start-check lines
     Runner ..> FinalBalancesCsvWriter : default_path(run_time)
     Runner --> ProcessDailyTransfer : builds with the parts, runs
     ProcessDailyTransfer --> BalancesCsvReader : balances_reader
@@ -14,6 +14,7 @@ classDiagram
     ProcessDailyTransfer --> FinalBalancesCsvWriter : writer
     ProcessDailyTransfer --> AccountRepository : repository
     ProcessDailyTransfer --> ReportPrinter : reporter
+    ProcessDailyTransfer ..> DisplayPath : Run started line
     ProcessDailyTransfer ..> LoadBalances : creates
     ProcessDailyTransfer ..> TransferService : creates
     ProcessDailyTransfer ..> DayResult : builds
@@ -26,6 +27,10 @@ classDiagram
     DayResult o-- "*" Account
     ReportPrinter ..> DayResult : reads
     ReportPrinter ..> DisplayPath : output line
+    InvalidBalancesFile ..> DisplayPath : message
+    NoTransfers ..> DisplayPath : message
+    UnreadableFile ..> DisplayPath : message
+    OutputNotWritable ..> DisplayPath : message
 ```
 
 ## One home per rule
@@ -112,7 +117,7 @@ classDiagram
 |---|---|---|
 | `DayResult::ALL_REJECTED_WARNING` | String | `All transfers were rejected; check this is the right file.` |
 | `DayResult.new(results:, total_before:, total_after:, accounts:, output_path:)` | Array of `TransferResult`, `Money`, `Money`, Array of `Account`, String | |
-| `results`, `total_before`, `total_after`, `accounts`, `output_path` | | As given; results in file order, accounts in load order |
+| `results`, `total_before`, `total_after`, `accounts`, `output_path` | | As given; results in file order, accounts in load order; `output_path` is the real path (plan P11), shown only by `ReportPrinter` |
 | `processed_count`, `applied_count`, `rejected_count` | Integer | Rows, applied rows, rejected rows |
 | `rejected_counts` | `Hash` of Symbol to Integer | Only the codes that occurred, in `TransferResult::REASON_CODES` order |
 | `all_rejected?` | Boolean | At least one row, and every row rejected |
@@ -155,6 +160,8 @@ All are direct subclasses of `StandardError`.
 | Member | Type | Meaning |
 |---|---|---|
 | `DisplayPath.of(path, folder = Dir.pwd)` | String, String | The path relative to `folder` with at most one leading `../`, or in full |
+
+- Paths are real (absolute) from the `Runner` on (plan P11). The shown form is built where a text is built: the four run-stopping errors that hold a path, the `Run started` line and the start-check lines use `DisplayPath.of`; the report's output line uses it in `ReportPrinter` alone.
 
 ### `Runner` (infrastructure; plan P12)
 

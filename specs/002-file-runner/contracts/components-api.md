@@ -8,11 +8,11 @@ Code files load their own dependencies with `require_relative`. A spec requires 
 
 | File | Defines | Uses |
 |---|---|---|
-| `application/errors` | `InvalidBalancesFile`, `NoTransfers`, `TotalChanged` | |
+| `application/errors` | `InvalidBalancesFile`, `NoTransfers`, `TotalChanged` | `infrastructure/display_path` |
 | `application/load_balances` | `LoadBalances` | `domain/account_number`, `domain/money`, `domain/account`, `domain/errors`, `application/errors`, `infrastructure/errors` |
 | `application/day_result` | `DayResult` | `domain/transfer_result` |
-| `application/process_daily_transfer` | `ProcessDailyTransfer` | `application/load_balances`, `application/day_result`, `application/errors`, `domain/transfer`, `domain/transfer_result`, `domain/transfer_service`, `infrastructure/final_balances_csv_writer` (for `default_path`) |
-| `infrastructure/errors` | `UnreadableFile`, `OutputNotWritable` | |
+| `application/process_daily_transfer` | `ProcessDailyTransfer` | `application/load_balances`, `application/day_result`, `application/errors`, `domain/transfer`, `domain/transfer_result`, `domain/transfer_service`, `infrastructure/final_balances_csv_writer` (for `default_path`), `infrastructure/display_path` |
+| `infrastructure/errors` | `UnreadableFile`, `OutputNotWritable` | `infrastructure/display_path` |
 | `infrastructure/row` | `Row` | |
 | `infrastructure/csv_rows` | `CsvRows` | `csv`, `infrastructure/row`, `infrastructure/errors` |
 | `infrastructure/balances_csv_reader` | `BalancesCsvReader` | `infrastructure/csv_rows` |
@@ -105,4 +105,4 @@ The `<problem>` texts inside `InvalidBalancesFile`, in field order for each row:
 
 - A reader passed to `LoadBalances` or `ProcessDailyTransfer` needs only `each_row(path)` yielding `Row`s; the fake readers in the specs have the same member.
 - A reporter needs only `print(day_result)`; a writer only `write(accounts, path)`; a repository `add`, `include?`, `find` and `all` (`001`); a logger `info`, `warn` and `error`.
-- The `Runner` passes `ProcessDailyTransfer` the paths already in their shown form (plan P11); `ProcessDailyTransfer` and the readers use them unchanged in messages and log lines.
+- The `Runner` passes `ProcessDailyTransfer` the real (absolute) paths (plan P11), so `DayResult#output_path` is the real path. Each component that builds a message or log text shows a path with `DisplayPath.of`: the run-stopping errors in their messages, `ProcessDailyTransfer` in its `Run started` line, and the `Runner` in its start-check lines. `ReportPrinter` alone works out the output path to show (page 6 pick 41). The readers and the writer open files with the path they are given.
