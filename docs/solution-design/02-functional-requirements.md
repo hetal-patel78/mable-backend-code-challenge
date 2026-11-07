@@ -535,10 +535,11 @@ W, [<timestamp> #<pid>]  WARN -- : Line 5 rejected: ************5665 -> ********
 - With no third argument, it must be `output/final_balances_YYYY-MM-DD_HHMMSS.csv`, named from the local date and time the run started (24-hour clock).
 - With a third argument, that path must be used as given, and any missing folders on it must be created.
 
-**AC-08.4 The output path is shown relative to where the command was run.**
+**AC-08.4 The output path is shown relative to where the command was run, or in full when the file is outside that folder.**
 - Given the sample files.
-- When `../bin/run` runs with no arguments from the project's `docs` folder.
-- Then the last report line is `Output file: ../output/final_balances_2026-11-07_143005.csv`.
+- When `bin/run` runs with no arguments from the project root.
+- Then the last report line is `Output file: output/final_balances_2026-11-07_143005.csv`.
+- And when `../bin/run` runs with no arguments from the project's `docs` folder, the output file is outside that folder, so the last line shows the full path: `Output file: <project root>/output/final_balances_2026-11-07_143005.csv`, where `<project root>` is the full path of the project folder.
 - And when a third argument names a file outside the current folder, such as `/tmp/day1.csv`, the last line shows the full path: `Output file: /tmp/day1.csv`.
 
 **AC-08.5 A changed total stops the run.**
