@@ -33,7 +33,7 @@ bin/run text eol=lf
 
 ## The pushed `main`: must be tracked (`git ls-files`)
 
-`README.md`, `Gemfile`, `Gemfile.lock`, `.ruby-version`, `.gitignore`, `.gitattributes`, `.rspec`, `Dockerfile`, `.github/workflows/ci.yml`, `bin/run`, `lib/domain/`, `lib/application/`, `lib/infrastructure/`, `spec/` (with `spec/fixtures/sample/mable_account_balances.csv` and `spec/fixtures/sample/mable_transactions.csv`), `data/mable_account_balances.csv`, `data/mable_transactions.csv`, `docs/`, `specs/` (US6 scenario 1).
+`README.md`, `Gemfile`, `Gemfile.lock`, `.ruby-version`, `.gitignore`, `.gitattributes`, `.rspec`, `.rubocop.yml`, `Dockerfile`, `.github/workflows/ci.yml`, `bin/run`, `lib/domain/`, `lib/application/`, `lib/infrastructure/`, `spec/` (with `spec/fixtures/sample/mable_account_balances.csv` and `spec/fixtures/sample/mable_transactions.csv`), `data/mable_account_balances.csv`, `data/mable_transactions.csv`, `docs/`, `specs/` (US6 scenario 1).
 
 ## The pushed `main`: must not be tracked
 

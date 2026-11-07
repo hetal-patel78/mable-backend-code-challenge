@@ -9,7 +9,7 @@ Phase 1 of the [plan](plan.md). This spec adds no class and no runtime data (FR-
   - Every item R-01 to R-14 in the README check is present (FR-001 to FR-014; SC-003).
   - Every exact text is copied from page 2: the sample report (AC-08.1, with the run time `2026-11-07_143005`), the usage message (AC-09.2) (FR-002, FR-003; US5 scenario 3).
   - Every command works as written on a clean checkout (US5 scenario 2); every relative link opens a file or folder in the repository (US5 scenario 5).
-  - Names no company whose balances are processed ([DEC-02](../../docs/design-analysis/design-decisions.md#dec-02)) and no other project (FR-014; plan item 11).
+  - Names no company whose balances are processed ([DEC-02](../../docs/design-analysis/design-decisions.md#dec-02)) (FR-014; plan item 11).
   - The design reasoning is here, not in code comments ([DEC-30](../../docs/design-analysis/design-decisions.md#dec-30), [DEC-37](../../docs/design-analysis/design-decisions.md#dec-37)).
 - **Checks**: C-29 to C-33.
 

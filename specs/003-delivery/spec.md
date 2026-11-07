@@ -254,7 +254,7 @@ The solution is submitted as a link to the GitHub repository, made public or sha
 **Acceptance Scenarios**:
 
 1. **What the repository holds** (DEC-38, DEC-01).
-   - **Given** the pushed branch, **When** `git ls-files` lists it, **Then** it includes `README.md`, `Gemfile`, `Gemfile.lock`, `.ruby-version`, `.gitignore`, `.gitattributes`, `.rspec`, `Dockerfile`, the workflow file, `bin/run`, the code folders, `spec/` (with `spec/fixtures/sample/`), `data/mable_account_balances.csv`, `data/mable_transactions.csv`, `docs/` and `specs/`.
+   - **Given** the pushed branch, **When** `git ls-files` lists it, **Then** it includes `README.md`, `Gemfile`, `Gemfile.lock`, `.ruby-version`, `.gitignore`, `.gitattributes`, `.rspec`, `.rubocop.yml`, `Dockerfile`, the workflow file, `bin/run`, the code folders, `spec/` (with `spec/fixtures/sample/`), `data/mable_account_balances.csv`, `data/mable_transactions.csv`, `docs/` and `specs/`.
 2. **Nothing generated** (DEC-27, DEC-36).
    - **Given** the same listing, **When** it is searched, **Then** no path is under `output/` or `coverage/`, and `git status` on a checkout after a run and a test run shows no untracked file.
 3. **The challenge files are unchanged** (CLAUDE.md, DEC-22).
@@ -300,7 +300,7 @@ Each requirement cites the NFR or decision it serves. The README requirements (F
 - **FR-011** (DEC-37, DEC-03, DEC-18, DEC-32; page 9 risks, page 10 known limitations): the README MUST give (a) what a version with persistent storage would need to stay idempotent (remembering which files and transfers were applied, so a rerun cannot apply a day twice), and that remembering applied files across runs is out of scope; (b) the production items: very large files (streaming or chunking), and a database repository with database transactions or sagas; (c) the known limitations from page 9's risks table and page 10, each in one line (decided in the run, item 11).
 - **FR-012** (DEC-36): the README MUST show the test coverage figure as SimpleCov prints it for line coverage after a full `bundle exec rspec` run on the final code (the percentage and the covered and total line counts), say that the full report is in `coverage/index.html` after a test run, and state no minimum.
 - **FR-013** (DEC-37, CLAUDE.md "Prompt log"): the README MUST have a "How this was built" section that says the design and code were made with an AI assistant, and lists the four steps (design analysis, solution design, GitHub Spec Kit specification, test-first implementation through the Spec Kit tasks), each with a link to its documents: `docs/design-analysis/design-decisions.md`, `docs/solution-design/README.md`, `.specify/memory/constitution.md` and `specs/`, and the prompt logs in `docs/prompts/` (decided in the run, item 12).
-- **FR-014** (DEC-37, DEC-38): the README MUST keep a link to the challenge in `docs/challenge/` and a repository layout table updated for the finished repository, and MUST replace the current "Status" and "To be added" sections; it MUST NOT name the company whose balances are processed ([DEC-02](../../docs/design-analysis/design-decisions.md#dec-02)) and MUST NOT name any other project; the challenge's own name is kept in the title and the challenge link (plan item 11).
+- **FR-014** (DEC-37, DEC-38): the README MUST keep a link to the challenge in `docs/challenge/` and a repository layout table updated for the finished repository, and MUST replace the current "Status" and "To be added" sections; it MUST NOT name the company whose balances are processed ([DEC-02](../../docs/design-analysis/design-decisions.md#dec-02)); the challenge's own name is kept in the title and the challenge link (plan item 11).
 
 **Language version and portability ([NFR-04](../../docs/solution-design/03-non-functional-requirements.md#nfr-04))**
 
@@ -345,7 +345,7 @@ Names and meanings as in the [page 10 glossary](../../docs/solution-design/10-tr
 - **Clean checkout**: a fresh clone of the pushed branch in a new, empty folder (Conventions).
 - **Submission**: the link to the GitHub repository (DEC-38).
 - Changed here: `Gemfile.lock` (platforms added, gem versions unchanged, FR-017); `bin/run` (content unchanged; Git mode set to 100755 if needed, FR-018).
-- Used from `001` and `002`, unchanged: `.ruby-version`, `Gemfile`, `.gitignore`, `.rspec`, `Runner`, `data/`, `spec/fixtures/sample/`.
+- Used from `001` and `002`, unchanged: `.ruby-version`, `Gemfile`, `.gitignore`, `.rspec`, `.rubocop.yml`, `Runner`, `data/`, `spec/fixtures/sample/`.
 
 ## Success Criteria *(mandatory)*
 
