@@ -282,9 +282,12 @@ The run's accounts are held in one place. It refuses a second account with the s
 **Acceptance Scenarios**:
 
 1. **Given** accounts `1111234522226789`, `1212343433335665` and `0000123412341234` added in that order, **When** `all` is called, **Then** it returns them in that order (domain outcome; DEC-31).
+- Run outcome: covered by AC-01.1 on page 2 (FR-01, owned and run by `002`): standard output lists the final balances of the accounts in file order, standard error (nothing), exit status 0.
 2. **Given** `1111234522226789` is held, **When** `include?` is called with an `AccountNumber` built from `1111234522226789`, **Then** it is true; for `9999888877776666` it is false (domain outcome; DEC-12, DEC-31).
+- Run outcome: none of its own (covered by AC-01.4, owned by `002`).
 3. **Given** `1111234522226789` is held, **When** another `Account` with that number is added, whether its balance is the same or different, **Then** `add` raises `DuplicateAccount` with the message `account 1111234522226789 appears more than once`, and the first account and its balance are kept (domain outcome; DEC-11, DEC-31).
 4. **Given** `1111234522226789` is held, **When** `find` is called with it, **Then** it returns that same `Account`, so a change made through it is seen by `all` (domain outcome).
+- Run outcome: none of its own (covered by AC-01.1, owned by `002`).
 5. Run outcome: the duplicate account appears on standard error as `  Line 5: account 1111234522226789 appears more than once (first on line 1)` in AC-01.4, with standard output (nothing) and exit status 1. That criterion is FR-01, owned and run by `002`; `LoadBalances` adds `Line N: ` and ` (first on line M)` around the domain wording.
 
 ---
@@ -300,8 +303,11 @@ Every amount and balance is exact after any number of transfers, with no fractio
 **Acceptance Scenarios**:
 
 1. **Given** `Money` of `0.00`, **When** `25.60` is added 1,000 times and then taken away 1,000 times, **Then** the value after the additions is exactly `25600.00` and the final value is exactly `0.00` (domain outcome; NFR-01, solution design pick 21).
+- Run outcome: none of its own (covered by AC-08.1, owned by `002`).
 2. **Given** `Money` of `0.10` and `0.20`, **When** they are added, **Then** the sum is exactly `0.30` (domain outcome).
+- Run outcome: none of its own (covered by AC-08.1, owned by `002`).
 3. **Given** a very large value such as `123456789012345678901234567890.12`, **When** `0.01` is added, **Then** the result is written as `123456789012345678901234567890.13`; there is no upper limit (domain outcome; DEC-09).
+- Run outcome: none of its own (covered by AC-08.1, owned by `002`).
 4. **Given** the five sample accounts `1111234522226789` 5000.00, `1111234522221234` 10000.00, `2222123433331212` 550.00, `1212343433335665` 1200.00 and `3212343433335755` 50000.00, **When** the four sample transfers are applied through `TransferService` in this order: `1111234522226789` to `1212343433335665` `500.00`; `3212343433335755` to `2222123433331212` `1000.00`; `3212343433335755` to `1111234522226789` `320.50`; `1111234522221234` to `1212343433335665` `25.60`, **Then** the balances are exactly 4820.50, 9974.40, 1550.00, 1725.60 and 48679.50, and their total is 66750.00 before and after (domain outcome; DEC-35).
 5. Run outcome: the sample files end to end are AC-08.1 (FR-08, owned and run by `002`): standard error (nothing), exit status 0, and the final balances section of standard output:
 

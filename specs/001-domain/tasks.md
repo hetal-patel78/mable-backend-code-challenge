@@ -213,14 +213,14 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 ## Phase 8: User Story 1 - A valid transfer moves the money, all or nothing (Priority: P1) MVP
 
-**Goal**: `TransferService` and `TransferResult` (FR-03; DEC-13, DEC-14, DEC-16, DEC-18, DEC-19). With this phase every domain outcome in the spec is covered, including the service-level views of AC-04.1 to AC-04.3, AC-05.1 to AC-05.3 and US6 scenario 4, which need the service.
+**Goal**: `TransferService` and `TransferResult` (FR-03; DEC-13, DEC-14, DEC-16, DEC-18, DEC-19). With this phase every domain outcome in the spec is covered, including the service-level views of AC-04.1 to AC-04.3, AC-05.1, AC-05.2, US3 scenario 3 and US6 scenario 4, which need the service.
 
 **Independent Test**: build the three accounts in a repository, apply transfers through `TransferService`, and check the balances and the errors raised; build `TransferResult`s and check what they return.
 
 ### Tests for User Story 1 (write first)
 
 - [ ] T039 [P] [US1] Add the builder `transfer(from: '1111234522226789', to: '1212343433335665', amount: '30.00')` to `spec/support/builders.rb`, taking text and building `Transfer.new` with `account_number` and `amount`; and the helper `three_accounts`, returning `repository_with` the three accounts of the spec's `balances.csv` [DEC-34; research R10]
-- [ ] T040 [P] [US1] Write `spec/domain/transfer_service_spec.rb`, every example on `three_accounts` unless it says otherwise, comparing the balances of `all` as one array [FR-019 to FR-021, FR-034; AC-03.1 to AC-03.3, AC-04.1 to AC-04.3, AC-05.1 to AC-05.3, US1 scenario 4, US6 scenario 4; SC-002]:
+- [ ] T040 [P] [US1] Write `spec/domain/transfer_service_spec.rb`, every example on `three_accounts` unless it says otherwise, comparing the balances of `all` as one array [FR-019 to FR-021, FR-034; AC-03.1 to AC-03.3, AC-04.1 to AC-04.3, AC-05.1, AC-05.2, US3 scenario 3, US1 scenario 4, US6 scenario 4; SC-002]:
   - applied: `1111234522226789` to `1212343433335665` `30.00` gives `70.00 80.00 0.00` (AC-03.1; DEC-13);
   - `apply` returns nil (D12);
   - exactly $0: `1111234522226789` to `1212343433335665` `100.00` gives `0.00 150.00 0.00` (AC-04.2; DEC-13 edge case);
@@ -233,7 +233,7 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
   - after that refusal, `all` holds only the three loaded account numbers (AC-05.1; DEC-17);
   - unknown from account: `9999888877776666` to `1111234522226789` `10.00` raises `UnknownAccount`, `account 9999888877776666 is not loaded` (AC-05.2; DEC-17);
   - after that refusal, the balances are unchanged (AC-05.2; DEC-18);
-  - both unknown: `9999888877776666` to `8888777766665555` `10.00` raises `UnknownAccount` naming the from account, `account 9999888877776666 is not loaded` (AC-05.3; DEC-17 edge case; spec item 10);
+  - both unknown: `9999888877776666` to `8888777766665555` `10.00` raises `UnknownAccount` naming the from account, `account 9999888877776666 is not loaded` (US3 scenario 3; DEC-17 edge case; spec item 10);
   - unknown account and too much money: `9999888877776666` to `1111234522226789` `1000000.00` raises `UnknownAccount`, not `InsufficientFunds`, because both lookups come before the withdrawal (AC-03.3; DEC-18, DEC-19 edge case);
   - refused while building the transfer: after `attempt(InvalidAmount) { service.apply(transfer(amount: '0')) }` the balances are unchanged, after `attempt(SameAccount) { service.apply(transfer(to: '1111234522226789')) }` the balances are unchanged, and after `attempt(InvalidAccountNumber) { service.apply(transfer(from: '12345')) }` the balances are `100.00 50.00 0.00` (AC-03.2; DEC-18 edge case);
   - the total stays the same after every refusal: after one refused transfer of each of `InvalidAccountNumber`, `InvalidAmount`, `SameAccount`, `UnknownAccount` and `InsufficientFunds`, the balances add up to `150.00` (AC-03.2; SC-002);

@@ -26,6 +26,7 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
   RuboCop reads the target Ruby version from `.ruby-version` (plan D15).
 - **Rationale**: DEC-36 asks for default settings and `rubocop-rspec`; current `rubocop-rspec` releases are loaded with `plugins:`. The defaults that shape the code are `Metrics/MethodLength` (10 lines), `Metrics/AbcSize`, `Style/Documentation` (a comment before each class), `Style/FrozenStringLiteralComment`; for specs `RSpec/MultipleExpectations` (1), `RSpec/ExampleLength` (5), `RSpec/NestedGroups` (3), `RSpec/SpecFilePathFormat` and `RSpec/DescribeClass`. Pending new cops print a notice but are not offences.
 - **Alternatives considered**: `require: rubocop-rspec` (the older form, which current versions warn about); `NewCops: enable` or changed limits (not the defaults).
+- **Open conflict (R2-01)**: core RuboCop's `Metrics/BlockLength` (default Max 25) also applies to spec files, and the planned one-describe-per-class spec files are longer than 25 lines. Zero offences with default settings cannot then be reached; the one setting needed is `Metrics/BlockLength: Exclude: [spec/**/*]`. DEC-36 and page 3 NFR-05 say "default settings", and this spec may not change them, so the setting is not added here. It needs a "Run change:" amendment of DEC-36 (brief rule 5); it is reported as a blocker.
 
 ## R4. Account number pattern
 
