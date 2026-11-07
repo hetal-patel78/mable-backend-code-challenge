@@ -37,5 +37,6 @@
 - "Success criteria are technology-agnostic": SC-005 counts style-checker offences and SC-008 counts test runs; both measure outcomes that NFR-05 and DEC-36 set as targets, not a design choice.
 - "Scope is clearly bounded": the spec owns FR-03 to FR-06, NFR-01, NFR-02 and NFR-05 only; the domain rules behind FR-01, FR-02 and FR-08 are built here but owned by `002`; the page 4 out-of-scope list is repeated under Assumptions.
 - "All acceptance scenarios are defined": every page 2 criterion of FR-03 to FR-06 (AC-03.1 to AC-03.3, AC-04.1 to AC-04.3, AC-05.1, AC-05.2, AC-06.1 to AC-06.3) appears with its domain outcome and its run outcome (standard output, standard error and exit status stated separately). Lines not printed on page 2 are marked **(derived)**.
-- Small gaps decided while writing are listed in the spec's "Decided in the run" section (14 items).
+- Small gaps decided while writing are listed in the spec's "Decided in the run" section (14 items, plus items 15 to 17 from `/speckit-clarify`).
+- Re-validated after `/speckit-clarify` on 2026-11-07 (3 questions answered): 16/16 items passing before and after; no item changed state.
 - Items marked incomplete require spec updates before `/speckit-clarify` or `/speckit-plan`
