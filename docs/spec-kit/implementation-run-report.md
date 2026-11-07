@@ -185,8 +185,8 @@ After round 6 approved, the only change was the commit that records the approval
   - `LoadBalances.new(reader, repository).call(path)`. `ProcessDailyTransfer.new(run_time: Time.now, **parts)` takes exactly the six named parts, and `call(balances_path, transfers_path, output_path = nil)` returns the DayResult.
   - DayResult is a Data value with `results`, `total_before`, `total_after`, `accounts` and `output_path`, and the counts, `rejected_counts` in DEC-19 order (only the reasons that occurred), `all_rejected?`, and `ALL_REJECTED_WARNING`. The report and the run-end log count the same results.
   - Each run-stopping error builds its own message and `stop_reason`. The reason from the system is the message up to Ruby's " @ " call details.
-  - `DisplayPath.of(path, folder = Dir.pwd)` shows a path relative to the current folder when the file is in it, below it, or below its parent (one `../` step), and in full otherwise. The Runner resolves each path to a real, absolute path and passes only real paths on, so `DayResult.output_path` holds the real path. The shown form is built with `DisplayPath` where each text is built: in the run-stopping errors' messages, in the `Run started` line and in the `Runner`'s start-check lines. `ReportPrinter` alone works out the shown output path.
-  - `CsvRows` reads with `CSV.open` and `csv.shift`, not `CSV.foreach`, because DEC-05 and DEC-07 need the raw line and the physical-line count (plan P29).
+  - `DisplayPath.of(path, folder = Dir.pwd)`, an infrastructure helper, shows a path relative to the current folder when the file is in it or below it, and in full otherwise (DEC-26). The Runner resolves each path to a real, absolute path for the start checks, then gives `ProcessDailyTransfer` the balances and transfers paths in their shown form and the output path in full, so `DayResult.output_path` holds the full path. Only `infrastructure/` uses `DisplayPath`: the Runner's start-check lines and the paths it passes on, `UnreadableFile` and `OutputNotWritable`, and `ReportPrinter`, which alone works out the shown output path. `InvalidBalancesFile.no_rows`, `NoTransfers` and the `Run started` line show the path they are given (page 6 pick 53).
+  - `CsvRows` reads with `CSV.open` and one row per `csv.shift`, as DEC-32 says, because DEC-05 and DEC-07 need the raw line and the physical-line count (plan P29).
   - `Runner.new(stdout:, stderr:, env:).run(arguments)` returns 0 or 1. `ReportPrinter.new(output:, current_folder:).print(day_result)`. The logger is at info when `LOG_LEVEL` is `casecmp?('info')`, otherwise warn.
   - The writer creates missing folders with `mkdir_p`, opens the file with `WRONLY|CREAT|EXCL|BINARY`, writes LF only, and deletes the file only if it created it before raising `OutputNotWritable`.
   - An applied amount is shown and logged as `Money.amount(text).to_s`. A rejected value is shown as written, and an empty value as `""`.
@@ -231,7 +231,13 @@ After round 6 approved, the only change was the commit that records the approval
 
 ### Changed in the run
 
-None. An early review claimed RuboCop could not reach zero offences under DEC-36; that was false, because rubocop-rspec's default configuration already excludes spec files from Metrics/BlockLength, so DEC-36 was not changed.
+Each change is its own "Run change:" commit, made under brief rule 5 after the [independent review after Part 1](#independent-review-after-part-1), following the chain decision, solution design, specs.
+
+- **Page 02 AC-08.4** (`197caa9`): from the project root the last report line is `Output file: output/final_balances_2026-11-07_143005.csv`; from `docs` the output file is outside the run folder, so the line shows its full path, `<project root>/output/final_balances_2026-11-07_143005.csv`, as [DEC-26](../design-analysis/design-decisions.md#dec-26) says. DEC-26 itself is unchanged.
+- **DEC-32** (`5ce0b1a`): the transfers file is read one row at a time with Ruby's CSV library (`CSV.open`, one row per `shift`), so the physical line number of each row is kept ([DEC-07](../design-analysis/design-decisions.md#dec-07)). The solution design did not name the method, so it is unchanged.
+- **Page 06 and page 10** (`bb2f85c`): the infrastructure helpers `CsvRows`, `Row` and `DisplayPath` are added to page 06, the page 10 components glossary and the assistant's picks (picks 52 and 53). The `Runner` passes `ProcessDailyTransfer` the balances and transfers paths in their shown form and the output path in full, so no application class works out a shown path.
+
+An early review claimed RuboCop could not reach zero offences under DEC-36; that was false, because rubocop-rspec's default configuration already excludes spec files from Metrics/BlockLength, so DEC-36 was not changed.
 
 ### Fixed in review
 
@@ -295,12 +301,30 @@ None. An early review claimed RuboCop could not reach zero offences under DEC-36
   - This report records step 7 review round 3 and its fix (round 4).
   - This report records step 7 review round 4 and its fix (round 5).
 
+### Independent review after Part 1
+
+After Part 1 was ready for review, an independent Claude Opus 5.5 agent that did not write the specs reviewed them against `design-decisions.md` and the solution design. The assistant that started the run decided how to fix each finding, and the fixes were made in the commits below.
+
+| # | Severity | Finding | Decision | Commits |
+|---|---|---|---|---|
+| 1 | Medium | 002 FR-029, the edge cases, plan P10, research R3, the command-line contract, tasks T011, T027 and T061, and 003's spec, quickstart and tasks T015 and T021 showed a file below the parent folder with one leading `../`. [DEC-26](../design-analysis/design-decisions.md#dec-26) shows the path relative to the folder the command was run from, or in full if the file is outside it; page 02 AC-08.4 contradicted DEC-26 | Follow DEC-26: page 02 AC-08.4 shows the full path when run from `docs`, and every spec, plan, research note, contract and task uses "relative when in or below the current folder, otherwise in full". The tests keep exact expected text: the run from a subfolder expects the full path built from the temporary folder (`run_scenario` returns `temp_folder`) | `197caa9` Run change: AC-08.4 shows the output path in full when run from docs (DEC-26); `14d5818` Fix independent review finding 1: show a path outside the run folder in full (DEC-26) |
+| 2 | Low | [DEC-32](../design-analysis/design-decisions.md#dec-32) named `CSV.foreach`, while 002 plan P29, research R1 and task T015 read with `CSV.open` and `csv.shift`, which [DEC-07](../design-analysis/design-decisions.md#dec-07)'s physical line numbers need | Reword DEC-32 to say the transfers file is read one row at a time with Ruby's CSV library (`CSV.open`, one row per `shift`), so physical line numbers are kept; the specs (FR-006, P29, R1, T015) cite that wording | `5ce0b1a` Run change: DEC-32 names CSV.open with one row per shift; `08c69d7` Fix independent review finding 2: specs cite DEC-32's CSV.open wording |
+| 3 | Low | 002 plan P2 `Row`, P3 `CsvRows` and P10 `DisplayPath` were not on page 06 or the page 10 glossary, and `DisplayPath` made `application/errors.rb` and `process_daily_transfer.rb` depend on `infrastructure/display_path` | Remove the application to infrastructure dependency: the `Runner` gives `ProcessDailyTransfer` the balances and transfers paths in their shown form and the output path in full, the application errors and `ProcessDailyTransfer` show the paths they are given, and only `infrastructure/` uses `DisplayPath`. `CsvRows`, `Row` and `DisplayPath` are added to page 06, the page 10 components glossary and the assistant's picks (52, 53) as infrastructure helpers. Every message and output stays the same | `bb2f85c` Run change: page 06 and 10 add the infrastructure helpers CsvRows, Row and DisplayPath; `0445dee` Fix independent review finding 3: no application class depends on DisplayPath |
+| 4 | Low | 002 tasks T039, T070 and T077: per-row and per-value `describe` groups would nest 4 levels, beyond RuboCop `RSpec/NestedGroups`' limit of 3 in the tasks' own convention | Each such group sits directly under its FR group, named with the AC ID and the value, for example `describe 'AC-09.5 LOG_LEVEL=INFO'`; the convention line says so too | `d88621c` Fix independent review finding 4: per-row and per-value groups sit under the FR group |
+
+| Round | Reviewer | Defects found | Result |
+|---|---|---|---|
+| 1 | Claude Opus 5.5, independent | 4 (1 medium, 3 low) | All 4 fixed in the commits above |
+
+A scripted check over `specs/`, the solution design and `design-decisions.md` then passed: no rule that shows a file below the parent folder with a leading `../`, no `CSV.foreach`, and no `application/` file, class or task that uses `infrastructure/display_path`. The same check fails on every point against the specification as it was before these commits. Two `application/` to `infrastructure/` uses remain, both set by the solution design and outside these findings: `LoadBalances` rescues `UnreadableFile` (page 6 pick 33) and `ProcessDailyTransfer` asks `FinalBalancesCsvWriter.default_path` when no output path is given (page 6 pick 35).
+
 ### Left for the developer
 
 1. Review the specs, plans and tasks, and every item under "Decided in the run" (the assistant's picks).
-2. 002 plan P29: `CsvRows` reads with `CSV.open` and `csv.shift` instead of the `CSV.foreach` named in DEC-32, because `CSV.foreach` gives neither the line number (DEC-07) nor the raw line (DEC-05). It still reads one row at a time, so no "Run change:" was made; confirm the mechanism.
-3. 001 plan D1 pins Ruby 3.4.12, the latest 3.4.x when the plan was written.
-4. Part 2 (implementation) is next.
+2. Finding 3 of the independent review: the infrastructure helpers `CsvRows`, `Row` and `DisplayPath` on page 06 and page 10 (picks 52 and 53), and the `Runner` passing `ProcessDailyTransfer` the balances and transfers paths in their shown form and the output path in full, so no application class depends on `DisplayPath`. Also confirm whether the two remaining `application/` to `infrastructure/` uses (page 6 picks 33 and 35) are acceptable.
+3. Finding 1 of the independent review: the path rule of DEC-26 as now applied everywhere, relative when the file is in or below the folder the command was run from, otherwise in full, so `../bin/run` from `docs` shows the output file's full path (page 02 AC-08.4).
+4. 001 plan D1 pins Ruby 3.4.12, the latest 3.4.x when the plan was written.
+5. Part 2 (implementation) is next.
 
 Medium and low `/speckit-analyze` issues left after round 3, not changed in this run:
 
@@ -308,12 +332,12 @@ Medium and low `/speckit-analyze` issues left after round 3, not changed in this
   - Low: the "Run outcome" bullets under User Story 5's scenarios 1, 2 and 4 (spec.md lines 281 to 288) start at column 0.
   - Low: the plan says three times that the seven error classes have no spec file of their own.
 - **002-file-runner** (1 medium, 5 low)
-  - Medium: plan P29 and research R1 read the transfers file with `CSV.open` and `csv.shift`, while DEC-32 names `CSV.foreach`.
+  - Medium: plan P29 and research R1 read the transfers file with `CSV.open` and `csv.shift`, while DEC-32 names `CSV.foreach`. Resolved by finding 2 of the [independent review after Part 1](#independent-review-after-part-1).
   - Low: research R9 says FakeReporter records only `printed` calls, while T019 also records `file_existed`.
   - Low: tasks.md does not say how the new support helpers reach the examples.
-  - Low: the nesting depth of variant scenarios is unclear against the three-level cap in the conventions.
+  - Low: the nesting depth of variant scenarios is unclear against the three-level cap in the conventions. Resolved by finding 4 of the [independent review after Part 1](#independent-review-after-part-1).
   - Low: the edge-case row for an invalid balances file with an empty transfers file cites T028, which the analyzer flags as not matching that case.
-  - Low: the parent-folder path rule is worded two ways (FR-029, plan P10 and the command-line contract say "exactly one leading ../").
+  - Low: the parent-folder path rule is worded two ways (FR-029, plan P10 and the command-line contract say "exactly one leading ../"). Resolved by finding 1 of the [independent review after Part 1](#independent-review-after-part-1).
 - **003-delivery** (4 low)
   - Low: quickstart.md C-43 and T059 (and T050) name different paths for the `git ls-files --eol` check.
   - Low: T059 sits in Phase 5, after T022, so the task IDs are out of sequence.
