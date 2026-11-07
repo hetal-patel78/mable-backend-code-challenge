@@ -6,7 +6,7 @@ Back to [project instructions](../../CLAUDE.md).
 
 ## Part 1: Specification
 
-Started by [P24](../prompts/prompts-spec-creation-phase.md#p24), from the branch `spec-kit-setup`.
+Started by [P24](../prompts/prompts-spec-creation-phase.md#p24), from the branch `spec-kit-setup`. Every review in Part 1 (each per-spec review round, the cross-check and the review before `main` is pushed) is done by an independent Claude Opus 5.5 agent that did not write or fix what it reviews ([P25](../prompts/prompts-spec-creation-phase.md#p25)); the reviewer model is recorded for each round.
 
 ### Status
 

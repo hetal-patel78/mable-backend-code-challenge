@@ -103,3 +103,9 @@ The prompt that started Part 1, given to a new session:
 > Run Part 1 (Specification) of `docs/spec-kit/spec-kit-brief.md`, following its shared rules exactly. Use a workflow (multi-agent orchestration with the Workflow tool) for the parallel steps, with the models in rule 6. Start from the local branch `spec-kit-setup`, which is checked out in `C:\Dev\mable-backend-code-challenge` and holds the Spec Kit set-up, the brief and the latest decisions; it is not pushed yet. Worktrees go in `C:\Dev\`, never inside the repository. Log this prompt as the next number in `docs/prompts/prompts-spec-creation-phase.md` (rule 7). Stop when the run report says "Specification ready for review". Do not start Part 2.
 
 Outcome: see the [run report](../spec-kit/implementation-run-report.md#part-1-specification).
+
+<a id="p25"></a>**P25. Use independent Opus reviewers for every review** (described, not quoted)
+
+During the Part 1 run, the developer instructed that every spec review in Part 1 is done by an independent Claude Opus 5.5 agent that did not write or fix what it reviews, so that any issues are picked up. This covers the per-spec review rounds, the cross-check and the review before `main` is pushed, and the reviewer model is recorded for each round in the run report.
+
+Outcome: every review in Part 1 ran on Opus with a new agent each round, and the [run report](../spec-kit/implementation-run-report.md#part-1-specification) records the reviewer of each round.
