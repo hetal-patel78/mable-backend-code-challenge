@@ -11,7 +11,7 @@ Code files load their own dependencies with `require_relative`. A spec requires 
 | `application/errors` | `InvalidBalancesFile`, `NoTransfers`, `TotalChanged` | `infrastructure/display_path` |
 | `application/load_balances` | `LoadBalances` | `domain/account_number`, `domain/money`, `domain/account`, `domain/errors`, `application/errors`, `infrastructure/errors` |
 | `application/day_result` | `DayResult` | `domain/transfer_result` |
-| `application/process_daily_transfer` | `ProcessDailyTransfer` | `application/load_balances`, `application/day_result`, `application/errors`, `domain/transfer`, `domain/transfer_result`, `domain/transfer_service`, `infrastructure/final_balances_csv_writer` (for `default_path`), `infrastructure/display_path` |
+| `application/process_daily_transfer` | `ProcessDailyTransfer` | `application/load_balances`, `application/day_result`, `application/errors`, `domain/account_number`, `domain/money`, `domain/errors`, `domain/transfer`, `domain/transfer_result`, `domain/transfer_service`, `infrastructure/final_balances_csv_writer` (for `default_path`), `infrastructure/display_path` |
 | `infrastructure/errors` | `UnreadableFile`, `OutputNotWritable` | `infrastructure/display_path` |
 | `infrastructure/row` | `Row` | |
 | `infrastructure/csv_rows` | `CsvRows` | `csv`, `infrastructure/row`, `infrastructure/errors` |
@@ -19,7 +19,7 @@ Code files load their own dependencies with `require_relative`. A spec requires 
 | `infrastructure/transfers_csv_reader` | `TransfersCsvReader` | `infrastructure/csv_rows` |
 | `infrastructure/display_path` | `DisplayPath` | `pathname` |
 | `infrastructure/final_balances_csv_writer` | `FinalBalancesCsvWriter` | `fileutils`, `infrastructure/errors` |
-| `infrastructure/report_printer` | `ReportPrinter` | `domain/money`, `infrastructure/display_path`, `infrastructure/transfers_csv_reader` |
+| `infrastructure/report_printer` | `ReportPrinter` | `domain/money`, `application/day_result`, `infrastructure/display_path`, `infrastructure/transfers_csv_reader` |
 | `infrastructure/runner` | `Runner` | `logger`, every class above, `domain/account_repository` |
 
 ## Reading
