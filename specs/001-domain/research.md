@@ -70,7 +70,7 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
 
 ## R10. Test helpers
 
-- **Decision**: `spec/support/builders.rb` defines a `Builders` module, included in every example group by `spec_helper.rb`, with builders that are valid by default: `account_number(text = '1111234522226789')`, `amount(text = '10.00')`, `balance(text = '100.00')`, `account(number = '1111234522226789', opening = '100.00')`, `transfer(from: ..., to: ..., amount: ...)` taking text, `repository_with(*accounts)`, and `attempt { ... }`, which runs the block and returns the domain error it raised (one of the seven), or nil; any other error is not rescued, so a bug still fails the test.
+- **Decision**: `spec/support/builders.rb` defines a `Builders` module, included in every example group by `spec_helper.rb`, with builders that are valid by default: `account_number(text = '1111234522226789')`, `amount(text = '10.00')`, `balance(text = '100.00')`, `account(number = '1111234522226789', opening = '100.00')`, `transfer(from: ..., to: ..., amount: ...)` taking text, `repository_with(*accounts)`, and `attempt(error_class) { ... }`, which runs the block and rescues only the named error, so any other error, including a wrong domain error, still fails the test. Each builder is added in the task phase that first needs it.
 - **Rationale**: DEC-34: small builders that are valid by default, so each test sets only the field it is about. `attempt` lets one example check an unchanged balance after a refusal while another checks the error, keeping one expectation per example (plan D17).
 - **Alternatives considered**: `FactoryBot` (another gem, ruled out by DEC-01); building every object by hand in each spec (long examples).
 
