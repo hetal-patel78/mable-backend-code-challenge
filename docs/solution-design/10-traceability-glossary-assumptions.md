@@ -1,0 +1,228 @@
+# 10. Traceability, glossary and assumptions
+
+Purpose: link every requirement to its decisions, components and tests, define every term once, and list the assumptions, known limitations, open questions and small details decided while writing this design.
+
+## Traceability
+
+Each requirement is listed with the decisions it comes from, the components and errors that implement it, and the kind of test that proves it. The test kinds follow [DEC-34](../design-analysis/design-decisions.md#dec-34) and the [testing strategy](09-considerations.md#testing-strategy):
+
+- **Unit**: a spec for one domain or application class, using builders and fakes, with no fixture files (the total-check spec writes to a temporary folder).
+- **Integration**: a spec for an infrastructure class (readers, writer, `ReportPrinter`, `Runner`), using fixture files or a temporary folder.
+- **End-to-end**: runs `bin/run` and checks the report, the output file and the exit status.
+
+### Functional requirements
+
+| Requirement | Decisions | Components and errors | Test kind |
+|---|---|---|---|
+| [FR-01](02-functional-requirements.md#fr-01-load-the-balances-file) Load the balances file | [DEC-04](../design-analysis/design-decisions.md#dec-04) to [DEC-12](../design-analysis/design-decisions.md#dec-12), [DEC-31](../design-analysis/design-decisions.md#dec-31) | `BalancesCsvReader`, `LoadBalances`, `AccountNumber`, `Money`, `Account`, `AccountRepository` (`include?`, `add`); `InvalidAccountNumber`, `InvalidAmount`, `NegativeBalance`, `DuplicateAccount`, `InvalidBalancesFile`, `UnreadableFile` | Unit: each value rule; `include?`; every problem collected with its line; the duplicate message naming both lines, reported before the balance problem; the known gap (first copy invalid); no-rows file. Integration: blank lines, header row, byte-order mark, unclosed quote, empty file, a file that cannot be opened, wrong field count. End-to-end: an invalid balances file. |
+| [FR-02](02-functional-requirements.md#fr-02-read-the-transfers-file) Read the transfers file | [DEC-04](../design-analysis/design-decisions.md#dec-04) to [DEC-07](../design-analysis/design-decisions.md#dec-07), [DEC-20](../design-analysis/design-decisions.md#dec-20), [DEC-21](../design-analysis/design-decisions.md#dec-21), [DEC-32](../design-analysis/design-decisions.md#dec-32) | `TransfersCsvReader`, `ProcessDailyTransfer`; `NoTransfers`, `UnreadableFile` | Unit, with fake readers: `NoTransfers`, the all-rejected warning. Integration: blank lines, header row, unclosed quote, wrong field count, a file that cannot be opened. End-to-end: an all-rejected file. |
+| [FR-03](02-functional-requirements.md#fr-03-apply-a-transfer) Apply a transfer | [DEC-13](../design-analysis/design-decisions.md#dec-13), [DEC-14](../design-analysis/design-decisions.md#dec-14), [DEC-16](../design-analysis/design-decisions.md#dec-16), [DEC-18](../design-analysis/design-decisions.md#dec-18), [DEC-19](../design-analysis/design-decisions.md#dec-19) | `Transfer`, `TransferService`, `Account`, `AccountRepository`, `TransferResult`, `ProcessDailyTransfer`; `SameAccount` | Unit: all-or-nothing transfer, each domain error mapped to its reason code in check order, two equal rows both applied. End-to-end: the sample files. |
+| [FR-04](02-functional-requirements.md#fr-04-a-transfer-that-would-take-an-account-below-0-and-exactly-0) Below $0, and exactly $0 | [DEC-13](../design-analysis/design-decisions.md#dec-13), [DEC-10](../design-analysis/design-decisions.md#dec-10), [DEC-19](../design-analysis/design-decisions.md#dec-19) | `Account`, `TransferService`, `ProcessDailyTransfer`; `InsufficientFunds` | Unit: exactly $0.00 left is applied; below $0 is rejected with both balances unchanged. End-to-end: mixed rejections. |
+| [FR-05](02-functional-requirements.md#fr-05-a-transfer-naming-an-account-that-is-not-loaded) Account not loaded | [DEC-17](../design-analysis/design-decisions.md#dec-17) | `AccountRepository`, `TransferService`, `ProcessDailyTransfer`; `UnknownAccount` | Unit: `find` raises, no account is created, the result is `unknown_account`. End-to-end: mixed rejections. |
+| [FR-06](02-functional-requirements.md#fr-06-validation-of-account-numbers-and-amounts) Validation of account numbers and amounts | [DEC-08](../design-analysis/design-decisions.md#dec-08), [DEC-09](../design-analysis/design-decisions.md#dec-09), [DEC-10](../design-analysis/design-decisions.md#dec-10), [DEC-19](../design-analysis/design-decisions.md#dec-19) | `AccountNumber`, `Money`, `Transfer`; `InvalidAccountNumber`, `InvalidAmount` | Unit: every valid and invalid value. Integration: an account number with leading zeros matched across both files. |
+| [FR-07](02-functional-requirements.md#fr-07-the-order-transfers-are-applied-in) Order of transfers | [DEC-15](../design-analysis/design-decisions.md#dec-15), [DEC-16](../design-analysis/design-decisions.md#dec-16) | `TransfersCsvReader`, `ProcessDailyTransfer` | Unit, with fake readers: file order, no retry of a rejected transfer. |
+| [FR-08](02-functional-requirements.md#fr-08-the-end-of-day-result-and-its-output) End-of-day result and output | [DEC-24](../design-analysis/design-decisions.md#dec-24), [DEC-26](../design-analysis/design-decisions.md#dec-26), [DEC-27](../design-analysis/design-decisions.md#dec-27), [DEC-35](../design-analysis/design-decisions.md#dec-35) | `ProcessDailyTransfer`, `DayResult`, `FinalBalancesCsvWriter`, `ReportPrinter`; `TotalChanged`, `OutputNotWritable` | Unit: the report printed once through the reporter, after the file is written; the failed total check with a fake repository whose total changes and a fake reporter (`TotalChanged`, no output file, the reporter never called). Integration: `default_path` from a fixed run time, LF line endings, no overwrite, partial file removed, `OutputNotWritable`, output path shown relative or in full; the `Runner` with a stand-in `ProcessDailyTransfer` that raises `TotalChanged` (message, one log line, exit status 1). End-to-end: the sample files with every closing balance. |
+| [FR-09](02-functional-requirements.md#fr-09-the-runner) The runner | [DEC-02](../design-analysis/design-decisions.md#dec-02), [DEC-03](../design-analysis/design-decisions.md#dec-03), [DEC-22](../design-analysis/design-decisions.md#dec-22), [DEC-23](../design-analysis/design-decisions.md#dec-23), [DEC-25](../design-analysis/design-decisions.md#dec-25), [DEC-28](../design-analysis/design-decisions.md#dec-28), [DEC-29](../design-analysis/design-decisions.md#dec-29) | `Runner`, `bin/run`, `FinalBalancesCsvWriter.default_path`, `ProcessDailyTransfer` (logging and masking); every run-stopping error | Unit: events logged at each level, masked numbers as `************6789`. Integration: start checks reported together (missing inputs and an existing output file), an existing output file left unchanged, `LOG_LEVEL` values, each run-stopping error giving its message, one log line and exit status 1. End-to-end: usage message with 1 argument. |
+
+### Non-functional requirements
+
+| Requirement | Decisions | Components | Test kind |
+|---|---|---|---|
+| [NFR-01](03-non-functional-requirements.md#nfr-01) Money accuracy | [DEC-09](../design-analysis/design-decisions.md#dec-09), [DEC-35](../design-analysis/design-decisions.md#dec-35), [DEC-24](../design-analysis/design-decisions.md#dec-24) | `Money`, `ProcessDailyTransfer` (total check, `TotalChanged`) | Unit: repeated adding and taking away stays exact. End-to-end: the sample files. Plus the total check in every run. |
+| [NFR-02](03-non-functional-requirements.md#nfr-02) Cost of each operation | [DEC-18](../design-analysis/design-decisions.md#dec-18), [DEC-31](../design-analysis/design-decisions.md#dec-31) | `AccountRepository` (`add`, `include?`, `find`), `TransferService`, `Account` | No test: design review of the [time and space table](09-considerations.md#time-and-space). |
+| [NFR-03](03-non-functional-requirements.md#nfr-03) Scale | [DEC-32](../design-analysis/design-decisions.md#dec-32), [DEC-03](../design-analysis/design-decisions.md#dec-03) | `TransfersCsvReader`, `BalancesCsvReader`, `AccountRepository` | No test: design review. |
+| [NFR-04](03-non-functional-requirements.md#nfr-04) Language version and portability | [DEC-01](../design-analysis/design-decisions.md#dec-01), [DEC-36](../design-analysis/design-decisions.md#dec-36), [DEC-37](../design-analysis/design-decisions.md#dec-37), [DEC-22](../design-analysis/design-decisions.md#dec-22), [DEC-04](../design-analysis/design-decisions.md#dec-04) | `bin/run`, `Runner`, the CSV readers, `FinalBalancesCsvWriter` (LF line endings) | Integration: byte-order mark, LF line endings. Plus CI on every push, a Docker run and a Windows run before submission. |
+| [NFR-05](03-non-functional-requirements.md#nfr-05) Code organisation and readability | [DEC-30](../design-analysis/design-decisions.md#dec-30), [DEC-33](../design-analysis/design-decisions.md#dec-33), [DEC-36](../design-analysis/design-decisions.md#dec-36) | Every component | No test: RuboCop in CI (10 lines per method at most), and design review. |
+| [NFR-06](03-non-functional-requirements.md#nfr-06) Testability and coverage | [DEC-34](../design-analysis/design-decisions.md#dec-34), [DEC-36](../design-analysis/design-decisions.md#dec-36), [DEC-24](../design-analysis/design-decisions.md#dec-24), [DEC-30](../design-analysis/design-decisions.md#dec-30), [DEC-28](../design-analysis/design-decisions.md#dec-28) | `ProcessDailyTransfer` (run time, readers, writer, repository, reporter and logger passed in), the whole suite | Unit, integration and end-to-end, run in random order in CI; SimpleCov coverage report. |
+
+## Glossary
+
+Each term is defined once here. Component details are on the [components page](06-components.md).
+
+### Terms
+
+| Term | Meaning |
+|---|---|
+| Account number | Exactly 16 digits, kept as text so leading zeros stay ([DEC-08](../design-analysis/design-decisions.md#dec-08)). |
+| Aggregate root | The one model that owns a piece of changing data and guards its rules. Here it is `Account`. |
+| Applied | A transfer that passed every check and moved the money. |
+| Assistant's pick | A small detail the decisions leave open, decided by the AI assistant and listed below for the developer to review. |
+| Balances file | The CSV file of starting balances: `account number,balance`, no header. |
+| `BigDecimal` | Ruby's exact decimal number type, used for all money. |
+| Blank line | An empty line, or one with only spaces or tabs. It is skipped and not counted ([DEC-05](../design-analysis/design-decisions.md#dec-05)). |
+| Builder | A test helper that makes a valid object, so a test sets only the field it is about. |
+| Byte-order mark | An invisible marker some editors put at the start of a file. It is ignored. |
+| CI (continuous integration) | A service that runs the tests and RuboCop on every push; here, GitHub Actions. |
+| Completed run | A run that processed every transfers row, passed the total check and wrote the output file. It prints the report and exits with 0 ([DEC-25](../design-analysis/design-decisions.md#dec-25)). |
+| CSV | Comma-separated values: a text file with one row per line and values separated by commas. |
+| DEC-nn | The ID of a decision in [design-decisions.md](../design-analysis/design-decisions.md). |
+| Default output path | `output/final_balances_YYYY-MM-DD_HHMMSS.csv`, named from the run time and used when no third argument is given ([DEC-27](../design-analysis/design-decisions.md#dec-27)). |
+| Design review | A reviewer reading the design and the code against a stated target. |
+| Docker | A tool that packages the program with its Ruby version; the fallback way to run it. |
+| Documentation format | RSpec output that prints each test name as a sentence. |
+| Domain error | An error about one value, one row or one account. The application layer turns it into a balances problem or a rejected transfer, so it never stops the run by itself. |
+| Domain, application, infrastructure | The three layers and folders: business rules; the steps of a run; files, screen and command line ([DEC-30](../design-analysis/design-decisions.md#dec-30)). |
+| DTO | Data transfer object: a plain data carrier between layers. Not used here. |
+| End-to-end test | A test that runs `bin/run` and checks the report, the output file and the exit status. |
+| Exit status | The number the program returns: 0 for a completed run, 1 for a stopped run ([DEC-25](../design-analysis/design-decisions.md#dec-25)). |
+| Fake | A small test object that stands in for a part passed in, for example readers that give rows from memory, a repository whose total changes ([DEC-24](../design-analysis/design-decisions.md#dec-24)), or a reporter that records whether it was called. |
+| Fixture file | A small prepared file kept with the tests, used only for file-level behaviour. |
+| Floating point | A binary number format that cannot hold values such as 25.60 exactly. Not used for money. |
+| FR-nn, NFR-nn | A functional requirement ([page 2](02-functional-requirements.md)) or a non-functional requirement ([page 3](03-non-functional-requirements.md)). |
+| Gem | A packaged Ruby library; `bundle install` installs the project's gems at the locked versions. |
+| Growth rate | How the time or memory of a step changes as its input grows, for example O(1) (stays the same) or O(m) (grows with m). |
+| Header hint | The message `This looks like a header row; files must not have a header.` added to a header-looking first row ([DEC-06](../design-analysis/design-decisions.md#dec-06)). |
+| Integration test | A spec for an infrastructure class that reads or writes real files, using fixture files or a temporary folder; page 3 calls it a fixture-file test. |
+| LF | Line feed only: the line ending used in the output file on every operating system. |
+| Line number | The physical line in the file, starting at 1 and counting blank lines ([DEC-07](../design-analysis/design-decisions.md#dec-07)). |
+| Log line | A timestamped line from Ruby's `Logger` on standard error. |
+| `LOG_LEVEL` | The environment variable that sets the log level: `warn` (default) or `info` ([DEC-28](../design-analysis/design-decisions.md#dec-28)). |
+| Masked account number | For a valid account number, 12 asterisks and the last 4 digits, for example `************6789`. For any other value, every character except the last 4 becomes an asterisk, and a value of 4 characters or fewer is shown as `****`. Used only in logs ([DEC-29](../design-analysis/design-decisions.md#dec-29)). |
+| Orthogonal tests | Tests where each rule is tested once, so one broken rule fails one spec ([DEC-34](../design-analysis/design-decisions.md#dec-34)). |
+| Output file | The CSV of final balances written by a completed run, in the balances file format ([DEC-27](../design-analysis/design-decisions.md#dec-27)). |
+| Passed in | A class is given the parts it uses when it is created, instead of creating them itself, so a test can pass a fake in their place. |
+| Reason code | The one reason a transfer was rejected: `malformed_row`, `invalid_account_number`, `invalid_amount`, `same_account`, `unknown_account` or `insufficient_funds`, in that check order ([DEC-19](../design-analysis/design-decisions.md#dec-19)). |
+| Rejected | A transfer that failed a check. No balance changes and the run continues. |
+| Report | What a completed run prints on standard output: transfers, summary, warning, final balances, output path ([DEC-26](../design-analysis/design-decisions.md#dec-26)). |
+| Reporter | The part passed in to `ProcessDailyTransfer` that prints the report; here `ReportPrinter`. |
+| Repository | The one place that holds the accounts, finds them by number and knows whether a number is already held. |
+| RSpec | The Ruby testing tool the challenge asks for. |
+| RuboCop | A style checker for Ruby code. |
+| Run time | The date and time a run started, read once by the `Runner`; it names the default output file ([DEC-30](../design-analysis/design-decisions.md#dec-30), [DEC-27](../design-analysis/design-decisions.md#dec-27)). |
+| Run-stopping error | An error that ends the run: the `Runner` prints its message, logs one error line and returns exit status 1 ([DEC-25](../design-analysis/design-decisions.md#dec-25)). |
+| SimpleCov | A tool that measures test coverage, the share of the code the tests run. |
+| Spec | One RSpec test file, or one test in it. |
+| Standard output, standard error | The two text streams a command writes to. The report goes to standard output; messages and log lines go to standard error. |
+| Start checks | The `Runner`'s checks, before anything is read, that both input files exist and the output file does not. Every problem found is reported together ([DEC-23](../design-analysis/design-decisions.md#dec-23)). |
+| Stopped run | A run that ended early for one of the reasons in [DEC-25](../design-analysis/design-decisions.md#dec-25). No report, no output file, exit status 1. |
+| Stub | In a test, replacing a method so it returns a stand-in. The `Runner` spec stubs `ProcessDailyTransfer.new` to reach the total-check error path. |
+| Total check | The check that the total of all balances is the same after the transfers as before ([DEC-24](../design-analysis/design-decisions.md#dec-24)). |
+| Transfers file | The CSV file of one day's transfers: `from account number,to account number,amount`, no header. |
+| Unit test | A spec for one domain or application class, using builders and fakes, with no fixture files (the total-check spec writes to a temporary folder). |
+| Unknown account | A valid 16-digit account number that is not in the balances file; a transfer naming one is rejected ([DEC-17](../design-analysis/design-decisions.md#dec-17)). |
+| Usage message | The message printed on standard error for a wrong number of arguments ([DEC-22](../design-analysis/design-decisions.md#dec-22)). |
+| Value model | A model whose data never changes once built; two with the same content are equal, for example `Money`. |
+
+### Components
+
+| Component | Layer | One-line meaning |
+|---|---|---|
+| `AccountNumber` | Domain | One valid 16-digit account number. |
+| `Money` | Domain | One exact amount with at most 2 decimal places. |
+| `Account` | Domain | The aggregate root: an account number and a balance that never goes below $0. |
+| `Transfer` | Domain | One request to move an amount from one account to another. |
+| `TransferResult` | Domain | The outcome of one transfers row: applied, or rejected with one reason code. |
+| `AccountRepository` | Domain | Holds the accounts in memory; `add`, `include?`, `find` and `all`. |
+| `AccountRepository#include?` | Domain | Says whether an account number is already held; `LoadBalances` asks it before checking a row's balance, to report a duplicate. |
+| `TransferService` | Domain | Applies one `Transfer`, all or nothing. |
+| `InvalidAccountNumber` | Domain error | Raised by `AccountNumber` for text that is not exactly 16 digits. |
+| `InvalidAmount` | Domain error | Raised by `Money` for a bad format or more than 2 decimal places, and by `Transfer` for an amount of $0 or less. |
+| `SameAccount` | Domain error | Raised by `Transfer` when both sides name the same account. |
+| `NegativeBalance` | Domain error | Raised by `Account` for a negative opening balance. |
+| `UnknownAccount` | Domain error | Raised by `AccountRepository#find` for a number that is not held. |
+| `DuplicateAccount` | Domain error | Raised by `AccountRepository#add` for a number already held; a guard, since `LoadBalances` finds duplicates first with `include?`. |
+| `InsufficientFunds` | Domain error | Raised by `Account#withdraw` when the balance would go below $0. |
+| `LoadBalances` | Application | Turns balances rows into accounts, or reports every problem. |
+| `ProcessDailyTransfer` | Application | Runs the day with the parts passed in: writes the output file, prints the report through the reporter, and returns a `DayResult`. |
+| `DayResult` | Application | Everything the report needs about a completed run. |
+| `InvalidBalancesFile` | Run-stopping error, application | Raised by `LoadBalances`; carries every balances problem with its line number. |
+| `NoTransfers` | Run-stopping error, application | Raised by `ProcessDailyTransfer` for a transfers file with no rows. |
+| `TotalChanged` | Run-stopping error, application | Raised by `ProcessDailyTransfer` when the total after differs from the total before. |
+| `BalancesCsvReader`, `TransfersCsvReader` | Infrastructure | Read a CSV file and give each row with its line number. |
+| `FinalBalancesCsvWriter` | Infrastructure | Gives the default output path for a run time (the class method `default_path`) and writes the output file. |
+| `ReportPrinter` | Infrastructure | The reporter: prints the report on standard output. |
+| `UnreadableFile` | Run-stopping error, infrastructure | Raised by the readers for a file that cannot be opened, or that cannot be read past a line, naming the line. |
+| `OutputNotWritable` | Run-stopping error, infrastructure | Raised by `FinalBalancesCsvWriter` when the output file cannot be written, with the system's reason. |
+| `Runner` | Infrastructure | Checks the arguments and files, reads the clock once, builds the real parts, runs the day, prints error messages and returns the exit status. |
+| `bin/run` | Command | The command a user types; calls `Runner`. |
+
+## Assumptions
+
+The assumptions are kept in [design-decisions.md](../design-analysis/design-decisions.md#assumptions); in short:
+
+- The balances file lists every account of the company ([DEC-17](../design-analysis/design-decisions.md#dec-17)).
+- The order of the transfers rows is the order the company intends ([DEC-15](../design-analysis/design-decisions.md#dec-15)).
+- Money is dollars and cents, one currency ([DEC-09](../design-analysis/design-decisions.md#dec-09)).
+- One transfers file holds one day's transfers ([DEC-02](../design-analysis/design-decisions.md#dec-02)).
+- An account number may start with 0 ([DEC-08](../design-analysis/design-decisions.md#dec-08)).
+- The rubric's "test files" are the two sample CSV files ([DEC-35](../design-analysis/design-decisions.md#dec-35)).
+- One person runs the program from the command line ([DEC-22](../design-analysis/design-decisions.md#dec-22)).
+- The input files are UTF-8 text ([DEC-04](../design-analysis/design-decisions.md#dec-04)).
+- A day's transfers fit in memory ([DEC-32](../design-analysis/design-decisions.md#dec-32)).
+- The reviewer has Ruby 3.4, or Docker ([DEC-36](../design-analysis/design-decisions.md#dec-36)).
+
+## Known limitations
+
+The full list of risks and limits is on the [considerations page](09-considerations.md#risks-and-known-limitations). One comes from a developer decision and is noted here as well:
+
+- **A duplicate whose first copy is invalid.** If the first copy of an account has an invalid balance, it is never added to the repository, so the later copy is not seen as a duplicate. The duplicate is reported only after the first row is fixed. The run still stops either way, and the repository stays the one place that knows about duplicates ([DEC-12](../design-analysis/design-decisions.md#dec-12), [DEC-31](../design-analysis/design-decisions.md#dec-31); AC-01.10 on [page 2](02-functional-requirements.md#fr-01-load-the-balances-file)).
+
+## Open questions
+
+None. The developer answered the earlier open questions (error names, the run time and default output path, what is passed in to `ProcessDailyTransfer`, start checks reported together, and a duplicate account with an invalid balance) in prompt P19, and every page now follows those answers.
+
+## Assistant's picks in this design
+
+Every small detail decided while writing the solution design. Each is marked "(assistant's pick)" on its page, with two kinds of exception. Picks 4, 19, 23, 24, 31, 43 and 44 are about how a page is written (example values, numbering, formatting, wording and diagram notation) and change no behaviour. Picks 22 and 27 are stated without a mark: page 3 gives pick 22 as a measurable target, and page 6 gives pick 27 as following the order in [DEC-19](../design-analysis/design-decisions.md#dec-19). They are waiting for the developer's review.
+
+| # | Page | Pick | Reason | Rejected |
+|---|---|---|---|---|
+| 1 | [02](02-functional-requirements.md) | The exact report layout (two spaces between parts; sections Transfers, Summary, Final balances, Output file; counts per reason under "Rejected", in [DEC-19](../design-analysis/design-decisions.md#dec-19) order) | [DEC-26](../design-analysis/design-decisions.md#dec-26) leaves the layout to the solution design | Other layouts, such as a table with borders |
+| 2 | [02](02-functional-requirements.md) | The exact wording of every message on standard error, including the usage message | The decisions say a clear message is printed, not its words | Ruby's own error text |
+| 3 | [02](02-functional-requirements.md), [07/09](07-logical-flow/09-run-output-and-exit-code.md) | The wording of every log line, and one `Run stopped` error line per stopped run; the usage message has no log line | The run never started for wrong arguments; [DEC-28](../design-analysis/design-decisions.md#dec-28) gives only an example | Logging the wrong-arguments case; free-form log text |
+| 4 | All | Examples use the run time 2026-11-07 14:30:05 local time, from the project root | One time makes every example's output file name agree | A different time on each page |
+| 5 | [01](01-request-summary.md) | The rubric headings "Object Orientation" and "General", at the end of checkbox lines, are read as headings for the items after them | Each names the group that follows; reading it as part of the item before gives text that makes no sense | Reading them as part of the item before; leaving the items ungrouped |
+| 6 | [02](02-functional-requirements.md) (AC-01.5) | Problems in one balances row are listed in field order | Reads left to right, like the row | Any other order |
+| 7 | [02](02-functional-requirements.md) | A balances row with the wrong number of fields reports only the field-count problem | It is not known which value is which | Checking the values by position too |
+| 8 | [02](02-functional-requirements.md) (AC-01.8) | An empty balances file logs `Run stopped: balances file invalid: 1 problem` | It is an invalid balances file under [DEC-11](../design-analysis/design-decisions.md#dec-11) | A separate log message |
+| 9 | [02](02-functional-requirements.md) (AC-01.9) | An unreadable balances line is one more problem line, `Line N: cannot read <file> from this line. Check for an unclosed quote or characters that are not text.`, counted as one problem | Keeps one message listing every balances problem | A separate error after the list; not counting it |
+| 10 | [02](02-functional-requirements.md) | The header hint after a field-count problem is joined with ". " | One readable sentence per line | Putting the hint on a second line |
+| 11 | [02](02-functional-requirements.md) (AC-02.2) | An empty value is shown as `""` in the report and logs (empty account values masked as `****`) | A blank would be invisible, for example for a `,,` row | Showing nothing |
+| 12 | [02](02-functional-requirements.md) | A transfers row with the wrong number of fields shows no values in the report (`malformed_row: N fields, expected 3`); its log line shows the fields by position, leaving out missing fields and fields after the third | It is not known which value is which, so the report does not guess; the log line follows [DEC-28](../design-analysis/design-decisions.md#dec-28) and can still be matched to the row | Showing the values in the report; logging no fields; logging every field |
+| 13 | [02](02-functional-requirements.md) (AC-01.10) | When a duplicate row also has an invalid balance, the duplicate problem line comes before the balance problem line | The duplicate belongs to the account number field, so this follows the field order in AC-01.5; it also matches the duplicate check running before the balance check | Balance problem first; reporting only the duplicate for that row |
+| 14 | [02](02-functional-requirements.md) (AC-09.4) | An output path that is an existing folder gives "cannot write output file" | It is not an existing file; [DEC-25](../design-analysis/design-decisions.md#dec-25) names a folder path as a write failure | Reporting it as "already exists" |
+| 15 | [02](02-functional-requirements.md) | Every file path in a message or log line is shown like the output path in the report | One rule for every path the user sees; [DEC-26](../design-analysis/design-decisions.md#dec-26) sets it only for the output path | Showing paths as typed |
+| 16 | [02](02-functional-requirements.md) (AC-09.3a) | An input file that exists but cannot be opened gives `Error: cannot read file <path>: <reason from the system>`, then `Run stopped: cannot read file`, no output and exit status 1 (raised as `UnreadableFile`) | [DEC-23](../design-analysis/design-decisions.md#dec-23) gives no wording; this follows the write-failure message and reuses an existing log line | Folding it into "file not found"; a new log line; printing the raw exception |
+| 17 | [02](02-functional-requirements.md) (AC-08.3), [06](06-components.md#finalbalancescsvwriter), [09](09-considerations.md#portability-and-ci) | Every line of the output CSV ends with LF only, the last line included, on every operating system | The same run gives the same bytes everywhere, so a test can compare the file exactly; a final line feed matches what Ruby's CSV library writes for each row, and the file reads back as the next day's balances file | No newline after the last line; the operating system's own line ending (CRLF on Windows) |
+| 18 | [02](02-functional-requirements.md) (AC-09.3) | Start-check `Error:` lines are printed in the order balances, transfers, output, followed by one log line `Run stopped: start checks failed (<reasons>)` listing only the reasons that occurred | This is the argument order, so the user reads the problems in the order they typed the paths; every problem is reported together so the user can fix them all at once, and one log line per stopped run keeps the log short | The output check first; grouping by reason in another order; one log line per problem; a fixed list of reasons whatever occurred |
+| 19 | [02](02-functional-requirements.md) | After deleting criteria, the rest were renumbered: AC-03.3 and AC-03.4 became AC-03.2 and AC-03.3, and AC-09.5 to AC-09.9 became AC-09.4 to AC-09.8. Not marked on the page, because it is numbering, not behaviour | Continuous numbers are easier to cite; no other page cites a renumbered ID | Keeping the old numbers with a "merged" note (gaps look like missing criteria) |
+| 20 | [03](03-non-functional-requirements.md#nfr-04) | `ruby bin/run` is run by hand on Windows on the sample files before submission | [DEC-37](../design-analysis/design-decisions.md#dec-37) names the command but not how it is checked; CI checks one platform | A Windows CI job (adds to [DEC-36](../design-analysis/design-decisions.md#dec-36)); not checking Windows |
+| 21 | [03](03-non-functional-requirements.md#nfr-01) | A unit test adds and takes away a value such as 25.60 many times and checks it stays exact | Makes "exact after any number of transfers" measurable; 25.60 is the example in [DEC-09](../design-analysis/design-decisions.md#dec-09) | Relying only on the sample end-to-end test; a randomised test (another tool) |
+| 22 | [03](03-non-functional-requirements.md#nfr-05) | RuboCop's default limit of 10 lines per method is the measurable target for short methods | Turns the rubric's "short methods" into a number, checked by a tool [DEC-36](../design-analysis/design-decisions.md#dec-36) already runs | A different limit set in the RuboCop settings; no number, design review only |
+| 23 | [05](05-high-level-design.md#diagram-3-the-domain-models) | The model table keeps only the "Model" and "Rule it guards" columns; one sentence before it links to the errors table on page 6 | Removes a copy of page 6's errors table while still pointing readers to it | Dropping the model table (page 5 needs it for adding a transfer rule); keeping an "Error it raises" column (repeats page 6) |
+| 24 | [05](05-high-level-design.md#diagram-4-where-the-results-and-errors-go) | "For each error that reaches it, the Runner prints..." in place of "For each one" | An `UnreadableFile` at a line in the balances file is folded into `InvalidBalancesFile`, so not every `UnreadableFile` reaches the `Runner` | Keeping "For each one" |
+| 25 | [06](06-components.md#money) | `Money` accepts a leading minus sign and records it, so `-0.00` counts as negative; it does not decide whether a negative value is allowed | [DEC-09](../design-analysis/design-decisions.md#dec-09) treats `-0` as negative, and balances and amounts handle negatives differently | Refusing any minus sign; relying on `BigDecimal`'s sign (it treats -0 as not negative) |
+| 26 | [06](06-components.md#account) | The not-negative opening balance rule ([DEC-11](../design-analysis/design-decisions.md#dec-11)) lives in `Account`, also as a class-level check needing only the `Money`, so `LoadBalances` reports it even when the account number is invalid | Keeps the $0 rule in the aggregate root; [DEC-12](../design-analysis/design-decisions.md#dec-12) needs every problem in a row reported | Only in the constructor; in `Money`; in `LoadBalances` |
+| 27 | [06](06-components.md#transfer) | `Transfer` checks the amount before the same-account check | [DEC-19](../design-analysis/design-decisions.md#dec-19) puts `invalid_amount` before `same_account` | Checking the same account first |
+| 28 | [06](06-components.md#transferresult) | `TransferResult` holds the line number, the values as written, applied or a reason code, and the header message for a header-looking row | The report and log show values as written, with the header message after the reason | Holding only a `Transfer`; rebuilding the header message in `ReportPrinter` |
+| 29 | [06](06-components.md#accountrepository) | The repository method that says whether a number is already held is named `include?` | Ruby's usual name for a membership question, as on `Hash` and `Array` | `exists?`, `has_account?` |
+| 30 | [06](06-components.md#loadbalances) | When `LoadBalances` adds an `Account`, it records that row's line as the line where the account first appeared | With the known gap (first copy invalid, so a later copy is added), the duplicate message names the copy the repository holds | Recording the first line the number was seen on, even when that row was never added |
+| 31 | [06](06-components.md#loadbalances) | `LoadBalances` checks a row's field count first; for a row with the right number of fields, the account number, duplicate and balance checks run separately | Agrees with pick 7 and AC-01.6; a wording change only | The earlier "Each check runs separately", which contradicts the field-count step |
+| 32 | [06](06-components.md#loadbalances) | An empty balances file raises `InvalidBalancesFile` with a single no-rows problem, which keeps its own message | [DEC-11](../design-analysis/design-decisions.md#dec-11) lists an empty file as invalid, and `LoadBalances` is the one raiser of `InvalidBalancesFile`; the approved error list has no separate no-rows error | A separate `NoBalances` error; reusing `NoTransfers` for both files |
+| 33 | [06](06-components.md#loadbalances) | `LoadBalances` wraps only an `UnreadableFile` raised at a line (it becomes the last balances problem); an `UnreadableFile` for a file that cannot be opened passes straight through to the `Runner` | The open failure has its own message (pick 16), and no rows were read, so there is nothing to list with it | Wrapping every `UnreadableFile` into `InvalidBalancesFile` |
+| 34 | [06](06-components.md#processdailytransfer) | `ProcessDailyTransfer` creates `LoadBalances` and `TransferService` itself, giving them the parts it was given | Neither has an outside dependency of its own, so passing them in would add constructor arguments without making any test easier | Passing them in from the `Runner` as well |
+| 35 | [06](06-components.md#processdailytransfer) | `ProcessDailyTransfer` takes the three paths when it runs; the `Runner` always gives the output path, and if a caller leaves it out, `ProcessDailyTransfer` asks the writer for the default path for its own run time | Keeps [DEC-30](../design-analysis/design-decisions.md#dec-30) meaningful while the `Runner`'s checked path and the written path stay the same | Making the output path required; `ProcessDailyTransfer` always working out its own default (the checked and written paths could differ) |
+| 36 | [06](06-components.md#processdailytransfer) | The readers are built by the `Runner` without paths and are given the path when `ProcessDailyTransfer` asks them to read | `ProcessDailyTransfer` already receives the paths (it logs them in "Run started"), so one place hands each path to its reader | Building each reader with its path in the `Runner` (the paths would be held in two places) |
+| 37 | [06](06-components.md#processdailytransfer) | Masking ([DEC-29](../design-analysis/design-decisions.md#dec-29)) is a private step of `ProcessDailyTransfer` | It is the only class that logs account numbers, and invalid values are masked too | A method on `AccountNumber`; a new masking class |
+| 38 | [06](06-components.md#processdailytransfer) | The totals are added up from `AccountRepository#all` | Needs no new repository method; a fake repository can still change the total | A new total method on the repository |
+| 39 | [06](06-components.md#finalbalancescsvwriter) | The writer's default-path method is named `FinalBalancesCsvWriter.default_path(run_time)` | A plain name for what the `Runner` asks the writer class for; a class method, so the `Runner` can ask before it builds the writer after the start checks | `default_output_path`, `path_for` |
+| 40 | [06](06-components.md#finalbalancescsvwriter) | If the output file appears between the start check and the moment it is opened, the writer raises `OutputNotWritable` with the system's reason, and the existing file stays unchanged | [DEC-27](../design-analysis/design-decisions.md#dec-27) checks existence at opening as well as at the start; the writer's only error is `OutputNotWritable` | A separate "already exists" error from the writer |
+| 41 | [06](06-components.md#reportprinter) | `ReportPrinter` works out the output path to show, relative or in full | It is the only component that shows the path; `DayResult` keeps the real path | Working it out in `Runner` or `ProcessDailyTransfer` |
+| 42 | [06](06-components.md#runner) | `Runner` returns the exit status and `bin/run` exits with it | Every behaviour can be tested through `Runner` without ending the test process | `Runner` calling `exit` itself |
+| 43 | [07/02](07-logical-flow/02-sample-files-end-to-end.md) to [07/05](07-logical-flow/05-exactly-zero.md) | Diagrams show account numbers in full, for example `Account 1111234522226789` | [DEC-29](../design-analysis/design-decisions.md#dec-29) shows numbers in full outside the logs, and its only shortened form is the masked one; full numbers keep similar accounts apart | The masked form (meant for logs); short forms such as `Account 6789` |
+| 44 | [07](07-logical-flow/README.md) | `Error:` is written in backticks in the overview's step 6, as page 8 writes it | The two pages then look the same | Plain `Error:` with no backticks |
+| 45 | [09](09-considerations.md#error-handling-by-layer) | An unexpected error (a bug) is not caught: Ruby prints its stack trace and exits with 1 | A friendly catch-all would hide bugs; status 1 still means stopped | A catch-all message; a separate exit status ([DEC-25](../design-analysis/design-decisions.md#dec-25) has only 0 and 1) |
+| 46 | [09](09-considerations.md#testing-strategy) | The [DEC-24](../design-analysis/design-decisions.md#dec-24) test is split across two specs. The `ProcessDailyTransfer` spec passes a fake repository whose total changes and a fake reporter, and checks `TotalChanged` with its message, no output file and the reporter never called. The `Runner` spec stubs `ProcessDailyTransfer.new` to return a stand-in whose run raises `TotalChanged`, and checks the message on standard error, the one error log line and exit status 1 | Each spec proves the part its class owns; the `Runner` takes nothing passed in, so stubbing the constructor is the only way to reach this path without a test-only input, and the stub stands in for the whole application step, not a part the `Runner` owns | Letting the `Runner` accept a fake repository to pass through (a test-only input); one end-to-end run (correct code cannot change the total); stubbing `AccountRepository.new` (stands in for a part the class under test owns) |
+| 47 | [09](09-considerations.md#testing-strategy) | The total-check spec uses the real `FinalBalancesCsvWriter` with an output path in a temporary folder, then checks that the file does not exist | Proves the outcome [DEC-24](../design-analysis/design-decisions.md#dec-24) names (no output file), not only that a call was skipped | A fake writer that records calls |
+| 48 | [09](09-considerations.md#testing-strategy) | End-to-end specs run `bin/run` as a separate process with all three arguments, writing into a temporary folder | Proves the real command, and the file name is known without the clock | No arguments (writes into `output/`); calling `Runner` in the same process |
+| 49 | [09](09-considerations.md#time-and-space) | `AccountRepository` holds accounts in a Ruby `Hash` keyed by account number text, giving O(1) `find` and `include?`; loading balances costs one `include?` and one `add` per row | O(1) lookups and load order in one native structure | An `Array` (O(m) lookups); a `Hash` plus an order list |
+| 50 | [09](09-considerations.md#portability-and-ci) | The GitHub Actions workflow runs one job on the latest Ubuntu runner, with Ruby from `.ruby-version` | One source for the Ruby version, fastest feedback | An OS matrix; a Ruby version written in the workflow |
+| 51 | [02](02-functional-requirements.md) (AC-01.7), [06](06-components.md#loadbalances) | In the balances file, a header-looking first row with the wrong number of fields reports only the field-count problem, followed by the header hint | Applies the transfers rule in [DEC-06](../design-analysis/design-decisions.md#dec-06) to the balances file, so both files treat a header row the same way | Leaving out the hint for a balances row with the wrong number of fields |
+
+## Decision coverage
+
+Every decision, [DEC-01](../design-analysis/design-decisions.md#dec-01) to [DEC-38](../design-analysis/design-decisions.md#dec-38), is cited on at least one page of this design other than this one (checked by searching every page, including those in `07-logical-flow/` and `08-alternatives/`, for each `#dec-nn` link). No decision is uncited.
+
+---
+
+[Back to the solution design](README.md)
