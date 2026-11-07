@@ -66,15 +66,30 @@ Rules:
 
 ### `/speckit-clarify` (001-domain)
 
-Pending.
+```text
+Clarify specs/001-domain. There is no user to answer: for each question, choose the answer that design-decisions.md and the solution design support (or, for a small gap, the most reasonable choice consistent with them), and write it into the spec's Clarifications section.
+```
+
+The scan found three questions worth asking; every other category was already clear. Questions and the answers chosen:
+
+1. **Q:** When a transfers row has the wrong number of fields, does its `TransferResult` keep every field the row had, as written?
+   **A:** Yes. It keeps all of the row's fields, in order, as written after trimming, so their number gives `N fields, expected 3` and the log takes from, to and amount by position (page 2 FR-02 and FR-08; page 10 pick 12).
+2. **Q:** Are two `Money` values equal when one was written with a minus sign and the other was not, such as `-0` and `0`?
+   **A:** Yes. Equality and comparison use the exact amount only; the recorded minus sign changes only whether the value counts as negative, and a `Money` made by adding or taking away is negative only when below 0 (DEC-09; page 6 `Money`; page 10 pick 25).
+3. **Q:** Should `Account#withdraw` and `Account#deposit` themselves refuse an amount of $0 or less?
+   **A:** No. The amount-above-$0 rule lives only in `Transfer` (DEC-30, FR-028); `TransferService` passes them only the amount of a valid `Transfer`.
 
 ### `/speckit-plan` (001-domain)
 
-Pending.
+```text
+Plan specs/001-domain. The technical context is already fixed by design-decisions.md and page 5: Ruby 3.4.x, Bundler, RSpec (random order), RuboCop with rubocop-rspec, SimpleCov; the folder layout on page 5; class names and members on page 6 and in the page 10 glossary. Nothing else is added. Pick any name page 10 leaves open and list it under "Decided in the run" in the plan. Fill the constitution check against .specify/memory/constitution.md.
+```
 
 ### `/speckit-tasks` (001-domain)
 
-Pending.
+```text
+Write the tasks for specs/001-domain. Tests first in every phase (write the spec, see it fail, then the code), each phase ends with its specs passing; every edge case in design-decisions.md within this spec's scope has a planned test, citing its DEC ID; every task cites its FR/NFR and DEC IDs where it helps; follow the brief's test split (rule 4).
+```
 
 ## 002-file-runner
 

@@ -32,6 +32,14 @@ These are copied from [page 2](../../docs/solution-design/02-functional-requirem
 - Where a criterion shows only some lines of the report, the rest follows the report layout in [FR-08](../../docs/solution-design/02-functional-requirements.md#fr-08-the-end-of-day-result-and-its-output). Lines marked **(derived)** are not printed on page 2 for that criterion; they are built from the FR-08 layout, the masking rule in AC-09.6 and the all-rejected warning in [DEC-21](../../docs/design-analysis/design-decisions.md#dec-21), and they add no behaviour. Each single-row example uses the row as line 1 of `transfers.csv`.
 - When every transfer in a run is rejected, standard output also holds `Warning: All transfers were rejected; check this is the right file.` after the summary, and standard error ends with `W, [<timestamp> #<pid>]  WARN -- : All transfers were rejected; check this is the right file.` ([DEC-21](../../docs/design-analysis/design-decisions.md#dec-21)).
 
+## Clarifications
+
+### Session 2026-11-07
+
+- Q: When a transfers row has the wrong number of fields, does its `TransferResult` keep every field the row had, as written? → A: Yes. It keeps all of the row's fields, in order, as written after trimming, so the number of fields gives `N fields, expected 3` for the report and the log takes from, to and amount by position (page 2 FR-02 and FR-08; page 10 pick 12).
+- Q: Are two `Money` values equal when one was written with a minus sign and the other was not, such as `-0` and `0`? → A: Yes. Equality and comparison use the exact amount only; the recorded minus sign changes only whether the value counts as negative. A `Money` made by adding or taking away counts as negative only when its amount is below 0.
+- Q: Should `Account#withdraw` and `Account#deposit` themselves refuse an amount of $0 or less? → A: No. The amount-above-$0 rule lives only in `Transfer` (DEC-30, FR-028); `TransferService` passes them only the amount of a valid `Transfer`, so no test calls them with $0 or less.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A valid transfer moves the money, all or nothing (Priority: P1)
@@ -61,7 +69,7 @@ The company asks for an amount to move from one of its accounts to another. When
      - Standard error: (nothing)
      - Exit status: 0
 2. **AC-03.2 A rejected transfer changes nothing and the run continues** (FR-03; DEC-14, DEC-18).
-   - **Given** the three accounts above, **When** a transfer is refused for any of the domain reasons (`InvalidAmount`, `SameAccount`, `UnknownAccount`, `InsufficientFunds`), **Then** both accounts keep their balances, the total stays 150.00, and the next transfer can be applied (domain outcome). `TransferService` finds both accounts before it withdraws, and deposits only after the withdrawal succeeded, so nothing is ever undone.
+   - **Given** the three accounts above, **When** a transfer is refused for any of the domain reasons (`InvalidAccountNumber`, `InvalidAmount`, `SameAccount`, `UnknownAccount`, `InsufficientFunds`), **Then** both accounts keep their balances, the total stays 150.00, and the next transfer can be applied (domain outcome). `TransferService` finds both accounts before it withdraws, and deposits only after the withdrawal succeeded, so nothing is ever undone.
    - Run outcome, for any transfer rejected for any of the six reasons in AC-03.3:
      - Standard output: the report in the FR-08 layout, listing the row as `rejected` with its reason code, and the final balances unchanged.
      - Standard error: the row's warn line, `W, [<timestamp> #<pid>]  WARN -- : Line N rejected: ...` with its reason code (FR-09, owned by `002`).
@@ -79,7 +87,7 @@ The company asks for an amount to move from one of its accounts to another. When
 
    - **Given** `1111234522226789`, `1111234522226789` and `0`, **When** the `Transfer` is built, **Then** it raises `InvalidAmount` with the message `amount "0" must be greater than 0.00`, not `SameAccount`, because the amount is checked first (domain outcome; DEC-19, page 6 `Transfer`).
    - **Given** `9999888877776666`, `9999888877776666` and `5.00`, and a repository that does not hold `9999888877776666`, **When** the `Transfer` is built, **Then** it raises `SameAccount` with the message `account 9999888877776666 cannot transfer to itself` before any lookup, so the reason is not `unknown_account` (domain outcome).
-   - **Given** a `Transfer` from an account that is not loaded and an amount larger than any balance, **When** it is applied, **Then** `UnknownAccount` is raised, not `InsufficientFunds`, because both lookups run before the withdrawal (domain outcome; DEC-18).
+   - **Given** a `Transfer` from `1111234522226789` (balance 100.00) to `9999888877776666`, which is not loaded, of `1000000.00`, **When** it is applied, **Then** `UnknownAccount` is raised, not `InsufficientFunds`, because both lookups run before the withdrawal, and the balances are unchanged (domain outcome; DEC-18).
    - The first example on page 2, `12345,1212343433335665,abc`, depends on the order in which `ProcessDailyTransfer` builds the values (both `AccountNumber`s before the `Money`, page 7.1); that order is owned by `002`. The domain part is that `AccountNumber` raises `InvalidAccountNumber` for `12345` whatever the amount is.
    - Run outcomes (each row alone in `transfers.csv`; every transfer is rejected, so the all-rejected warning follows):
 
@@ -91,10 +99,14 @@ The company asks for an amount to move from one of its accounts to another. When
 
 4. **Two equal transfers are both applied** (FR-03; DEC-16).
    - **Given** the three accounts above, **When** two `Transfer`s from `1111234522226789` to `0000123412341234` of `20.00` are applied one after the other, **Then** both are applied and the balances are 60.00, 50.00 and 40.00 (domain outcome). There is no duplicate check.
-   - Run outcome: covered by AC-07.1 on page 2 (FR-07, owned by `002`); standard output ends with the final balances `  1111234522226789  60.00`, `  1212343433335665  50.00`, `  0000123412341234  40.00`, and the exit status is 0.
+   - Run outcome: covered by AC-07.1 on page 2 (FR-07, owned by `002`); line 1 (`0000123412341234,1212343433335665,20.00`) is rejected as `insufficient_funds`.
+     - Standard output contains `Final balances`, `  1111234522226789  60.00`, `  1212343433335665  50.00`, `  0000123412341234  40.00`.
+     - Standard error: `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************1234 -> ************5665 20.00 insufficient_funds` **(derived)**.
+     - Exit status: 0
 
 5. **The outcome of a transfers row is one `TransferResult`** (FR-03 domain part; FR-08 owned by `002`; DEC-19, DEC-06).
    - **Given** a line number, the row's values as written (after trimming) and the outcome, **When** a `TransferResult` is built, **Then** it says whether it was applied, gives no reason code when applied and exactly one of the six reason codes when rejected, and returns its line number and values unchanged. A rejected header-looking row also carries the header hint `This looks like a header row; files must not have a header.` (domain outcome).
+   - **Given** line 4 with the two fields `1111234522226789` and `1212343433335665`, **When** a rejected `TransferResult` with `malformed_row` is built, **Then** it returns both fields in that order, so their number is 2; a row of 4 fields returns all 4 (domain outcome; DEC-19, page 2 AC-02.1).
    - Run outcome: none of its own; `ReportPrinter` and the log lines that read it are owned by `002`.
 
 ---
@@ -166,8 +178,13 @@ Only accounts from the balances file exist. A transfer to or from any other vali
      - Exit status: 0
 3. **Both accounts unknown** (FR-05; DEC-17, page 7.6).
    - **Given** a repository that holds neither account, **When** a `Transfer` from `9999888877776666` to `8888777766665555` of `10.00` is applied, **Then** `UnknownAccount` is raised naming the from account, `account 9999888877776666 is not loaded`, because the from account is looked up first (domain outcome). The reason code is `unknown_account` whichever side is unknown.
+   - Run outcome, with `transfers.csv` holding `9999888877776666,8888777766665555,10.00`:
+     - Standard output contains `  Line 1  rejected  9999888877776666 -> 8888777766665555  10.00  unknown_account` **(derived)**.
+     - Standard error: `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************6666 -> ************5555 10.00 unknown_account` **(derived)**, then the all-rejected warn line.
+     - Exit status: 0
 4. **`find` never creates an account** (FR-05; DEC-17, DEC-31).
    - **Given** an empty repository, **When** `find` is called with `9999888877776666`, **Then** it raises `UnknownAccount`, and afterwards `include?` for that number is false and `all` is empty (domain outcome).
+   - Run outcome: none of its own (covered by AC-05.1).
 
 ---
 
@@ -216,7 +233,7 @@ An account number is exactly 16 digits, kept as text so leading zeros stay. A mo
      |---|---|
      | `10`, `10.5`, `10.50`, `007.50` | valid; written as `10.00`, `10.50`, `10.50`, `7.50` |
      | `0`, `0.00` | valid money, written as `0.00`; not negative |
-     | `-5.00`, `-0`, `-0.00` | valid money, and negative (the minus sign is recorded, so `-0` and `-0.00` count as negative) |
+     | `-5.00`, `-0`, `-0.00` | valid money, and negative (the minus sign is recorded, so `-0` and `-0.00` count as negative); `-0` and `-0.00` still equal `Money` built from `0` |
      | `1.234` | `InvalidAmount`: `amount "1.234" has more than 2 decimal places` (never rounded) |
      | (empty) | `InvalidAmount`: `amount is empty` |
      | `abc`, `10.`, `.50`, `+10`, `1e3`, `$10`, `1 0`, `1,000.00` | `InvalidAmount`: `amount "<text>" is not a valid amount`, for example `amount "abc" is not a valid amount` |
@@ -265,9 +282,12 @@ The run's accounts are held in one place. It refuses a second account with the s
 **Acceptance Scenarios**:
 
 1. **Given** accounts `1111234522226789`, `1212343433335665` and `0000123412341234` added in that order, **When** `all` is called, **Then** it returns them in that order (domain outcome; DEC-31).
+- Run outcome: covered by AC-01.1 on page 2 (FR-01, owned and run by `002`): standard output lists the final balances of the accounts in file order, standard error (nothing), exit status 0.
 2. **Given** `1111234522226789` is held, **When** `include?` is called with an `AccountNumber` built from `1111234522226789`, **Then** it is true; for `9999888877776666` it is false (domain outcome; DEC-12, DEC-31).
+- Run outcome: none of its own (covered by AC-01.4, owned by `002`).
 3. **Given** `1111234522226789` is held, **When** another `Account` with that number is added, whether its balance is the same or different, **Then** `add` raises `DuplicateAccount` with the message `account 1111234522226789 appears more than once`, and the first account and its balance are kept (domain outcome; DEC-11, DEC-31).
 4. **Given** `1111234522226789` is held, **When** `find` is called with it, **Then** it returns that same `Account`, so a change made through it is seen by `all` (domain outcome).
+- Run outcome: none of its own (covered by AC-01.1, owned by `002`).
 5. Run outcome: the duplicate account appears on standard error as `  Line 5: account 1111234522226789 appears more than once (first on line 1)` in AC-01.4, with standard output (nothing) and exit status 1. That criterion is FR-01, owned and run by `002`; `LoadBalances` adds `Line N: ` and ` (first on line M)` around the domain wording.
 
 ---
@@ -283,8 +303,11 @@ Every amount and balance is exact after any number of transfers, with no fractio
 **Acceptance Scenarios**:
 
 1. **Given** `Money` of `0.00`, **When** `25.60` is added 1,000 times and then taken away 1,000 times, **Then** the value after the additions is exactly `25600.00` and the final value is exactly `0.00` (domain outcome; NFR-01, solution design pick 21).
+- Run outcome: none of its own (covered by AC-08.1, owned by `002`).
 2. **Given** `Money` of `0.10` and `0.20`, **When** they are added, **Then** the sum is exactly `0.30` (domain outcome).
+- Run outcome: none of its own (covered by AC-08.1, owned by `002`).
 3. **Given** a very large value such as `123456789012345678901234567890.12`, **When** `0.01` is added, **Then** the result is written as `123456789012345678901234567890.13`; there is no upper limit (domain outcome; DEC-09).
+- Run outcome: none of its own (covered by AC-08.1, owned by `002`).
 4. **Given** the five sample accounts `1111234522226789` 5000.00, `1111234522221234` 10000.00, `2222123433331212` 550.00, `1212343433335665` 1200.00 and `3212343433335755` 50000.00, **When** the four sample transfers are applied through `TransferService` in this order: `1111234522226789` to `1212343433335665` `500.00`; `3212343433335755` to `2222123433331212` `1000.00`; `3212343433335755` to `1111234522226789` `320.50`; `1111234522221234` to `1212343433335665` `25.60`, **Then** the balances are exactly 4820.50, 9974.40, 1550.00, 1725.60 and 48679.50, and their total is 66750.00 before and after (domain outcome; DEC-35).
 5. Run outcome: the sample files end to end are AC-08.1 (FR-08, owned and run by `002`): standard error (nothing), exit status 0, and the final balances section of standard output:
 
@@ -322,12 +345,14 @@ A developer (or reviewer) clones the project, installs its gems, runs the tests 
 Each is covered by a domain unit test in this spec (DEC-34):
 
 - A transfer that leaves exactly $0.00 is applied; one cent more is refused (DEC-13; AC-04.1, AC-04.2).
-- A rejected transfer leaves both balances unchanged, for each of `InvalidAmount`, `SameAccount`, `UnknownAccount` and `InsufficientFunds` (DEC-18; AC-03.2).
-- A transfer naming an unknown account and asking for more than any balance gets `UnknownAccount`, because both lookups come before the withdrawal (DEC-18, DEC-19).
+- A rejected transfer leaves both balances unchanged, for each of `InvalidAccountNumber`, `InvalidAmount`, `SameAccount`, `UnknownAccount` and `InsufficientFunds` (DEC-18; AC-03.2).
+- A transfer from a known account without enough money to an unknown account gets `UnknownAccount`, because both lookups come before the withdrawal (DEC-18, DEC-19).
 - A transfer from an account to itself with an amount of 0 gets `InvalidAmount`, because the amount is checked before the accounts (DEC-19).
 - A transfer from an account to itself that is also not loaded gets `SameAccount`, because `Transfer` refuses it before any lookup (DEC-19).
 - Both accounts unknown: `UnknownAccount` names the from account (DEC-17).
-- `-0` and `-0.00` are negative: refused as a transfer amount (`InvalidAmount`) and as an opening balance (`NegativeBalance`) (DEC-09).
+- `-0` and `-0.00` are negative: refused as a transfer amount (`InvalidAmount`) and as an opening balance (`NegativeBalance`) (DEC-09). As `Money` they still equal `0`, because equality uses the amount only.
+- A `Money` made by taking away is negative only when its amount is below 0 (for example `5.00` minus `5.00` is `0.00` and not negative).
+- A `malformed_row` result keeps every field of the row, whether it has fewer or more than 3 (DEC-19).
 - `0` and `0.00` are a valid opening balance but not a valid transfer amount (DEC-10).
 - `007.50` is valid and written as `7.50`; `10.` and `.50` are invalid (DEC-09).
 - `+100`, `1e3`, `$100`, `1,000.00` and values with spaces inside are invalid (DEC-09).
@@ -351,9 +376,9 @@ Each is covered by a domain unit test in this spec (DEC-34):
 **Money ([FR-06](../../docs/solution-design/02-functional-requirements.md#fr-06-validation-of-account-numbers-and-amounts), [NFR-01](../../docs/solution-design/03-non-functional-requirements.md#nfr-01))**
 
 - **FR-003** (FR-06, NFR-01; DEC-09): `Money` MUST accept text that is digits, optionally followed by a point and 1 or 2 digits, with an optional leading minus sign, and MUST hold the value as an exact decimal, never as floating point. A value never passes through floating point on the way in.
-- **FR-004** (FR-06; DEC-09): `Money` MUST record that a minus sign was written, so `-0` and `-0.00` count as negative, and MUST NOT itself decide whether a negative value is allowed.
+- **FR-004** (FR-06; DEC-09): `Money` MUST record that a minus sign was written, so `-0` and `-0.00` count as negative, and MUST NOT itself decide whether a negative value is allowed. The recorded sign changes only whether the value counts as negative; a `Money` made by adding or taking away counts as negative only when its amount is below 0.
 - **FR-005** (FR-06, NFR-01; DEC-09): `Money` MUST raise `InvalidAmount` for: empty text (message `<label> is empty`); digits with a point and 3 or more decimal places, with or without a leading minus sign (message `<label> "<text>" has more than 2 decimal places`); and any other text (message `<label> "<text>" is not a valid amount`). `<label>` is `balance` for an opening balance and `amount` for a transfer amount; `<text>` is the text as given. It MUST never round or truncate.
-- **FR-006** (NFR-01; DEC-09): `Money` MUST support adding, taking away and comparing values exactly, with no upper limit, and two `Money` values of the same amount MUST be equal.
+- **FR-006** (NFR-01; DEC-09): `Money` MUST support adding, taking away and comparing values exactly, with no upper limit, and two `Money` values of the same amount MUST be equal, whatever sign was written (`-0` equals `0`).
 - **FR-007** (NFR-01; DEC-09): `Money` MUST write itself with exactly 2 decimal places and no leading zeros before the units digit: `550` is written `550.00`, `007.50` is written `7.50`, `10.5` is written `10.50`.
 
 **Transfers ([FR-03](../../docs/solution-design/02-functional-requirements.md#fr-03-apply-a-transfer), [FR-06](../../docs/solution-design/02-functional-requirements.md#fr-06-validation-of-account-numbers-and-amounts))**
@@ -365,7 +390,7 @@ Each is covered by a domain unit test in this spec (DEC-34):
 
 - **FR-010** (FR-04; DEC-13, DEC-30): `Account` MUST be the aggregate root: it owns its `AccountNumber` and its balance, and its balance MUST change only through `withdraw` and `deposit`.
 - **FR-011** (FR-04; DEC-13, DEC-18): `Account#withdraw(money)` MUST compare first and change the balance only when the balance minus the amount is $0.00 or more; otherwise it MUST raise `InsufficientFunds` with the message `account <number> cannot pay <amount> from a balance of <balance>` (amounts written with 2 decimal places) and leave the balance unchanged. A withdrawal that leaves exactly $0.00 MUST succeed.
-- **FR-012** (FR-03; DEC-18): `Account#deposit(money)` MUST add the amount and cannot fail.
+- **FR-012** (FR-03; DEC-18): `Account#deposit(money)` MUST add the amount and cannot fail. Neither `withdraw` nor `deposit` checks that the amount is above $0; that rule lives only in `Transfer` (FR-008, FR-028), and `TransferService` passes them only the amount of a valid `Transfer`.
 - **FR-013** (FR-06, supports FR-01; DEC-10, DEC-11): `Account` MUST refuse a negative opening balance with `NegativeBalance` and the message `balance "<text>" must not be negative`, and MUST accept an opening balance of `0.00`. The same check MUST be available on `Account` as a class-level check that needs only the `Money`, so it can run when the row's account number is invalid.
 
 **Repository ([FR-05](../../docs/solution-design/02-functional-requirements.md#fr-05-a-transfer-naming-an-account-that-is-not-loaded); supports FR-01)**
@@ -384,7 +409,7 @@ Each is covered by a domain unit test in this spec (DEC-34):
 
 **Transfer results ([FR-03](../../docs/solution-design/02-functional-requirements.md#fr-03-apply-a-transfer); supports FR-08)**
 
-- **FR-022** (FR-03; DEC-19): `TransferResult` MUST hold the line number, the row's values as written (after trimming), and either applied or exactly one reason code from `malformed_row`, `invalid_account_number`, `invalid_amount`, `same_account`, `unknown_account` and `insufficient_funds`. It is a domain result, not a data transfer object.
+- **FR-022** (FR-03; DEC-19): `TransferResult` MUST hold the line number, the row's values as written (after trimming: every field the row had, in order, so a `malformed_row` result keeps fewer or more than 3 and their number gives the field count), and either applied or exactly one reason code from `malformed_row`, `invalid_account_number`, `invalid_amount`, `same_account`, `unknown_account` and `insufficient_funds`. It is a domain result, not a data transfer object.
 - **FR-023** (FR-03; DEC-06, DEC-19): a rejected `TransferResult` for a header-looking row MUST also carry the header hint `This looks like a header row; files must not have a header.`; any other result carries none.
 - **FR-024** (FR-03; DEC-19, DEC-26): the six reason codes MUST be defined once in the domain, in the [DEC-19](../../docs/design-analysis/design-decisions.md#dec-19) check order, so the summary (`002`) can list counts in that order.
 - **FR-025** (FR-03; DEC-26): `TransferResult` MUST NOT format itself for the screen or the log.
@@ -440,7 +465,7 @@ Names and meanings as on [page 6](../../docs/solution-design/06-components.md) a
 - **`Money`** (value): one exact amount with at most 2 decimal places, written with exactly 2; records a written minus sign. Rule: money format. Error: `InvalidAmount`.
 - **`Account`** (aggregate root): an account number and a balance that never goes below $0. Members: its number, its balance, `withdraw`, `deposit`, and the class-level opening-balance check. Rules: no overdraft; opening balance not negative. Errors: `InsufficientFunds`, `NegativeBalance`.
 - **`Transfer`** (value): one request to move an amount from one account to another; refers to accounts by number. Rules: amount above $0, then different accounts. Errors: `InvalidAmount`, `SameAccount`.
-- **`TransferResult`** (domain result): the outcome of one transfers row: line number, values as written, applied or one reason code, and the header hint when it applies.
+- **`TransferResult`** (domain result): the outcome of one transfers row: line number, every field as written, applied or one reason code, and the header hint when it applies.
 - **`AccountRepository`**: holds the run's accounts in memory, in load order; `add`, `include?`, `find`, `all`. Rules: no duplicate on add; unknown account on find. Errors: `DuplicateAccount`, `UnknownAccount`.
 - **`TransferService`**: applies one `Transfer`, all or nothing: find both, withdraw, deposit.
 - **Domain errors**: `InvalidAccountNumber`, `InvalidAmount`, `SameAccount`, `NegativeBalance`, `UnknownAccount`, `DuplicateAccount`, `InsufficientFunds`.
@@ -485,3 +510,6 @@ Small gaps decided while writing this spec, consistent with `design-decisions.md
 | 12 | Run-outcome lines marked **(derived)** are built from the FR-08 layout, AC-09.6 masking and DEC-21, where page 2 gives no full output for that criterion | DEC-21, DEC-26, DEC-29 | The brief asks for standard output, standard error and exit status in every scenario; deriving adds no behaviour | Leaving the channels unstated |
 | 13 | Each single-row example on page 2 is the only row of `transfers.csv`, on line 1 | FR-03 to FR-06 | Page 2 gives the rows without line numbers | Other line numbers |
 | 14 | The exact Ruby 3.4.x version is recorded by the plan, from the latest release when the plan is written | DEC-01 | The decision says "the latest 3.4.x release"; the number depends on when the plan runs | A version written into this spec |
+| 15 | A `TransferResult` keeps every field of its row, in order, as written; for `malformed_row` the number of fields gives `N fields, expected 3` | DEC-19, page 2 FR-08, page 10 pick 12 | The report needs the field count and the log takes fields by position; keeping the fields gives both with no extra member | A separate field-count member; keeping only the first 3 fields (loses the count) |
+| 16 | `Money` equality and comparison use the amount only, so `-0` equals `0`; the written minus sign changes only whether the value counts as negative, and a computed `Money` is negative only below 0 | DEC-09, page 6 `Money`, page 10 pick 25 | A value model is equal by content, and the content is the amount; the sign is recorded only so `-0` is refused | Equality that also compares the written sign (`-0` not equal to `0`) |
+| 17 | `Account#withdraw` and `#deposit` do not check that the amount is above $0 | DEC-30, FR-028 | Each rule lives in one place, and that rule is in `Transfer`; `TransferService` passes only amounts of valid transfers | Repeating the above-$0 check in `Account` (two places for one rule) |
