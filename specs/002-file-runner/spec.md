@@ -686,6 +686,11 @@ A user runs `bin/run` with 0, 2 or 3 positional arguments. The runner checks the
 6. **AC-09.6 Account numbers are masked only in log lines** (FR-09; DEC-26, DEC-29).
    - Log lines show 12 asterisks and the last 4 characters: `************6789`. A value that is not a valid account number is masked the same way (`12345` becomes `*2345`), and a value of 4 characters or fewer, including an empty value, becomes `****`.
    - The report, the error messages and the output file show full account numbers. Error log lines show no account numbers at all.
+   - **(derived)** **Given** the sample files in `data/`, **When** `LOG_LEVEL=info bin/run` runs, **Then**:
+     - Standard output: exactly the report in AC-08.1, with every account number in full (for example `1111234522226789`).
+     - Standard error: exactly the six info lines of AC-09.5, with every account number masked as `************NNNN` and no run of 16 digits.
+     - Exit status: 0
+   - **(derived)** A stopped run (AC-01.4 with `LOG_LEVEL=info`): standard output (nothing); standard error as in AC-09.5's stopped-run example, with full account numbers in the `Error:` lines and none in the error log line; exit status 1.
 7. **AC-09.7 Every run starts from the balances file** (FR-09; DEC-02, DEC-03, DEC-27).
    - **Given** the sample files, **When** `bin/run` runs twice, one second apart, **Then** both runs give the same report and the same final balances, and each writes its own file (`..._143005.csv` and `..._143006.csv`). For both runs: standard output is AC-08.1's report apart from the `Output file:` line, which shows the run's own file; standard error (nothing); exit status 0. Nothing in the report, the logs or the output names a company.
    - Test (decided in the run, item 4): `FinalBalancesCsvWriter.default_path` gives `output/final_balances_2026-11-07_143005.csv` and `output/final_balances_2026-11-07_143006.csv` for run times one second apart; two runner runs on the same sample files, with the two output paths, give identical standard output apart from the `Output file:` line and identical output files.
