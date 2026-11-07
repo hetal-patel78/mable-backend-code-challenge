@@ -184,7 +184,9 @@ specs/003-delivery: the technical context is already fixed by design-decisions.m
 
 ### `/speckit-tasks` (003-delivery)
 
-Pending.
+```text
+specs/003-delivery: tests first in every phase (write the spec, see it fail, then the code), each phase ends with its specs passing; every edge case in design-decisions.md within this spec's scope has a planned test, citing its DEC ID; every task cites its FR/NFR and DEC IDs where it helps; follow the brief's test split (rule 4). This spec is checked by CI, a Docker run, a Windows run from a clean checkout and a README check, not by new RSpec specs: its tasks are those checks and documents.
+```
 
 ## Whole specification
 
