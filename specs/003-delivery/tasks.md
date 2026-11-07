@@ -8,7 +8,7 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 
 **Prerequisites**: `001-domain` and `002-file-runner` are implemented on the branch this work starts from (brief Part 2 step 2).
 
-**Tests**: this spec adds no RSpec spec (brief rule 4; FR-030). Its tests are the checks C-01 to C-39 in [quickstart.md](quickstart.md). In every phase the check comes first: run it, see it fail (or, for a phase that adds no file, see that it exists and is ready), then make the change, then run it again until it passes. Every phase ends with its checks passing, `bundle exec rspec` passing in random order and `bundle exec rubocop` reporting no offences (constitution, Development workflow). Each result is recorded in `docs/spec-kit/implementation-run-report.md` (Part 2 section) with the platform, date, commit and evidence; a check that cannot run on the machine at hand is recorded as left for the developer, never as passed (FR-025; C-28).
+**Tests**: this spec adds no RSpec spec (brief rule 4; FR-030). Its tests are the checks C-01 to C-40 in [quickstart.md](quickstart.md). In every phase the check comes first: run it, see it fail (or, for a phase that adds no file, see that it exists and is ready), then make the change, then run it again until it passes. Every phase ends with its checks passing, `bundle exec rspec` passing in random order and `bundle exec rubocop` reporting no offences (constitution, Development workflow). Each result is recorded in `docs/spec-kit/implementation-run-report.md` (Part 2 section) with the platform, date, commit and evidence; a check that cannot run on the machine at hand is recorded as left for the developer, never as passed (FR-025; C-28).
 
 **Organization**: by user story, in the order the files depend on each other: the repository files, then CI (US4), the Ruby runs (US1, US2), Docker (US3), the README (US5, which needs the commands and the coverage figure proved first), then the push and the submission (US6).
 
@@ -97,9 +97,9 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 **Independent Test**: C-13 to C-16 in PowerShell on Windows with RubyInstaller at the version in `.ruby-version`. If no such Ruby is available, they are left for the developer (C-28). This story adds no file.
 
 - [ ] T018 [US2] Make the Windows clean checkout: `git clone -c core.autocrlf=true --branch <this implementation branch> $REPO $env:CHECKS\win`; then `$env:BUNDLE_FROZEN='true'; bundle install` succeeds and `git status --porcelain` prints nothing (C-13 first part; FR-017; DEC-01; plan item 15).
-- [ ] T019 [US2] Run C-13: `ruby bin/run` from the project root; `$LASTEXITCODE` is 0; standard output equals `report.txt` with `<run time>` filled in, with `/` in `Output file: output/final_balances_<run time>.csv`; standard error empty; the output file's bytes equal `final.csv` (LF, not CRLF) (US2 scenario 1; AC-08.1, AC-08.3; DEC-22, DEC-35, DEC-37; spec item 3; page 10 pick 17).
-- [ ] T020 [US2] Run C-14: `ruby bin/run -h`; `$LASTEXITCODE` is 1; standard output empty; standard error equals `usage.txt` (US2 scenario 2; AC-09.2; DEC-22, DEC-25).
-- [ ] T021 [US2] Run C-15: `ruby ..\bin\run` from `docs`; exit 0; last line `Output file: ../output/final_balances_<run time>.csv` (edge case "A run from another folder on Windows"; AC-08.4; DEC-22, DEC-26).
+- [ ] T019 [US2] Run C-13: `cmd /c "ruby bin/run > ..\wout.txt 2> ..\werr.txt"` from the project root (cmd keeps the bytes; plain PowerShell redirection would not); `$LASTEXITCODE` is 0; `wout.txt` equals `report.txt` with `<run time>` filled in, byte for byte, with `/` in `Output file: output/final_balances_<run time>.csv`; `werr.txt` is 0 bytes; the output file's bytes equal `final.csv` (LF, not CRLF) (US2 scenario 1; AC-08.1, AC-08.3; DEC-22, DEC-35, DEC-37; spec item 3; page 10 pick 17).
+- [ ] T020 [US2] Run C-14: `cmd /c "ruby bin/run -h > ..\hout.txt 2> ..\herr.txt"`; `$LASTEXITCODE` is 1; `hout.txt` is 0 bytes; `herr.txt` equals `usage.txt` byte for byte (US2 scenario 2; AC-09.2; DEC-22, DEC-25).
+- [ ] T021 [US2] Run C-15: `cmd /c "ruby ..\bin\run > ..\..\dout.txt"` from `docs`; exit 0; `dout.txt` is the sample report byte for byte except its last line, which is `Output file: ../output/final_balances_<run time>.csv` (edge case "A run from another folder on Windows"; AC-08.4; DEC-22, DEC-26).
 - [ ] T022 [US2] Run C-16: `git ls-files --eol data/` shows `w/crlf` for both files, so T019 proved CRLF input gives the sample report (US2 scenario 3; edge case "Line endings in a Windows checkout"; DEC-04). Record C-13 to C-16 in the run report.
 
 **Checkpoint**: C-13 to C-16 pass (or are left for the developer, C-28).
@@ -177,7 +177,7 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 
 - [ ] T048 Run C-34 on this branch against the tip of `002-file-runner`'s implementation: `git diff --stat <002 tip> HEAD -- lib spec data` prints nothing (FR-030, SC-007; brief rule 4).
 - [ ] T049 [US4] After the review loop finds 0 defects and the branch is pushed (brief Part 2 step 2), run C-07 on the pushed head commit: one run, conclusion `success`, a frozen install, `0 failures`, `no offenses detected` (US4 scenario 1; FR-020, SC-002; DEC-36). A failure is fixed on the branch, test-first, and pushed again.
-- [ ] T050 [US6] After the implementation branches are merged and `main` is pushed (brief Part 2 step 4), make fresh clean checkouts of `origin` `main` and repeat C-08 to C-12 (as Phase 4), C-13 to C-16 (as Phase 5) and C-17 to C-27 (as Phase 6) on them, and C-33 against the CI log of the latest `main` commit. If the coverage line differs from the README's (the code changed after T038), update `## Test coverage` in `README.md`, commit, push, and repeat C-33 (FR-025, FR-012; SC-001, SC-004; DEC-36, DEC-37).
+- [ ] T050 [US6] After the implementation branches are merged and `main` is pushed (brief Part 2 step 4), make fresh clean checkouts of `origin` `main` and repeat C-08 to C-12 (as Phase 4), C-13 to C-16 (as Phase 5) and C-17 to C-27 (as Phase 6) on them, and C-33 against the CI log of the latest `main` commit. If the coverage line differs from the README's (the code changed after T038), update `## Test coverage` in `README.md` and commit it on the implementation branch (or a branch from `main`), have a separate review agent that did not write or fix the change approve it, then push `main` (brief rule 5; Part 2 step 4), and repeat C-33 (FR-025, FR-012; SC-001, SC-004; DEC-36, DEC-37).
 - [ ] T051 [P] [US6] Run C-35 on `main`: `git ls-files` lists every path of [repository-files.md](contracts/repository-files.md#the-pushed-main-must-be-tracked-git-ls-files) (US6 scenario 1; FR-026; DEC-38, DEC-01).
 - [ ] T052 [P] [US6] Run C-36 on `main`: `git ls-files output coverage` prints nothing, and `git status --porcelain` on the clean checkout after a run and a test run prints nothing (US6 scenario 2; FR-027, SC-006; DEC-27, DEC-36).
 - [ ] T053 [P] [US6] Run C-37 on `main`: `docs/challenge/` has no difference from the commit that added it, and the blob IDs of the copies in `data/` and `spec/fixtures/sample/` equal the challenge files' (US6 scenario 3; FR-028, SC-006; DEC-22).
@@ -191,6 +191,7 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 ## Phase 9: Polish and cross-cutting checks
 
 - [ ] T056 Record the success criteria in the run report from the results above: SC-001 (3 of 3 platforms, or which are left for the developer), SC-002, SC-003 (14 of 14), SC-004, SC-005, SC-006 and SC-007 (spec Success Criteria).
+- [ ] T058 Run C-40, the design review of how the input files are read: `grep -rn "File.read\|IO.read\|readlines\|each_line" lib/` finds no reading of an input file, and the readers in `lib/infrastructure` open the files as `bom|utf-8` through Ruby's CSV library (`002` FR-001); record the result in the run report (FR-019; NFR-04; DEC-04, DEC-22).
 - [ ] T057 On the final `main` commit, confirm `bundle exec rspec` passes in random order and `bundle exec rubocop` reports no offences, and that no file under `lib/`, `bin/` (other than `bin/run`'s mode), `spec/` or `data/` was changed by this spec (FR-030; constitution III and IV).
 
 ---
@@ -208,6 +209,7 @@ Every edge case in the spec, and every decision edge case within this spec's sco
 | A lock file made on Windows | C-03, C-09, C-13, C-17, C-07 | T007, T013, T018, T026, T049 | DEC-01 |
 | `bin/run` on Linux, macOS and in Docker | C-01, C-10, C-19, C-26 | T006, T014, T028, T035 | DEC-22 |
 | Line endings in a Windows checkout | C-16, C-26 | T022, T035 | DEC-04 |
+| Input files read only through the CSV library (CRLF, no final newline, BOM) | C-40 | T058 | DEC-04, DEC-22 |
 | Docker on a Linux host | C-27 | T036 | DEC-36, DEC-37 |
 | A Windows reviewer with Docker Desktop (PowerShell command) | C-29 | T039, T047 | DEC-37 |
 | A run from another folder on Windows | C-15 | T021 | DEC-22, DEC-26 |

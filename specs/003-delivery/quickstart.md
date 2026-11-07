@@ -5,7 +5,7 @@ Phase 1 of the [plan](plan.md). This spec is checked by these commands, not by R
 ## Prerequisites
 
 - `001-domain` and `002-file-runner` are implemented: `bundle exec rspec` passes in random order and `bundle exec rubocop` reports no offences.
-- Git and Bash (Git Bash on Windows) for the repository checks; Ruby at the version in `.ruby-version` for the Ruby checks; Docker for the Docker checks; Windows with RubyInstaller at that version and PowerShell for the Windows checks; the GitHub CLI `gh` (or the Actions page) for the CI checks.
+- Git and Bash (Git Bash on Windows) for the repository checks; Ruby at the version in `.ruby-version` for the Ruby checks; Docker for the Docker checks; Windows with RubyInstaller at that version and PowerShell for the Windows checks (any version: the program's output is captured through `cmd /c`, so the files hold the program's own bytes and PowerShell's redirection changes nothing); the GitHub CLI `gh` (or the Actions page) for the CI checks.
 - Scratch files go in a temporary folder outside the repository, called `$CHECKS` below (`CHECKS=$(mktemp -d)`). `$REPO` is the working repository; `$CLEAN` is a clean checkout.
 
 ## Expected texts
@@ -26,6 +26,7 @@ To compare a run with the report: take `<run time>` from the name of the file th
 | C-03 | `Gemfile.lock` platforms, versions unchanged | `sed -n '/^PLATFORMS/,/^$/p' Gemfile.lock`; `git diff <001 lock commit> -- Gemfile.lock` | the six platforms of [repository-files.md](contracts/repository-files.md#gemfilelock); the diff touches only platforms | FR-017; DEC-01 |
 | C-04 | One Ruby version in `.ruby-version` and the Dockerfile | `test "$(head -1 Dockerfile)" = "FROM ruby:$(cat .ruby-version)"` (or `...-bookworm`, plan item 7) | exit status 0; `.ruby-version` is the latest 3.4.x release | FR-015, SC-005; DEC-01 |
 | C-05 | Only the named gems | `grep -E "^\s*gem " Gemfile` | `csv`, `bigdecimal`, `logger`, `rspec`, `simplecov`, `rubocop`, `rubocop-rspec`, nothing else | FR-016; DEC-01 |
+| C-40 | Input files are read only through Ruby's CSV library (design review) | `grep -rn "File.read\|IO.read\|readlines\|each_line" lib/`; read the readers in `lib/infrastructure` | the grep finds no reading of an input file; the readers open the files as `bom\|utf-8` through CSV (`002` FR-001), so CRLF, a missing final newline and a byte-order mark give the same result (the last proved by `002`'s fixture test) | FR-019; NFR-04; DEC-04, DEC-22 |
 
 ## CI (User Story 4)
 
@@ -48,9 +49,9 @@ To compare a run with the report: take `<run time>` from the name of the file th
 
 | ID | Check | Command | Expected | Refs |
 |---|---|---|---|---|
-| C-13 | The sample files on Windows | `git clone -c core.autocrlf=true --branch main <origin url> $env:CHECKS\win; cd $env:CHECKS\win; $env:BUNDLE_FROZEN='true'; bundle install; git status --porcelain; ruby bin/run > ..\wout.txt 2> ..\werr.txt; $LASTEXITCODE` | install succeeds, `git status` prints nothing; `0`; the report matches, with `/` in `Output file: output/final_balances_<run time>.csv`; `werr.txt` empty; `[IO.File]::ReadAllBytes(<output file>)` equals `final.csv` byte for byte (LF, not CRLF) | US2-1; FR-025(b); DEC-22, DEC-35, DEC-37; page 10 pick 17 |
-| C-14 | Wrong arguments on Windows | `ruby bin/run -h > ..\hout.txt 2> ..\herr.txt; $LASTEXITCODE` | `1`; `hout.txt` empty; `herr.txt` is the usage message | US2-2; AC-09.2; DEC-22, DEC-25 |
-| C-15 | From another folder on Windows | `Remove-Item -Recurse output; cd docs; ruby ..\bin\run > ..\..\dout.txt; $LASTEXITCODE; cd ..` | `0`; last line `Output file: ../output/final_balances_<run time>.csv` | edge case; AC-08.4; DEC-22, DEC-26 |
+| C-13 | The sample files on Windows | `git clone -c core.autocrlf=true --branch main <origin url> $env:CHECKS\win; cd $env:CHECKS\win; $env:BUNDLE_FROZEN='true'; bundle install; git status --porcelain; cmd /c "ruby bin/run > ..\wout.txt 2> ..\werr.txt"; $LASTEXITCODE` | install succeeds, `git status` prints nothing; `0`; `wout.txt` equals `report.txt` (with `<run time>` filled in) byte for byte, with `/` in `Output file: output/final_balances_<run time>.csv`; `werr.txt` is 0 bytes; `[IO.File]::ReadAllBytes(<output file>)` equals `final.csv` byte for byte (LF, not CRLF) | US2-1; FR-025(b); DEC-22, DEC-35, DEC-37; page 10 pick 17 |
+| C-14 | Wrong arguments on Windows | `cmd /c "ruby bin/run -h > ..\hout.txt 2> ..\herr.txt"; $LASTEXITCODE` | `1`; `hout.txt` is 0 bytes; `herr.txt` equals `usage.txt` byte for byte | US2-2; AC-09.2; DEC-22, DEC-25 |
+| C-15 | From another folder on Windows | `Remove-Item -Recurse output; cd docs; cmd /c "ruby ..\bin\run > ..\..\dout.txt"; $LASTEXITCODE; cd ..` | `0`; `dout.txt` equals `report.txt` byte for byte except its last line, which is `Output file: ../output/final_balances_<run time>.csv` | edge case; AC-08.4; DEC-22, DEC-26 |
 | C-16 | Windows line endings in the input | `git ls-files --eol data/` | `w/crlf` for both files, and C-13 still gave the sample report | US2-3; DEC-04 |
 
 ## Docker (User Story 3), from the clean checkout of C-08
