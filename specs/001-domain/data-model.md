@@ -50,11 +50,11 @@ classDiagram
 | `Money.amount(text)` | String | A transfer amount; messages use the word `amount` (D4) |
 | `Money.balance(text)` | String | An opening balance; messages use the word `balance` (D4) |
 | `Money.new(value, text = nil)` | `BigDecimal`, String | Builds a value; used by the two class methods and by `+` and `-` (D5) |
-| `text` | String | The text as written; for a computed value, the same as `to_s` |
+| `text` | String | The text as written when one was given; for a computed value (no written text), the same as `to_s` |
 | `to_s` | String | Exactly 2 decimal places, no leading zeros before the units digit (R6) |
 | `+`, `-` | `Money` | Exact sum or difference, as a computed `Money` |
 | `<=>` (with `Comparable`), `==`, `eql?`, `hash` | | By value only, so `-0` equals `0` (R7); `hash` is `value.zero? ? BigDecimal('0').hash : value.hash`, so `-0` and `0` hash alike |
-| `negative?` | Boolean | A minus sign was written, or the value is below 0 (R7) |
+| `negative?` | Boolean | A minus sign was written (checked only when there is written text), or the value is below 0 (R7) |
 | `positive?` | Boolean | The value is above 0 |
 
 - Validation, in order (R5): empty text, "`<label> is empty`"; `-?digits.digits{3,}`, "`<label> "<text>" has more than 2 decimal places`"; anything not `-?digits(.d{1,2})?`, "`<label> "<text>" is not a valid amount`".

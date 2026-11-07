@@ -67,7 +67,7 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
   - invalid, each raising `InvalidAccountNumber` with `account number "<text>" must be exactly 16 digits`: `111123452222678` (15 digits), `11112345222267890` (17 digits), `1111O34522226789` (letter O), `1111-2345-2222-6789` (dashes), `12345`, and the empty text, giving `account number "" must be exactly 16 digits` (DEC-08).
 - [ ] T011 [P] [US4] Write `spec/domain/money_spec.rb`, parsing, writing, equality and comparison [FR-003 to FR-007; AC-06.2, AC-06.3; DEC-09, DEC-10; D4, D5; research R5 to R7]:
   - valid and written with 2 decimals by `to_s`: `Money.amount('10')` `10.00`, `'10.5'` `10.50`, `'10.50'` `10.50`, `'007.50'` `7.50` (DEC-09), `'550'` `550.00`, `'5000.00'` `5000.00`, `'0'` `0.00`, `'0.00'` `0.00`;
-  - `text` returns the text as written: `Money.amount('007.50').text` is `007.50`;
+  - `text` returns the text as written: `Money.amount('007.50').text` is `007.50`; for a computed value it is the same as `to_s` (see T021);
   - not negative: `0`, `0.00`, `10.00`; negative: `-5.00`, `-0`, `-0.00` (`negative?`; DEC-09);
   - `positive?`: true for `0.01` and `10.00`; false for `0`, `0.00`, `-0`, `-0.00`, `-5.00`;
   - equality by amount only: `Money.amount('-0')` and `Money.amount('-0.00')` each equal `Money.amount('0')`; `Money.amount('10.5')` equals `Money.amount('10.50')`; equal values have equal `hash`, and `Money.amount('-0').hash` equals `Money.amount('0').hash` (spec clarification 2);
@@ -96,7 +96,7 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 - [ ] T016 [US4] Create `lib/domain/errors.rb` with a one-line comment per class and `InvalidAccountNumber` (built with `new(text)`, message `account number "<text>" must be exactly 16 digits`), `InvalidAmount` (raised with its full message), `SameAccount` (built with `new(account_number)`, message `account <number> cannot transfer to itself`) and `NegativeBalance` (built with `new(balance)`, message `balance "<balance.text>" must not be negative`), each a direct subclass of `StandardError` [FR-026, FR-027; DEC-30; D3, D21]
 - [ ] T017 [P] [US4] Create `lib/domain/account_number.rb`: `AccountNumber.new(text)` raises `InvalidAccountNumber` unless `text` matches `/\A[0-9]{16}\z/`; `to_s`, `==`, `eql?` and `hash` by text; frozen [FR-001, FR-002; DEC-08; D19; research R4]
-- [ ] T018 [P] [US4] Create `lib/domain/money.rb`: `Money.amount(text)` and `Money.balance(text)` classify the text in the order of research R5 (empty; `/\A-?[0-9]+\.[0-9]{3,}\z/`; not `/\A-?[0-9]+(\.[0-9]{1,2})?\z/`) and raise `InvalidAmount` with the label `amount` or `balance`, else build `Money.new(BigDecimal(text), text)`; `text`, `to_s` (research R6, no `Float`, no rounding), `negative?` (written `-` or value below 0), `positive?`, `Comparable` with `<=>`, `==`, `eql?` and `hash` by value, with `hash` defined as `value.zero? ? BigDecimal('0').hash : value.hash` so that `-0` and `0` hash alike; frozen [FR-003 to FR-007; DEC-09; D4, D5, D19; research R5 to R7]
+- [ ] T018 [P] [US4] Create `lib/domain/money.rb`: `Money.amount(text)` and `Money.balance(text)` classify the text in the order of research R5 (empty; `/\A-?[0-9]+\.[0-9]{3,}\z/`; not `/\A-?[0-9]+(\.[0-9]{1,2})?\z/`) and raise `InvalidAmount` with the label `amount` or `balance`, else build `Money.new(BigDecimal(text), text)`; `text` (the written text when one was given, `to_s` otherwise), `to_s` (research R6, no `Float`, no rounding), `negative?` (a written `-`, checked only when there is written text, or value below 0), `positive?`, `Comparable` with `<=>`, `==`, `eql?` and `hash` by value, with `hash` defined as `value.zero? ? BigDecimal('0').hash : value.hash` so that `-0` and `0` hash alike; frozen [FR-003 to FR-007; DEC-09; D4, D5, D19; research R5 to R7]
 - [ ] T019 [US4] Create `lib/domain/transfer.rb`: `Transfer.new(from:, to:, amount:)` raises `InvalidAmount` with `amount "<amount.text>" must be greater than 0.00` unless `amount.positive?`, then `SameAccount.new(from)` when `from == to`; readers `from`, `to`, `amount`; frozen (depends on T016 to T018) [FR-008, FR-009; DEC-10, DEC-13, DEC-19; D8, D19]
 - [ ] T020 [US4] Create `lib/domain/account.rb` with `Account.check_opening_balance(balance)` (raises `NegativeBalance.new(balance)` when `balance.negative?`), `Account.new(number, balance)` calling it, and the readers `number` and `balance` (depends on T016, T018) [FR-010, FR-013; DEC-10, DEC-11; D6, D7]
 
@@ -118,12 +118,13 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
   - from `0.00`, adding `25.60` 1,000 times and then taking it away 1,000 times gives exactly `0.00`;
   - no upper limit: `123456789012345678901234567890.12` plus `0.01` is written `123456789012345678901234567890.13` (DEC-09);
   - `5.00` minus `5.00` is `0.00` and not `negative?` (spec clarification 2);
-  - `5.00` minus `5.01` is `negative?` and written `-0.01`.
+  - `5.00` minus `5.01` is `negative?` and written `-0.01`;
+  - a computed value has `text` equal to `to_s`: `(Money.amount('5.00') + Money.amount('2.50')).text` is `7.50`.
 - [ ] T022 [US6] Run `bundle exec rspec spec/domain/money_spec.rb` and confirm the new examples fail (no `+` or `-` yet) (depends on T021)
 
 ### Implementation for User Story 6
 
-- [ ] T023 [US6] Add `+` and `-` to `lib/domain/money.rb`, each returning `Money.new(value ± other.value)` with no written text, so the result is negative only below 0 (depends on T022) [FR-006; NFR-01; DEC-09; D5]
+- [ ] T023 [US6] Add `+` and `-` to `lib/domain/money.rb`, each returning `Money.new(value ± other.value)` with no written text (its `text` is then `to_s`), so the result is negative only below 0 (depends on T022) [FR-006; NFR-01; DEC-09; D5]
 
 **Checkpoint**: `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences.
 
