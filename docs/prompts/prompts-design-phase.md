@@ -208,3 +208,18 @@ The developer approved the parent page ("Looks good"), then answered two open qu
 - Q2, how cost and scale are stated: "no timing test for this one also update the main prompt accordingly."
 
 Outcome: cost and scale are stated as growth rates, checked by design review, with no timing test. At the developer's request, the brief in `docs/solution-design/solution-design-brief.md` was updated to say so. Step 3 of the brief started.
+
+<a id="p19"></a>**P19. Answers to the cross-page design questions**
+
+The first drafts of the child pages raised five design questions (OQ1 to OQ5) about how the components connect. The developer's answers:
+
+> for OQ1 - a) Domain: InvalidAccountNumber, InvalidAmount, SameAccount, NegativeBalance. Run-stopping: InvalidBalancesFile, NoTransfers, UnreadableFile, TotalChanged, OutputNotWritable.
+>
+> for OQ2 - (a) The Runner reads the clock once, gets the default path from FinalBalancesCsvWriter, checks it, and passes the same time and path to ProcessDailyTransfer. bin/run still passes nothing
+>
+> for OQ3 - Readers, writer, repository, reporter and logger are all passed in to ProcessDailyTransfers; the Runner builds the real ones.
+>
+> OQ4 - Report every problem found at the start together: missing inputs and an existing output.
+> OQ5 - before checking a row’s balance, LoadBalances asks the repository whether the account number already exists, and if so reports the duplicate. The repository stays the one place that knows about duplicates. Known gap: if the first copy of an account is the invalid row, it was never added, so the duplicate is only reported after that row is fixed. The run still stops either way.
+
+Outcome: pages 02, 05, 06, 07, 09 and 10 were revised to follow the answers, each reviewed twice by a separate agent, then the whole solution design was reviewed once more by a separate agent and its findings fixed. The approved name `ProcessDailyTransfer` (singular) was kept. The assistant picked the log line `Run stopped: start checks failed (<reasons>)`, the name `AccountRepository#include?`, and `FinalBalancesCsvWriter.default_path` as a class method, so the `Runner` can ask for the default path before it builds the writer; all are listed on [page 10](../solution-design/10-traceability-glossary-assumptions.md#assistants-picks-in-this-design).
