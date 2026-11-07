@@ -93,3 +93,13 @@ The assistant asked whether the Spec Kit prompt ([P20](#p20)) counts as approval
 > OQ1–OQ5 answers: should I add them to design-decisions.md - yes
 
 Outcome: the P19 answers were added to [DEC-12](../design-analysis/design-decisions.md#dec-12), [DEC-23](../design-analysis/design-decisions.md#dec-23), [DEC-30](../design-analysis/design-decisions.md#dec-30) and [DEC-31](../design-analysis/design-decisions.md#dec-31). The name `include?` is listed for review. The brief says that a "Run change:" commit in Part 1 needs no further approval, only when the change is needed for a full, working, error-free system.
+
+## 2. Part 1: Specification
+
+<a id="p24"></a>**P24. Run Part 1 of the Spec Kit brief**
+
+The prompt that started Part 1, given to a new session:
+
+> Run Part 1 (Specification) of `docs/spec-kit/spec-kit-brief.md`, following its shared rules exactly. Use a workflow (multi-agent orchestration with the Workflow tool) for the parallel steps, with the models in rule 6. Start from the local branch `spec-kit-setup`, which is checked out in `C:\Dev\mable-backend-code-challenge` and holds the Spec Kit set-up, the brief and the latest decisions; it is not pushed yet. Worktrees go in `C:\Dev\`, never inside the repository. Log this prompt as the next number in `docs/prompts/prompts-spec-creation-phase.md` (rule 7). Stop when the run report says "Specification ready for review". Do not start Part 2.
+
+Outcome: see the [run report](../spec-kit/implementation-run-report.md#part-1-specification).
