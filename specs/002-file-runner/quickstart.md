@@ -17,7 +17,7 @@ How to check that `002-file-runner` is done. It proves every scenario in the [sp
 | 3 | `bundle exec rspec spec/acceptance` | Exactly 5 spec files, each describing one end-to-end run, all passing | FR-044; SC-005 |
 | 4 | `bundle exec rubocop` | `no offenses detected` | SC-008; NFR-05 (owned by `001`) |
 | 5 | `bin/run` (on Windows `ruby bin/run`) | Standard output exactly AC-08.1's report, with today's date and time in the `Output file:` line; standard error empty; exit status 0 (`echo $?`); a new file in `output/` holding the five AC-08.1 balances, LF line endings | US1; AC-08.1; SC-001 |
-| 6 | `cd docs && ../bin/run; cd ..` | The last report line is `Output file: ../output/final_balances_<date>_<time>.csv` | AC-08.4 |
+| 6 | `cd docs && ../bin/run; cd ..` | The last report line is `Output file: ` followed by the full path of the project's `output/final_balances_<date>_<time>.csv`, as the file is outside `docs` | AC-08.4 |
 | 7 | `LOG_LEVEL=info bin/run` | Standard error holds `Run started`, four `Line N applied` lines and `Run ended: processed 4, applied 4, rejected 0`, each in the `I, [...]  INFO -- : ` format with masked numbers | AC-09.5, AC-09.6 |
 | 8 | `bin/run data/mable_account_balances.csv` | Standard error exactly the two usage lines; standard output empty; exit status 1 | AC-09.2 |
 | 9 | `bin/run missing1.csv missing2.csv` | Two `Error: file not found:` lines, then one `Run stopped: start checks failed (file not found)` log line; exit status 1 | AC-09.3 |

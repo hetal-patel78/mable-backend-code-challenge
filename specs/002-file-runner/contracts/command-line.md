@@ -27,7 +27,7 @@ Environment: `LOG_LEVEL` is `info` (any letter case) for info level; anything el
 | Standard output | The report of a completed run, once, after the output file is written; nothing else, ever |
 | Standard error | `Error:` lines and the usage message (plain text), and log lines (`Logger`'s default format) |
 
-Every path in the report, in a message or in a log line is shown relative to the current folder when the file is in it, below it, or below its parent (one `../`), and in full otherwise (plan P10).
+Every path in the report, in a message or in a log line is shown relative to the current folder when the file is in it or below it, and in full otherwise (DEC-26; plan P10).
 
 ## The report (exit status 0)
 

@@ -22,9 +22,9 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
 
 ## R3. Showing a path
 
-- **Decision**: `DisplayPath.of(path, folder = Dir.pwd)` expands `path` against `folder`, takes `Pathname#relative_path_from(folder)`, and returns that relative path when it has no `..` part, or exactly one leading `..` part; otherwise, and when the two paths have no common root (another Windows drive raises `ArgumentError`), it returns the expanded full path (plan P10).
-- **Rationale**: page 2 shows `../output/final_balances_2026-11-07_143005.csv` from `docs` and `/tmp/day1.csv` in full; one `../` step is the narrowest rule that gives both, and it lets a test show a file in a second temporary folder in full (spec item 3) when the scenario runs from a subfolder of the first temporary folder, whatever folder the system keeps temporary folders in. Every component that builds a message or log text applies it to the real path it holds (plan P11), so `DisplayPath` stays the one owner of the rule.
-- **Alternatives considered**: any number of `../` steps (two temporary folders share a parent, so the "full path" case could never be tested); comparing lengths (gives different answers for the same layout depending on folder names).
+- **Decision**: `DisplayPath.of(path, folder = Dir.pwd)` expands `path` against `folder`, takes `Pathname#relative_path_from(folder)`, and returns that relative path when it has no `..` part (the file is in or below `folder`); otherwise, and when the two paths have no common root (another Windows drive raises `ArgumentError`), it returns the expanded full path (plan P10).
+- **Rationale**: DEC-26 shows the output path relative to the folder the command was run from, or in full if the file is outside that folder; page 2 shows `output/final_balances_2026-11-07_143005.csv` from the project root, the full path from `docs` and `/tmp/day1.csv` in full. A relative path with no `..` part is exactly a file in or below the folder, so the rule needs no other test. Every component that builds a message or log text applies it to the real path it holds (plan P11), so `DisplayPath` stays the one owner of the rule.
+- **Alternatives considered**: allowing leading `..` steps (shows a file outside the run folder relative, which DEC-26 does not allow); comparing lengths (gives different answers for the same layout depending on folder names).
 
 ## R4. `LoadBalances` problem by problem
 

@@ -159,7 +159,7 @@ All are direct subclasses of `StandardError`.
 
 | Member | Type | Meaning |
 |---|---|---|
-| `DisplayPath.of(path, folder = Dir.pwd)` | String, String | The path relative to `folder` with at most one leading `../`, or in full |
+| `DisplayPath.of(path, folder = Dir.pwd)` | String, String | The path relative to `folder` when the file is in or below it, or in full |
 
 - Paths are real (absolute) from the `Runner` on (plan P11). The shown form is built where a text is built: the four run-stopping errors that hold a path, the `Run started` line and the start-check lines use `DisplayPath.of`; the report's output line uses it in `ReportPrinter` alone.
 
