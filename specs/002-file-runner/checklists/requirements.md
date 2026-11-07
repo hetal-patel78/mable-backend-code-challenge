@@ -38,5 +38,5 @@
 - "Scope is clearly bounded": the spec owns FR-01, FR-02, FR-07, FR-08, FR-09, NFR-03 and NFR-06 only; it runs the page 2 scenarios of FR-03 to FR-06 (owned by `001`) through the runner without owning them; the page 4 out-of-scope list is repeated under Assumptions.
 - "All acceptance scenarios are defined": every page 2 criterion of FR-01 to FR-09 (AC-01.1 to AC-09.8, including AC-09.3a) appears with standard output, standard error and the exit status stated separately. Lines not printed in full on page 2 are marked **(derived)** and built from Templates A and R.
 - Masked values were checked by count: 12 asterisks for 16-character values, 11 for `111123452222678`, 13 for `11112345222267890`, 15 for `1111-2345-2222-6789`, and `*2345` for `12345`.
-- Small gaps decided while writing are listed in the spec's "Decided in the run" section (17 items).
+- Small gaps decided while writing are listed in the spec's "Decided in the run" section (22 items; 18 to 22 from /speckit-clarify).
 - Items marked incomplete require spec updates before `/speckit-clarify` or `/speckit-plan`
