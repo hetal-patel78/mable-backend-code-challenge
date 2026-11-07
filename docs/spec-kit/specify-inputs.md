@@ -221,4 +221,4 @@ specs/003-delivery: tests first in every phase (write the spec, see it fail, the
 
 ### `/speckit-analyze`
 
-Pending.
+Run once per spec (001-domain, 002-file-runner, 003-delivery) with no extra input, after pointing Spec Kit at the spec's folder.

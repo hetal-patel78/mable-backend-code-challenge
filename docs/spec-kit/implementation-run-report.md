@@ -15,9 +15,9 @@ Started by [P24](../prompts/prompts-spec-creation-phase.md#p24), from the branch
 | 1. Start | Done |
 | 2. Constitution | Done |
 | 3. Specs | Done |
-| 4. Clarify, plan and tasks | Done: 001 7 rounds (2 earlier, 5 continuation), 002 10 rounds (1 earlier, 9 continuation), 003 26 rounds (12 earlier, 14 continuation); each ended on a round with 0 defects. 001-domain pushed; 002-file-runner and 003-delivery not pushed |
-| 5. Cross-check | Not started |
-| 6. Scripted checks | Not started |
+| 4. Clarify, plan and tasks | Done: 001 7 rounds (2 earlier, 5 continuation), 002 10 rounds (1 earlier, 9 continuation), 003 26 rounds (12 earlier, 14 continuation); each ended on a round with 0 defects. All three spec branches pushed: 001-domain, 002-file-runner, 003-delivery |
+| 5. Cross-check | Done: 3 rounds (round 1 found 1 medium defect, round 2 found 2 low, round 3 found 0 and was clean) |
+| 6. Scripted checks | Done: 3 rounds (round 1 failed 3 checks, round 2 failed 1, round 3 passed all 7) |
 | 7. Merge and push | Not started |
 | 8. Stop | Not started |
 
@@ -71,9 +71,43 @@ Step 4 reviews. Every round is by an independent Claude Opus 5.5 agent that did 
 | 003-delivery | 25 (continuation 13) | Claude Opus 5.5 (independent) | 1 (low) | Fixed |
 | 003-delivery | 26 (continuation 14) | Claude Opus 5.5 (independent) | 0 | Converged |
 
-Each spec ended on a round with 0 defects. The `001-domain` branch was pushed. `002-file-runner` and `003-delivery` were not pushed; pushing needs the developer's approval.
+Each spec ended on a round with 0 defects. The `001-domain`, `002-file-runner` and `003-delivery` branches were pushed.
 
 RuboCop `Metrics/BlockLength` against spec files, the blocker in the earlier 001 and 002 rounds, was not a defect: rubocop-rspec's default config already excludes spec files, so no DEC-36 change was needed.
+
+Step 5 cross-check. Every round is by an independent Claude Opus 5.5 agent that did not write or fix the specs. Round 1 found one medium defect, round 2 found two low defects, all fixed, and round 3 found none, so the cross-check ended on a clean round.
+
+| Round | Reviewer | Defects found | Result |
+|---|---|---|---|
+| 1 | Claude Opus 5.5 (opus), independent | 1 (medium) | Fixed |
+| 2 | Claude Opus 5.5 (opus), independent | 2 (2 low) | Fixed |
+| 3 | Claude Opus 5.5 (opus), independent | 0 | Converged |
+
+Step 6 scripted checks. The table shows the final round (round 3). Round 1 failed three checks (exact strings, channels and exit codes, and placeholders) and round 2 failed one (exact strings); all were fixed before round 3.
+
+| Check | Result | Detail |
+|---|---|---|
+| FR/NFR coverage | Passed | 15 IDs (FR-01 to FR-09, NFR-01 to NFR-06), each owned by one spec and in its spec.md and at least one task. Thinnest: FR-05 and NFR-04, one task each. 0 failures |
+| Exact strings | Passed | 41 acceptance criteria; 119 unique output strings (120 string-by-spec pairs), all exact; 28 exit-code checks, all matched. 0 failures |
+| Channels and exit codes | Passed | 70 run-output scenarios of 100 each state standard output, standard error and exit status separately. 8 unit-level scenarios not applicable. 0 failures |
+| Names match page 6 and page 10 | Passed | 29 names, all found in plan.md or data-model.md; 6 new names declared in their spec's Decided list. 0 failures |
+| Edge cases have planned tests | Passed | 61 of 61 edge cases matched to tasks. 0 failures |
+| No code | Passed | 0 files under lib/, bin/ or spec/ in git. 0 failures |
+| No placeholders | Passed | 28 files scanned; 0 placeholders, 0 TODO, 0 TBD. 0 failures |
+
+`/speckit-analyze` counts by severity per spec, analyzer Claude Opus 5.5 (opus). Specs are in the order 001-domain, 002-file-runner, 003-delivery. No critical or high issues in any round.
+
+| Spec | Round | Critical | High | Medium | Low |
+|---|---|---|---|---|---|
+| 001-domain | 1 | 0 | 0 | 0 | 3 |
+| 001-domain | 2 | 0 | 0 | 0 | 7 |
+| 001-domain | 3 | 0 | 0 | 0 | 2 |
+| 002-file-runner | 1 | 0 | 0 | 2 | 4 |
+| 002-file-runner | 2 | 0 | 0 | 3 | 6 |
+| 002-file-runner | 3 | 0 | 0 | 2 | 6 |
+| 003-delivery | 1 | 0 | 0 | 3 | 5 |
+| 003-delivery | 2 | 0 | 0 | 1 | 4 |
+| 003-delivery | 3 | 0 | 0 | 1 | 4 |
 
 ### Decided in the run
 
@@ -226,7 +260,30 @@ None.
   - Plan, research and checklist state the spec's item counts correctly; the rejected alternatives in plan item 3 and research R-2 and R-5 are corrected, including R-5's CI matrix citation.
   - US2 scenario 4 and US4 scenario 2 now state standard output, error and exit code.
   - Quickstart expected texts and checks C-21, C-23 and C-26 compare a run's output the same way.
+- **Cross-check**
+  - The Gemfile.lock platform list in 001 plan D14 and in 003's Decided list now agree (X1).
+  - 001 no longer gives a run outcome for a scenario that no spec runs, since its spec says every run outcome goes through the 002 runner (XC2-01).
+  - 003's example Ruby version is now 3.4.12, the version 001 pins in plan D1 and task T001 (XC2-02).
 
 ### Left for the developer
 
-None yet.
+Medium and low `/speckit-analyze` issues left after round 3, not changed in this run:
+
+- **001-domain** (2 low)
+  - Low: the "Run outcome" bullets under User Story 5's scenarios 1, 2 and 4 (spec.md lines 281 to 288) start at column 0.
+  - Low: the plan says three times that the seven error classes have no spec file of their own.
+- **002-file-runner** (2 medium, 6 low)
+  - Medium: tasks.md "Phase dependencies" says Phase 5 (US3) can run before or after Phase 4, which contradicts Phase 5's stated dependency.
+  - Medium: plan P29 and research R1 read the transfers file with `CSV.open` and `csv.shift`, while DEC-32 names `CSV.foreach`.
+  - Low: some 002 entries in this report, such as the DisplayPath line in Decided in the run, no longer match plan P11.
+  - Low: research R9 says FakeReporter records only `printed` calls, while T019 also records `file_existed`.
+  - Low: tasks.md does not say how the new support helpers reach the examples.
+  - Low: the nesting depth of variant scenarios is unclear against the three-level cap in the conventions.
+  - Low: the edge-case row for an invalid balances file with an empty transfers file cites T028, which the analyzer flags as not matching that case.
+  - Low: the parent-folder path rule is worded two ways (FR-029, plan P10 and the command-line contract say "exactly one leading ../").
+- **003-delivery** (1 medium, 4 low)
+  - Medium: the source of the clean checkout is described differently across quickstart.md (C-08, C-13, C-26 and the Docker checkout) and elsewhere.
+  - Low: quickstart.md C-43 and T059 (and T050) name different paths for the `git ls-files --eol` check.
+  - Low: T059 sits in Phase 5, after T022, so the task IDs are out of sequence.
+  - Low: plan "Decided in the run" item 19 uses history wording.
+  - Low: research R-2 and spec item 4 say a lock file made on Windows lists only the Windows platform, which the analyzer says conflicts with the Gemfile.lock platform decision.
