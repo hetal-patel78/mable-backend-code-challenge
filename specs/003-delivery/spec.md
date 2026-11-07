@@ -87,7 +87,11 @@ A reviewer who has Ruby 3.4 clones the repository, installs the gems with `bundl
 **Acceptance Scenarios**:
 
 1. **The gems install at the locked versions** (NFR-04; DEC-01).
-   - **Given** a clean checkout and Ruby at the exact version in `.ruby-version`, **When** `bundle install` runs, **Then** it succeeds without changing `Gemfile.lock` (`git status` shows no change), installing only the gems the lock file lists.
+   - **Given** a clean checkout and Ruby at the exact version in `.ruby-version`, **When** `bundle install` runs, **Then**:
+     - Standard output: Bundler's summary line (`Bundle complete!`); not compared exactly.
+     - Standard error: not compared.
+     - Exit status: 0
+     - And `Gemfile.lock` is unchanged (`git status` shows no change), and only the gems the lock file lists are installed.
 2. **The sample files with no arguments** (NFR-04, AC-08.1; DEC-22, DEC-35).
    - **Given** that clean checkout after `bundle install`, **When** `bin/run` runs from the project root, **Then**:
      - Standard output: the sample report.
@@ -97,7 +101,15 @@ A reviewer who has Ruby 3.4 clones the repository, installs the gems with `bundl
 3. **From another folder** (NFR-04, AC-08.4; DEC-22, DEC-26).
    - **Given** the same checkout, **When** `../bin/run` runs with no arguments from the project's `docs` folder, **Then** standard output is the sample report with its last line `Output file: ../output/final_balances_<run time>.csv`, standard error is (nothing), the exit status is 0, and the file is written in the project's `output/` folder.
 4. **The tests and the style checker on the reviewer's machine** (NFR-04; DEC-34, DEC-36).
-   - **Given** the same checkout, **When** `bundle exec rspec` and then `bundle exec rubocop` run, **Then** RSpec reports 0 failures in random order and exits with 0, SimpleCov writes `coverage/`, and RuboCop reports no offences and exits with 0.
+   - **Given** the same checkout, **When** `bundle exec rspec` and then `bundle exec rubocop` run, **Then**, for `bundle exec rspec`:
+     - Standard output: RSpec's summary with `0 failures`, a `Randomized with seed` line (random order) and SimpleCov's `Line Coverage:` line.
+     - Standard error: not compared.
+     - Exit status: 0
+     - And SimpleCov writes `coverage/`.
+   - And, for `bundle exec rubocop`:
+     - Standard output: RuboCop's summary line, `no offenses detected`.
+     - Standard error: not compared.
+     - Exit status: 0
 
 ---
 
@@ -129,7 +141,10 @@ A reviewer on Windows, where a file without an extension cannot be started direc
 
      - Exit status: 1 (`$LASTEXITCODE` in PowerShell, `%ERRORLEVEL%` in Command Prompt).
 3. **Windows line endings in the input** (NFR-04; DEC-04).
-   - **Given** a Windows checkout, **When** the sample files are read, **Then** the result is the sample report whatever line endings the checkout gives `data/` (the files are read only through Ruby's CSV library, which accepts CRLF and a missing final newline; checked by design review, page 3).
+   - **Given** a Windows checkout, **When** `ruby bin/run` runs on the sample files, **Then**, whatever line endings the checkout gives `data/` (the files are read only through Ruby's CSV library, which accepts CRLF and a missing final newline; checked by design review, page 3):
+     - Standard output: the sample report.
+     - Standard error: (nothing)
+     - Exit status: 0
 
 ---
 
@@ -144,7 +159,10 @@ A reviewer without Ruby 3.4, or who cannot get `bundle install` working, builds 
 **Acceptance Scenarios**:
 
 1. **The image builds from a clean checkout** (NFR-04; DEC-01, DEC-36).
-   - **Given** a clean checkout, **When** `docker build -t mable-transfers .` runs in its root, **Then** the build succeeds from the official Ruby image whose version equals `.ruby-version`, `bundle install` inside it installs the locked gems without changing `Gemfile.lock`, and the build exits with 0.
+   - **Given** a clean checkout, **When** `docker build -t mable-transfers .` runs in its root, **Then**:
+     - Standard output: Docker's build log, not compared exactly; it shows the official Ruby image whose version equals `.ruby-version` and `bundle install` installing the locked gems without changing `Gemfile.lock`.
+     - Standard error: not compared.
+     - Exit status: 0
 2. **The sample files by default, with `output` mounted and `TZ` set** (NFR-04, AC-08.1; DEC-27, DEC-36, DEC-37).
    - **Given** the built image, **When** the README's run command runs it with no command, with the checkout's `output` folder mounted at the container's `output` folder and `TZ` set to the reviewer's time zone (for example `TZ=Australia/Sydney`), **Then**:
      - Standard output: the sample report, where `<run time>` is the local time in that time zone.
@@ -152,7 +170,10 @@ A reviewer without Ruby 3.4, or who cannot get `bundle install` working, builds 
      - Exit status: 0
      - And the sample output file is in the reviewer's own `output/` folder after the container ends.
 3. **The tests in the container** (NFR-04; DEC-34, DEC-36, DEC-37).
-   - **Given** the built image, **When** the README's test command runs `bundle exec rspec` in it, **Then** RSpec reports 0 failures in random order and the exit status is 0.
+   - **Given** the built image, **When** the README's test command runs `bundle exec rspec` in it, **Then**:
+     - Standard output: RSpec's summary with `0 failures` and a `Randomized with seed` line (random order).
+     - Standard error: not compared.
+     - Exit status: 0
 4. **The log level and exit status pass through Docker** (NFR-04, AC-09.5, AC-09.2; DEC-25, DEC-28).
    - **Given** the built image, **When** it runs with `-e LOG_LEVEL=info` and no command, **Then** standard output is the sample report, the exit status is 0, and standard error is, as in AC-09.5:
 
