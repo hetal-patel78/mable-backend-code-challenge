@@ -730,7 +730,7 @@ The page 2 scenarios of FR-03 to FR-06 are owned by `001-domain`. This spec runs
    | Criterion | Row | Standard output | Standard error |
    |---|---|---|---|
    | AC-04.1 | `1111234522226789,1212343433335665,100.01` | R: `  Line 1  rejected  1111234522226789 -> 1212343433335665  100.01  insufficient_funds` | `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************6789 -> ************5665 100.01 insufficient_funds`, then `W, [<timestamp> #<pid>]  WARN -- : All transfers were rejected; check this is the right file.` |
-   | AC-04.2 | `1111234522226789,1212343433335665,100.00` | A: `1111234522226789 -> 1212343433335665  100.00` **(derived)**; balances `0.00`, `150.00`, `0.00` | (nothing) |
+   | AC-04.2 | `1111234522226789,1212343433335665,100.00` | A: `1111234522226789 -> 1212343433335665  100.00` **(derived)**; final balances `1111234522226789  0.00`, `1212343433335665  150.00` (written as `  1212343433335665  150.00` in the output) and `0000123412341234  0.00` | (nothing) |
    | AC-04.3 | `0000123412341234,1111234522226789,0.01` | R: `  Line 1  rejected  0000123412341234 -> 1111234522226789  0.01  insufficient_funds` **(derived)** | `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************1234 -> ************6789 0.01 insufficient_funds` **(derived)** |
 
    - Exit status: 0 for every row of this table.
