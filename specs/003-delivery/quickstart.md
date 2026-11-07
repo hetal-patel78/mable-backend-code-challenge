@@ -1,0 +1,97 @@
+# Quickstart: the checks for 003-delivery
+
+Phase 1 of the [plan](plan.md). This spec is checked by these commands, not by RSpec specs (brief rule 4; FR-030). Each check is written down before the file it checks, run once to see it fail, and run again once the file is in place. Each result is recorded in the run report, `docs/spec-kit/implementation-run-report.md` (Part 2 section), with the platform, date, commit and evidence. A check that cannot run on the machine at hand is recorded as "left for the developer", never as passed (FR-025; C-28).
+
+## Prerequisites
+
+- `001-domain` and `002-file-runner` are implemented: `bundle exec rspec` passes in random order and `bundle exec rubocop` reports no offences.
+- Git and Bash (Git Bash on Windows) for the repository checks; Ruby at the version in `.ruby-version` for the Ruby checks; Docker for the Docker checks; Windows with RubyInstaller at that version and PowerShell for the Windows checks; the GitHub CLI `gh` (or the Actions page) for the CI checks.
+- Scratch files go in a temporary folder outside the repository, called `$CHECKS` below (`CHECKS=$(mktemp -d)`). `$REPO` is the working repository; `$CLEAN` is a clean checkout.
+
+## Expected texts
+
+- **The sample report**: the block "The sample report" in [spec.md](spec.md#conventions-used-in-the-scenarios) (AC-08.1 with `2026-11-07_143005` replaced by `<run time>`). Save it as `$CHECKS/report.txt`.
+- **The sample output file**: the block "The sample output file" in [spec.md](spec.md#conventions-used-in-the-scenarios). Save it as `$CHECKS/final.csv`, with LF line endings and a final LF.
+- **The usage message**: the two lines of AC-09.2, saved as `$CHECKS/usage.txt`.
+- **The info log**: the six lines of AC-09.5.
+
+To compare a run with the report: take `<run time>` from the name of the file the run created (`final_balances_<run time>.csv`), replace `<run time>` in `report.txt` with it, and `diff` the result with the run's standard output. `diff` must print nothing.
+
+## Repository files (Foundational)
+
+| ID | Check | Command | Expected | Refs |
+|---|---|---|---|---|
+| C-01 | `bin/run` is executable, starts with the Ruby line and is LF; every text file is stored LF | `git ls-files -s bin/run`; `head -1 bin/run`; `git ls-files --eol \| grep 'i/crlf'` | `100755`; `#!/usr/bin/env ruby`; the grep prints nothing | FR-018; DEC-22, DEC-04 |
+| C-02 | `.gitattributes` is the one line | `od -c .gitattributes` | exactly `bin/run text eol=lf\n` | FR-018 |
+| C-03 | `Gemfile.lock` platforms, versions unchanged | `sed -n '/^PLATFORMS/,/^$/p' Gemfile.lock`; `git diff <001 lock commit> -- Gemfile.lock` | the six platforms of [repository-files.md](contracts/repository-files.md#gemfilelock); the diff touches only platforms | FR-017; DEC-01 |
+| C-04 | One Ruby version in `.ruby-version` and the Dockerfile | `test "$(head -1 Dockerfile)" = "FROM ruby:$(cat .ruby-version)"` (or `...-bookworm`, plan item 7) | exit status 0; `.ruby-version` is the latest 3.4.x release | FR-015, SC-005; DEC-01 |
+| C-05 | Only the named gems | `grep -E "^\s*gem " Gemfile` | `csv`, `bigdecimal`, `logger`, `rspec`, `simplecov`, `rubocop`, `rubocop-rspec`, nothing else | FR-016; DEC-01 |
+
+## CI (User Story 4)
+
+| ID | Check | Command | Expected | Refs |
+|---|---|---|---|---|
+| C-06 | The workflow holds what it must and nothing it must not | read `.github/workflows/ci.yml` against [ci-workflow.md](contracts/ci-workflow.md); `grep -nE "matrix\|ruby-version\|bundler-cache\|continue-on-error\|pull_request\|coverage" .github/workflows/ci.yml` | every "must hold" row present; the grep prints nothing; no step ends with `\|\| true` | FR-020, FR-021; DEC-36; US4-2, US4-3 |
+| C-07 | A push runs CI and it passes | `gh run list --commit $(git rev-parse HEAD) --limit 1`; `gh run view <id> --log` | one run, status `completed`, conclusion `success`; the log shows a frozen install, `0 failures`, RuboCop `no offenses detected` | FR-020, SC-002; DEC-36; US4-1 |
+
+## Ruby on Linux or macOS, from a clean checkout (User Story 1)
+
+| ID | Check | Command | Expected | Refs |
+|---|---|---|---|---|
+| C-08 | Make a clean checkout | `CLEAN=$CHECKS/clean; git clone --branch main <origin url> "$CLEAN"; cd "$CLEAN"` | a new folder with no `output/`, `coverage/` or `vendor/` | spec item 2 |
+| C-09 | The gems install at the locked versions | `BUNDLE_FROZEN=true bundle install; git status --porcelain` | exit status 0; `git status` prints nothing | US1-1; FR-017; DEC-01 |
+| C-10 | The sample files with no arguments | `bin/run >$CHECKS/out.txt 2>$CHECKS/err.txt; echo $?`; compare as above; `cmp output/final_balances_*.csv $CHECKS/final.csv` | `0`; the report matches; `err.txt` is empty; `cmp` prints nothing | US1-2; AC-08.1; DEC-22, DEC-35, DEC-27 |
+| C-11 | From another folder | `rm -r output; cd docs; ../bin/run >$CHECKS/out2.txt 2>$CHECKS/err2.txt; echo $?; cd ..` | `0`; the report with last line `Output file: ../output/final_balances_<run time>.csv`; `err2.txt` empty; the file is in `$CLEAN/output/` | US1-3; AC-08.4; DEC-22, DEC-26 |
+| C-12 | Tests and style checker | `bundle exec rspec; echo $?; bundle exec rubocop; echo $?` | `0 failures`, `Randomized with seed`, `0`; SimpleCov's `Line Coverage:` line and a `coverage/` folder; `no offenses detected`, `0` | US1-4; DEC-34, DEC-36 |
+
+## Windows (User Story 2), PowerShell
+
+| ID | Check | Command | Expected | Refs |
+|---|---|---|---|---|
+| C-13 | The sample files on Windows | `git clone -c core.autocrlf=true --branch main <origin url> $env:CHECKS\win; cd $env:CHECKS\win; $env:BUNDLE_FROZEN='true'; bundle install; git status --porcelain; ruby bin/run > ..\wout.txt 2> ..\werr.txt; $LASTEXITCODE` | install succeeds, `git status` prints nothing; `0`; the report matches, with `/` in `Output file: output/final_balances_<run time>.csv`; `werr.txt` empty; `[IO.File]::ReadAllBytes(<output file>)` equals `final.csv` byte for byte (LF, not CRLF) | US2-1; FR-025(b); DEC-22, DEC-35, DEC-37; page 10 pick 17 |
+| C-14 | Wrong arguments on Windows | `ruby bin/run -h > ..\hout.txt 2> ..\herr.txt; $LASTEXITCODE` | `1`; `hout.txt` empty; `herr.txt` is the usage message | US2-2; AC-09.2; DEC-22, DEC-25 |
+| C-15 | From another folder on Windows | `Remove-Item -Recurse output; cd docs; ruby ..\bin\run > ..\..\dout.txt; $LASTEXITCODE; cd ..` | `0`; last line `Output file: ../output/final_balances_<run time>.csv` | edge case; AC-08.4; DEC-22, DEC-26 |
+| C-16 | Windows line endings in the input | `git ls-files --eol data/` | `w/crlf` for both files, and C-13 still gave the sample report | US2-3; DEC-04 |
+
+## Docker (User Story 3), from the clean checkout of C-08
+
+| ID | Check | Command | Expected | Refs |
+|---|---|---|---|---|
+| C-17 | The image builds | `docker build -t mable-transfers .; echo $?` | `0`; the build log shows `bundle install` using the locked versions, with no "lockfile" change error | US3-1; FR-022; DEC-01, DEC-36 |
+| C-18 | Time-zone data in the image | `docker run --rm mable-transfers test -f /usr/share/zoneinfo/Australia/Sydney; echo $?` | `0` (otherwise plan item 7) | US3-2; FR-022; DEC-37 |
+| C-19 | Sample files, `output` mounted, `TZ` set | `docker run --rm -e TZ=Australia/Sydney -v "$(pwd)/output:/app/output" mable-transfers >$CHECKS/dout.txt 2>$CHECKS/derr.txt; echo $?` | `0`; the report matches; `derr.txt` empty; the file is in `$CLEAN/output/`, equal to `final.csv`; `<run time>` is Sydney's local time at the run (`TZ=Australia/Sydney date`) | US3-2; FR-023; DEC-27, DEC-36, DEC-37 |
+| C-20 | Tests in the container | `docker run --rm mable-transfers bundle exec rspec; echo $?` | `0 failures`, `Randomized with seed`, `0` | US3-3; FR-023; DEC-34, DEC-36 |
+| C-21 | Log level and exit status pass through | `docker run --rm -e LOG_LEVEL=info mable-transfers >o.txt 2>e.txt; echo $?`; `docker run --rm mable-transfers bin/run -h >o2.txt 2>e2.txt; echo $?` | `0`, `o.txt` the report, `e.txt` the six AC-09.5 lines (timestamps and pid aside); `1`, `o2.txt` empty, `e2.txt` the usage message | US3-4; AC-09.5, AC-09.2; DEC-25, DEC-28 |
+| C-22 | No `TZ` | `docker run --rm -v "$(pwd)/output:/app/output" mable-transfers` | exit 0; the file name carries the UTC time (`date -u`) | edge case; DEC-37 |
+| C-23 | No mount | `rm -r output; docker run --rm mable-transfers; ls output` | exit 0; the report on standard output; `ls` finds no `output/` on the host | edge case; DEC-37 |
+| C-24 | An existing file of the same name in the mount | `mkdir -p output; echo keep > output/existing.csv; docker run --rm -v "$(pwd)/output:/app/output" mable-transfers bin/run data/mable_account_balances.csv data/mable_transactions.csv output/existing.csv; echo $?; cat output/existing.csv` | standard output (nothing); standard error `Error: output file already exists: output/existing.csv. Delete it or give another output path.` then `E, [<timestamp> #<pid>] ERROR -- : Run stopped: start checks failed (output file already exists)`; `1`; `keep` | edge case; AC-09.3; DEC-25, DEC-27 |
+| C-25 | A reviewer's own files, mounted | `mkdir $CHECKS/mine; cp data/*.csv $CHECKS/mine/; docker run --rm -v "$CHECKS/mine:/app/mine" -v "$(pwd)/output:/app/output" mable-transfers bin/run mine/mable_account_balances.csv mine/mable_transactions.csv; echo $?` | `0`; the sample report (last line `Output file: output/final_balances_<run time>.csv`); the copies are scratch files, never committed | edge case; DEC-22, DEC-37 |
+| C-26 | An image built from a Windows checkout starts `bin/run` | in the C-13 clone: `git ls-files --eol bin/run` then `docker build -t mable-transfers-win .; docker run --rm mable-transfers-win; $LASTEXITCODE; docker rmi mable-transfers-win` | `w/lf` for `bin/run`; `0` and the sample report | edge case; FR-018; DEC-22 |
+| C-27 | Docker on a Linux host writes as root | on a Linux host, after C-19: `ls -l output/` | the file belongs to root, as the README says (on Docker Desktop the owner is the host user; record which was seen) | edge case; spec Clarifications; DEC-36, DEC-37 |
+
+## Hand checks not run (all stories)
+
+| ID | Check | Expected | Refs |
+|---|---|---|---|
+| C-28 | Every hand check (C-13 to C-16 on Windows, C-17 to C-27 with Docker) that could not run on the machine at hand | listed in the run report as left for the developer, with the reason (no Ruby 3.4 for Windows, no Docker, no Linux host); none marked passed | FR-025, SC-001; edge case |
+
+## README (User Story 5)
+
+| ID | Check | Command | Expected | Refs |
+|---|---|---|---|---|
+| C-29 | Every README command works as written | each command in the README equals one already run in C-09 to C-25 (or, for `bin/run b.csv t.csv out/day1.csv`, run it on the clean checkout with copies of the sample files) | each gives the outcome the README says | US5-2; FR-001 to FR-005; DEC-37 |
+| C-30 | Exact texts match page 2 | `diff` the README's sample report block with AC-08.1, and its usage block with AC-09.2 | `diff` prints nothing | US5-3; FR-002, FR-003; DEC-22, DEC-25, DEC-26 |
+| C-31 | The README check | read the README against R-01 to R-14 in [readme.md](contracts/readme.md#the-readme-check-c-31) | 14 of 14 present, in order | US5-1; SC-003; DEC-37 |
+| C-32 | Every relative link resolves | `grep -oE '\]\([^)#]+' README.md \| sed 's/](//' \| grep -v '^http' \| while read p; do test -e "$p" \|\| echo "missing $p"; done` | prints nothing; links to sections open on GitHub | US5-5; DEC-37, DEC-38 |
+| C-33 | The coverage figure is current | `bundle exec rspec \| grep "Line Coverage"` on the clean checkout of the submitted commit, and the same line in the CI log of that commit | both equal the README's line | US5-4; FR-012, SC-004; DEC-36 |
+
+## The submission (User Story 6), on `main` after the push
+
+| ID | Check | Command | Expected | Refs |
+|---|---|---|---|---|
+| C-34 | This spec adds no spec, class or test-data file | `git diff --stat <002 implementation tip> main -- lib spec data` | prints nothing | FR-030, SC-007; brief rule 4 |
+| C-35 | What the repository holds | `git ls-files` | every path in [repository-files.md](contracts/repository-files.md#the-pushed-main-must-be-tracked-git-ls-files) | US6-1; FR-026; DEC-38, DEC-01 |
+| C-36 | Nothing generated | `git ls-files output coverage`; on the clean checkout after C-10 and C-12: `git status --porcelain` | both print nothing | US6-2; FR-027, SC-006; DEC-27, DEC-36 |
+| C-37 | The challenge files unchanged, and the copies equal | `git diff --exit-code $(git log --diff-filter=A --format=%H -- docs/challenge/MABLE_BACK_END_CODE_TEST.md \| tail -1) HEAD -- docs/challenge/`; `git rev-parse HEAD:<path>` for each pair in [repository-files.md](contracts/repository-files.md#copies-of-the-challenge-files) | exit status 0; equal blob IDs pair by pair | US6-3; FR-028, SC-006; DEC-22 |
+| C-38 | CI is green on the latest `main` commit | `gh run list --branch main --limit 1` | conclusion `success`, for the commit `git rev-parse origin/main` | US6-4; FR-029, SC-002; DEC-36 |
+| C-39 | Making the repository public is left to the developer | the run report's "left for the developer" list | it names making the repository public, or sharing it with the reviewer, at submission time | US6-4; FR-029; DEC-38 |

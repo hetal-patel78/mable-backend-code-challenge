@@ -178,7 +178,9 @@ Questions asked and the answers chosen (5 of 5; recorded in the spec's Clarifica
 
 ### `/speckit-plan` (003-delivery)
 
-Pending.
+```text
+specs/003-delivery: the technical context is already fixed by design-decisions.md and page 5: Ruby 3.4.x, Bundler, RSpec (random order), RuboCop with rubocop-rspec, SimpleCov; the folder layout on page 5; class names and members on page 6 and in the page 10 glossary. Nothing else is added. Pick any name page 10 leaves open and list it under "Decided in the run" in the plan. Fill the constitution check against .specify/memory/constitution.md.
+```
 
 ### `/speckit-tasks` (003-delivery)
 
