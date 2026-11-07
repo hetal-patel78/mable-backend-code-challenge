@@ -23,7 +23,7 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
 ## R3. Showing a path
 
 - **Decision**: `DisplayPath.of(path, folder = Dir.pwd)` expands `path` against `folder`, takes `Pathname#relative_path_from(folder)`, and returns that relative path when it has no `..` part (the file is in or below `folder`); otherwise, and when the two paths have no common root (another Windows drive raises `ArgumentError`), it returns the expanded full path (plan P10).
-- **Rationale**: DEC-26 shows the output path relative to the folder the command was run from, or in full if the file is outside that folder; page 2 shows `output/final_balances_2026-11-07_143005.csv` from the project root, the full path from `docs` and `/tmp/day1.csv` in full. A relative path with no `..` part is exactly a file in or below the folder, so the rule needs no other test. Every component that builds a message or log text applies it to the real path it holds (plan P11), so `DisplayPath` stays the one owner of the rule.
+- **Rationale**: DEC-26 shows the output path relative to the folder the command was run from, or in full if the file is outside that folder; page 2 shows `output/final_balances_2026-11-07_143005.csv` from the project root, the full path from `docs` and `/tmp/day1.csv` in full. A relative path with no `..` part is exactly a file in or below the folder, so the rule needs no other test. The `Runner` applies it to its start-check lines and to the balances and transfers paths it passes on, the infrastructure errors to the paths in their messages and `ReportPrinter` to the output line (plan P11); no application class uses it, so `DisplayPath` stays the one owner of the rule and `application/` does not depend on it.
 - **Alternatives considered**: allowing leading `..` steps (shows a file outside the run folder relative, which DEC-26 does not allow); comparing lengths (gives different answers for the same layout depending on folder names).
 
 ## R4. `LoadBalances` problem by problem
@@ -40,7 +40,7 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
 
 ## R5. `ProcessDailyTransfer` step by step
 
-- **Decision**: `call` runs, in this order: output path defaulted to `FinalBalancesCsvWriter.default_path(run_time)` when nil; `logger.info("Run started: balances <DisplayPath.of(b)>, transfers <DisplayPath.of(t)>")` (the paths are the real ones, plan P11); `LoadBalances.new(balances_reader, repository).call(b)`; total before; `transfers_reader.each_row(t)` turning each `Row` into a `TransferResult` and logging it; `NoTransfers.new(t)` when no row was read; `logger.warn(DayResult::ALL_REJECTED_WARNING)` when every result is rejected; total after, and `TotalChanged.new(before, after)` when they differ; `writer.write(repository.all, output_path)`; the `DayResult`; `reporter.print(day_result)`; `logger.info("Run ended: ...")`; the `DayResult` is returned.
+- **Decision**: `call` runs, in this order: output path defaulted to `FinalBalancesCsvWriter.default_path(run_time)` when nil; `logger.info("Run started: balances <b>, transfers <t>")` (the paths as given; the `Runner` gives them in their shown form, plan P11); `LoadBalances.new(balances_reader, repository).call(b)`; total before; `transfers_reader.each_row(t)` turning each `Row` into a `TransferResult` and logging it; `NoTransfers.new(t)` when no row was read; `logger.warn(DayResult::ALL_REJECTED_WARNING)` when every result is rejected; total after, and `TotalChanged.new(before, after)` when they differ; `writer.write(repository.all, output_path)`; the `DayResult`; `reporter.print(day_result)`; `logger.info("Run ended: ...")`; the `DayResult` is returned.
   - A row with `wrong_field_count?` becomes `TransferResult.rejected(..., reason: :malformed_row, header_hint: row.header_hint)` with no domain object built.
   - Otherwise `AccountNumber.new(from)`, `AccountNumber.new(to)`, `Money.amount(amount)`, `Transfer.new(from:, to:, amount:)`, `TransferService#apply`, then `TransferResult.applied`. A rescue of the five domain errors, listed once in a frozen `Hash` from error class to reason code, gives `TransferResult.rejected` with that code and `row.header_hint`.
   - `TransferService` is built once per `call`, with the repository passed in.
@@ -63,13 +63,13 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
 
 - **Decision**: `Runner#run(arguments)`:
   1. unless the count is 0, 2 or 3: print the two usage lines on `stderr`, return 1;
-  2. paths: typed paths `File.expand_path(arg)`, defaults `File.expand_path('data/<name>', PROJECT_ROOT)`; these real (absolute) paths are passed on as they are (plan P11);
+  2. paths: typed paths `File.expand_path(arg)`, defaults `File.expand_path('data/<name>', PROJECT_ROOT)`; the start checks use these real (absolute) paths (plan P11);
   3. logger (plan P16);
   4. `run_time = Time.now`, once;
   5. output path: the third argument expanded as in step 2, or `File.expand_path(FinalBalancesCsvWriter.default_path(run_time), PROJECT_ROOT)`;
   6. start checks: `File.exist?` for each input file, `File.file?` for the output (plan P28); every problem printed, with the path shown by `DisplayPath.of`, as an `Error:` line in the order balances, transfers, output, then one `logger.error("Run stopped: start checks failed (<reasons>)")`, return 1;
   7. build `BalancesCsvReader.new`, `TransfersCsvReader.new`, `FinalBalancesCsvWriter.new`, `AccountRepository.new`, `ReportPrinter.new(output: stdout)`;
-  8. `ProcessDailyTransfer.new(run_time:, balances_reader:, transfers_reader:, writer:, repository:, reporter:, logger:).call(balances, transfers, output)`;
+  8. `ProcessDailyTransfer.new(run_time:, balances_reader:, transfers_reader:, writer:, repository:, reporter:, logger:).call(DisplayPath.of(balances), DisplayPath.of(transfers), output)`: the input paths in their shown form, the output path in full (plan P11);
   9. return 0; `rescue *STOPPING_ERRORS => error`: `stderr.puts("Error: #{error.message}")`, `logger.error("Run stopped: #{error.stop_reason}")`, return 1.
   `PROJECT_ROOT` is `File.expand_path('../..', __dir__)`, the folder holding `bin/` and `lib/`.
 - **Rationale**: FR-031's order. The usage check comes before the logger is used, so a wrong-argument run logs nothing (page 10 pick 3). Returning the status rather than calling `exit` keeps every runner behaviour testable in one process (page 6 pick 42).

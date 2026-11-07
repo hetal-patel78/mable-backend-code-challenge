@@ -6,7 +6,7 @@ Phase 1 of the [plan](plan.md). Names and meanings are those of [page 6](../../d
 
 ```mermaid
 classDiagram
-    Runner ..> DisplayPath : start-check lines
+    Runner ..> DisplayPath : start-check lines, input paths passed on
     Runner ..> FinalBalancesCsvWriter : default_path(run_time)
     Runner --> ProcessDailyTransfer : builds with the parts, runs
     ProcessDailyTransfer --> BalancesCsvReader : balances_reader
@@ -14,7 +14,6 @@ classDiagram
     ProcessDailyTransfer --> FinalBalancesCsvWriter : writer
     ProcessDailyTransfer --> AccountRepository : repository
     ProcessDailyTransfer --> ReportPrinter : reporter
-    ProcessDailyTransfer ..> DisplayPath : Run started line
     ProcessDailyTransfer ..> LoadBalances : creates
     ProcessDailyTransfer ..> TransferService : creates
     ProcessDailyTransfer ..> DayResult : builds
@@ -27,8 +26,6 @@ classDiagram
     DayResult o-- "*" Account
     ReportPrinter ..> DayResult : reads
     ReportPrinter ..> DisplayPath : output line
-    InvalidBalancesFile ..> DisplayPath : message
-    NoTransfers ..> DisplayPath : message
     UnreadableFile ..> DisplayPath : message
     OutputNotWritable ..> DisplayPath : message
 ```
@@ -55,7 +52,7 @@ classDiagram
 
 ## Entities
 
-### `Row` (value, infrastructure; plan P2)
+### `Row` (value, infrastructure helper; plan P2; page 6 pick 52)
 
 | Member | Type | Meaning |
 |---|---|---|
@@ -68,7 +65,7 @@ classDiagram
 
 - A `Data` value: frozen, equal by content.
 
-### `CsvRows` (infrastructure; plan P3)
+### `CsvRows` (infrastructure helper; plan P3; page 6 pick 52)
 
 | Member | Type | Meaning |
 |---|---|---|
@@ -155,13 +152,13 @@ All are direct subclasses of `StandardError`.
 | `ReportPrinter.new(output: $stdout, current_folder: Dir.pwd)` | IO, String | |
 | `print(day_result)` | `DayResult` | Prints the report (FR-027, FR-028) to `output` |
 
-### `DisplayPath` (infrastructure; plan P10)
+### `DisplayPath` (infrastructure helper; plan P10; page 6 pick 53)
 
 | Member | Type | Meaning |
 |---|---|---|
 | `DisplayPath.of(path, folder = Dir.pwd)` | String, String | The path relative to `folder` when the file is in or below it, or in full |
 
-- Paths are real (absolute) from the `Runner` on (plan P11). The shown form is built where a text is built: the four run-stopping errors that hold a path, the `Run started` line and the start-check lines use `DisplayPath.of`; the report's output line uses it in `ReportPrinter` alone.
+- The `Runner` resolves every path to a real (absolute) path for the start checks, then gives `ProcessDailyTransfer` the balances and transfers paths in their shown form and the output path in full (plan P11). Only `infrastructure/` uses `DisplayPath.of`: the start-check lines, the paths the `Runner` passes on, `UnreadableFile` and `OutputNotWritable`, and the report's output line in `ReportPrinter`. `InvalidBalancesFile.no_rows`, `NoTransfers` and the `Run started` line show the path they are given (page 6 pick 53).
 
 ### `Runner` (infrastructure; plan P12)
 
