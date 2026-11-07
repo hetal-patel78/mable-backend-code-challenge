@@ -31,7 +31,7 @@ Phase 1 of the [plan](plan.md). This spec adds no class and no runtime data (FR-
 
 - **Holds**: six instructions, as in [contracts/dockerfile.md](contracts/dockerfile.md) (FR-022).
 - **Rules**: base image `ruby:<the text of .ruby-version>`, the full image (or its `-bookworm` variant, plan item 7); working folder `/app`, the project root (FR-023); frozen `bundle install`; default command `CMD ["bin/run"]` in exec form; nothing else: no extra package, no other gem, no `.dockerignore` (FR-024); runs as the image's default user, root (spec Clarifications).
-- **Checks**: C-04, C-17 to C-26.
+- **Checks**: C-04, C-17 to C-26, C-42 (the file read against its contract: six instructions, none of the forbidden ones, no `.dockerignore`).
 
 ## `.gitattributes`
 
