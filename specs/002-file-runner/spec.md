@@ -248,7 +248,8 @@ The program loads every account and its starting balance from the balances file,
 
      - Exit status: 1
 6. **AC-01.6 Other balance problems** (FR-01; DEC-04, DEC-09, DEC-11, DEC-12).
-   - **Given** a `balances.csv` whose line 1 is `1212343433335665,50.00` (decided in the run, item 9) and whose line 2 is the row below, **When** the program runs, **Then** standard output is (nothing), the exit status is 1, and standard error is `Error: the balances file is invalid (<count>):`, then the problem lines, then `E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: <count>`:
+   - **Given** a `balances.csv` whose line 1 is `1212343433335665,50.00` (decided in the run, item 9) and whose line 2 is the row below, **When** the program runs, **Then** standard output is (nothing), standard error is `Error: the balances file is invalid (<count>):`, then the problem lines, then `E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: <count>`, and
+     Exit status: 1:
 
      | Row on line 2 | Count | Problem lines |
      |---|---|---|
@@ -697,6 +698,7 @@ A user runs `bin/run` with 0, 2 or 3 positional arguments. The runner checks the
 8. **AC-09.8 Exit status** (FR-09; DEC-25).
    - 0 for every completed run, even if some or all transfers were rejected (AC-02.3, AC-08.2).
    - 1 for every stopped run: wrong arguments (AC-09.2), a missing input file (AC-09.3) or one that cannot be opened (AC-09.3a), an invalid balances file (AC-01.3 to AC-01.10), an empty transfers file (AC-02.4), a file that cannot be read past a line (AC-01.9, AC-02.5), a changed total (AC-08.5), an output file that already exists (AC-09.3), or an output file that cannot be written (AC-09.4).
+   - Standard error: for exit status 0, nothing unless a transfer was rejected (warn lines, AC-09.5) or `LOG_LEVEL` asks for more; for exit status 1, the `Error:` lines and the error log line of the scenario that stopped the run.
    - Every exit status 1 means standard output is (nothing), no output file is written, and an output file that already existed is unchanged.
 
 ---
@@ -715,27 +717,32 @@ The page 2 scenarios of FR-03 to FR-06 are owned by `001-domain`. This spec runs
 
    | Criterion | Row | Standard output | Standard error |
    |---|---|---|---|
-   | AC-03.1 | `1111234522226789,1212343433335665,30.00` | A: `1111234522226789 -> 1212343433335665  30.00`; balances `70.00`, `80.00`, `0.00` | (nothing) |
+   | AC-03.1 | `1111234522226789,1212343433335665,30.00` | A, with the transfers line `  Line 1  applied  1111234522226789 -> 1212343433335665  30.00` and the final balances lines `  1111234522226789  70.00`, `  1212343433335665  80.00` and `  0000123412341234  0.00` | (nothing) |
    | AC-03.3 | `12345,1212343433335665,abc` | R: `  Line 1  rejected  12345 -> 1212343433335665  abc  invalid_account_number` **(derived)** | `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: *2345 -> ************5665 abc invalid_account_number` **(derived)** |
    | AC-03.3 | `1111234522226789,1111234522226789,0` | R: `  Line 1  rejected  1111234522226789 -> 1111234522226789  0  invalid_amount` **(derived)** | `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************6789 -> ************6789 0 invalid_amount` **(derived)** |
    | AC-03.3 | `9999888877776666,9999888877776666,5.00` | R: `  Line 1  rejected  9999888877776666 -> 9999888877776666  5.00  same_account` **(derived)** | `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************6666 -> ************6666 5.00 same_account` **(derived)** |
 
-   - **AC-03.2** (a rejected transfer changes nothing and the run continues) is shown by every R row above and in FR-04 to FR-06 (both balances unchanged in the final balances), and by AC-08.2 (the row after a rejected one is processed; exit status 0).
+   - Exit status: 0 for every row of this table.
+   - **AC-03.2** (a rejected transfer changes nothing and the run continues; standard output and standard error as in the rows above; Exit status: 0) is shown by every R row above and in FR-04 to FR-06 (both balances unchanged in the final balances), and by AC-08.2 (the row after a rejected one is processed; exit status 0).
    - The order in which `ProcessDailyTransfer` builds the values, both `AccountNumber`s before the `Money`, is owned here (FR-014 below); it gives `invalid_account_number` for `12345,1212343433335665,abc`.
 2. **FR-04** (owned by `001`; DEC-10, DEC-13):
 
    | Criterion | Row | Standard output | Standard error |
    |---|---|---|---|
-   | AC-04.1 | `1111234522226789,1212343433335665,100.01` | R: `  Line 1  rejected  1111234522226789 -> 1212343433335665  100.01  insufficient_funds` | `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************6789 -> ************5665 100.01 insufficient_funds` |
+   | AC-04.1 | `1111234522226789,1212343433335665,100.01` | R: `  Line 1  rejected  1111234522226789 -> 1212343433335665  100.01  insufficient_funds` | `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************6789 -> ************5665 100.01 insufficient_funds`, then `W, [<timestamp> #<pid>]  WARN -- : All transfers were rejected; check this is the right file.` |
    | AC-04.2 | `1111234522226789,1212343433335665,100.00` | A: `1111234522226789 -> 1212343433335665  100.00` **(derived)**; balances `0.00`, `150.00`, `0.00` | (nothing) |
    | AC-04.3 | `0000123412341234,1111234522226789,0.01` | R: `  Line 1  rejected  0000123412341234 -> 1111234522226789  0.01  insufficient_funds` **(derived)** | `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************1234 -> ************6789 0.01 insufficient_funds` **(derived)** |
+
+   - Exit status: 0 for every row of this table.
 
 3. **FR-05** (owned by `001`; DEC-17):
 
    | Criterion | Row | Standard output | Standard error |
    |---|---|---|---|
-   | AC-05.1 | `1111234522226789,9999888877776666,10.00` | R: `  Line 1  rejected  1111234522226789 -> 9999888877776666  10.00  unknown_account`; the final balances list only the three loaded accounts | `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************6789 -> ************6666 10.00 unknown_account` |
+   | AC-05.1 | `1111234522226789,9999888877776666,10.00` | R: `  Line 1  rejected  1111234522226789 -> 9999888877776666  10.00  unknown_account`; the final balances list only the three loaded accounts | `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************6789 -> ************6666 10.00 unknown_account`, then `W, [<timestamp> #<pid>]  WARN -- : All transfers were rejected; check this is the right file.` |
    | AC-05.2 | `9999888877776666,1111234522226789,10.00` | R: `  Line 1  rejected  9999888877776666 -> 1111234522226789  10.00  unknown_account` **(derived)** | `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************6666 -> ************6789 10.00 unknown_account` **(derived)** |
+
+   - Exit status: 0 for every row of this table.
 
 4. **AC-06.1 Account numbers** (FR-06, owned by `001`; DEC-08). The row is `<from>,1212343433335665,10.00`:
 
@@ -748,6 +755,7 @@ The page 2 scenarios of FR-03 to FR-06 are owned by `001-domain`. This spec runs
    | `1111O34522226789` | R: `  Line 1  rejected  1111O34522226789 -> 1212343433335665  10.00  invalid_account_number` **(derived)** | `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************6789 -> ************5665 10.00 invalid_account_number` **(derived)** |
    | `1111-2345-2222-6789` | R: `  Line 1  rejected  1111-2345-2222-6789 -> 1212343433335665  10.00  invalid_account_number` **(derived)** | `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ***************6789 -> ************5665 10.00 invalid_account_number` **(derived)** |
 
+   - Exit status: 0 for every row of this table.
    - The account number with leading zeros matched across both files is also an integration test with fixture files (DEC-34).
 5. **AC-06.2 Amounts** (FR-06, owned by `001`; DEC-09, DEC-10). The row is `1111234522226789,1212343433335665,<amount>`:
 
@@ -761,6 +769,7 @@ The page 2 scenarios of FR-03 to FR-06 are owned by `001-domain`. This spec runs
    | `"1,000.00"` (quoted) | R: `  Line 1  rejected  1111234522226789 -> 1212343433335665  1,000.00  invalid_amount` **(derived)** | `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************6789 -> ************5665 1,000.00 invalid_amount` **(derived)** |
    | `1,000.00` (not quoted: 4 fields) | R: `  Line 1  rejected  malformed_row: 4 fields, expected 3` **(derived)** | `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************6789 -> ************5665 1 malformed_row` **(derived)** |
 
+   - Exit status: 0 for every row of this table.
    - `<as written>` is the value after trimming spaces: `10.` is shown as `10.`, not `10.00`. An applied amount is shown with 2 decimal places in the report and in the info log line (`LOG_LEVEL=info`).
 6. **AC-06.3 The same rules hold in the balances file** (FR-06, owned by `001`; FR-01; DEC-09 to DEC-11): run through the runner by AC-01.4 to AC-01.6 above.
 
@@ -799,7 +808,7 @@ A developer runs the whole suite and gets orthogonal RSpec specs that read as th
 3. **Given** the fixture files in `spec/fixtures/`, **Then** they are used only for file-level behaviour: blank lines, a header row, a byte-order mark, an unreadable CSV (an unclosed quote), an empty file, a missing file, a wrong number of fields, an account number with leading zeros matched across both files, the end-to-end inputs, and the copies of the challenge's files in `spec/fixtures/sample/` (NFR-06; DEC-34).
 4. **Given** the end-to-end specs, **Then** there are exactly five, each running `bin/run` as a separate process: the sample files (AC-08.1), mixed rejections (AC-08.2), all rejected (AC-02.3), an invalid balances file (AC-01.4), and a wrong number of arguments (AC-09.2, 1 argument) (NFR-06; DEC-34, DEC-35; decided in the run, item 2).
 5. **Given** `ProcessDailyTransfer`, **When** a test builds it, **Then** it can pass a fixed run time, so the output file name is known, and a logger that writes to memory, so the log lines can be read (NFR-06; DEC-28, DEC-30).
-6. **Given** the total-check failure, **Then** its message, no output file, no report and exit status 1 are tested (AC-08.5; NFR-06; DEC-24).
+6. **Given** the total-check failure, **Then** its message, no output file, no report and exit status 1 are tested: standard output is (nothing), standard error is the two lines of AC-08.5, and the exit status is 1 (AC-08.5; NFR-06; DEC-24).
 7. **Given** the runner scenarios of User Stories 2 to 6, **Then** each checks standard output, standard error and the exit status exactly, with `<timestamp>` and `<pid>` matched as patterns and `<reason from the system>` matched as any non-empty text (decided in the run, items 1 and 10).
 
 ---
