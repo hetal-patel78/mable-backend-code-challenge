@@ -217,7 +217,11 @@ Every push to the GitHub repository starts a GitHub Actions run that installs th
      - Exit status: 0
    - And the workflow produces one run for the commit, and its conclusion is success.
 2. **A failing check fails the run** (NFR-04; DEC-36).
-   - **Given** a commit where a spec fails or RuboCop finds an offence, **When** it is pushed, **Then** that step exits with a non-zero status and the run's status is failure. (Checked by reading the workflow: each command is its own step, and no step ignores errors. No failing commit is pushed to prove it; decided in the run, item 9.)
+   - **Given** a commit where a spec fails or RuboCop finds an offence, **When** it is pushed, **Then**, for the failing step (`bundle exec rspec` or `bundle exec rubocop`):
+     - Standard output: RSpec's summary with at least one failure, or RuboCop's offence list; not compared exactly.
+     - Standard error: not compared.
+     - Exit status: non-zero.
+   - And later steps are skipped and the run's conclusion is failure (checked by reading the workflow: each command is its own step, and no step ignores errors; no failing commit is pushed to prove it; decided in the run, item 9).
 3. **No threshold and no matrix** (NFR-04; DEC-36; page 4).
    - **Given** the workflow, **When** it is read, **Then** it has no coverage minimum, no operating-system or Ruby-version matrix, and no Ruby version written in it.
 
