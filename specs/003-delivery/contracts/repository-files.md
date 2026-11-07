@@ -25,6 +25,7 @@ bin/run text eol=lf
 
 - Git mode `100755` (`git ls-files -s bin/run`); fixed, if needed, with `git update-index --chmod=+x bin/run` (plan item 14).
 - First line exactly `#!/usr/bin/env ruby`.
+- `bundle exec rubocop bin/run` reports no offence. If it reports one, the only change this spec makes is `# frozen_string_literal: true` on line 2; any other offence is a cross-spec finding against `002-file-runner`, fixed there test-first.
 - Stored with LF (`git ls-files --eol bin/run` shows `i/lf`); checked out with LF everywhere (`w/lf`), by `.gitattributes`.
 
 ## Every text file
@@ -52,4 +53,4 @@ These blob IDs must be equal, pair by pair (`git rev-parse HEAD:<path>`; plan it
 
 ## What this spec adds, and nothing more (FR-030, SC-007)
 
-Compared with the tip of `002-file-runner`'s implementation, this spec's commits touch only `README.md`, `.github/workflows/ci.yml`, `Dockerfile`, `.gitattributes`, `Gemfile.lock` (platforms), `bin/run` (its Git mode and, if missing or different, its first line `#!/usr/bin/env ruby`; nothing else; spec item 16) and documents under `docs/` and `specs/`. No file under `lib/`, `spec/` or `data/` changes.
+Compared with the tip of `002-file-runner`'s implementation, this spec's commits touch only `README.md`, `.github/workflows/ci.yml`, `Dockerfile`, `.gitattributes`, `Gemfile.lock` (platforms), `bin/run` (its Git mode and, if missing or different, its first line `#!/usr/bin/env ruby`; and, only if RuboCop then reports it, `# frozen_string_literal: true` on line 2; nothing else; spec item 16) and documents under `docs/` and `specs/`. No file under `lib/`, `spec/` or `data/` changes.

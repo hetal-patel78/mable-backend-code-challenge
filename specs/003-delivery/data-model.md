@@ -46,7 +46,7 @@ Phase 1 of the [plan](plan.md). This spec adds no class and no runtime data (FR-
 
 ## `bin/run` (built by `002-file-runner`; mode and first line added and checked here)
 
-- **Holds**: Git mode `100755`; first line `#!/usr/bin/env ruby`; LF line endings in the index and in every checkout (FR-018). `002` requires none of the three; this spec sets the mode and the first line if missing (spec item 16) and changes nothing else in the file.
+- **Holds**: Git mode `100755`; first line `#!/usr/bin/env ruby`; LF line endings in the index and in every checkout (FR-018). `002` requires none of the three; this spec sets the mode and the first line if missing (spec item 16) and, if `bundle exec rubocop bin/run` then reports an offence, adds only the `# frozen_string_literal: true` comment on line 2; any other offence is a cross-spec finding against `002-file-runner`.
 - **Checks**: C-01, C-26.
 
 ## Clean checkout
