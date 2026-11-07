@@ -37,5 +37,5 @@
 - "Success criteria are technology-agnostic": SC-002 and SC-005 name CI, the style checker and the Ruby version because NFR-04 and DEC-36 set exactly those targets.
 - "Scope is clearly bounded": the spec owns NFR-04 only; it checks NFR-04 targets built by `001` and `002` without changing them, adds no RSpec spec, class or test-data file, and repeats the page 4 out-of-scope items that touch delivery under Assumptions.
 - "All acceptance scenarios are defined": every scenario that runs the program gives standard output, standard error and the exit status separately, copied from page 2 (AC-08.1, AC-08.4, AC-09.2, AC-09.5), with `<run time>` in place of the page 2 run time only (decided in the run, item 1).
-- Small gaps decided while writing are listed in the spec's "Decided in the run" section (14 items).
+- Small gaps decided while writing are listed in the spec's "Decided in the run" section (17 items).
 - Items marked incomplete require spec updates before `/speckit-clarify` or `/speckit-plan`

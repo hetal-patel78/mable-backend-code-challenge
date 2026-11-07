@@ -193,15 +193,29 @@ Rules:
 
 ### `/speckit-clarify` (003-delivery)
 
-Pending.
+```text
+specs/003-delivery: run the clarification scan with no user. For each question, pick the answer design-decisions.md and the solution design support (or, for a small gap, the most reasonable choice consistent with them) and write it into the spec's Clarifications section. Focus on what the README check, the CI workflow, the Dockerfile and the clean-checkout and submission checks need to be testable.
+```
+
+Questions asked and the answers chosen (5 of 5; recorded in the spec's Clarifications, session 2026-11-07):
+
+1. Which branch do the submission checks, the clean checkout and the README's coverage figure apply to? Answer: `main`, the repository's default branch, the one the submission link opens, after the merged implementation is pushed to it (DEC-38; brief Part 2 step 4).
+2. How is `bin/run` kept with LF line endings in a Windows checkout, so a Docker image built there still starts it? Answer: it is not forced and nothing needs to force it: no `.gitattributes`; a Windows checkout with `core.autocrlf=true` gives every Ruby file CRLF, which RuboCop's default `Layout/EndOfLine` (`native`) wants on Windows, and Docker runs `ruby bin/run`, which ignores a CRLF `#!` line (DEC-22, DEC-36, NFR-04).
+3. What does the Docker image run by default: `bin/run` directly, or through `bundle exec`? Answer: `ruby bin/run` directly, `CMD ["ruby", "bin/run"]` in exec form; a command after the image name replaces it (DEC-22, DEC-36, DEC-37).
+4. Which user does the container run as, given that on a Linux host the mounted output file then belongs to that user? Answer: the image's default user (root), no `--user` option; the README says so in one line (DEC-36, DEC-37).
+5. In what order does the README give its sections after build, test and run? Answer: DEC-37's order: build, test and run; input files; `LOG_LEVEL` and exit statuses; assumptions; design reasoning; test coverage; persistent storage, production items and known limitations; "How this was built"; repository layout and the challenge link (DEC-37).
 
 ### `/speckit-plan` (003-delivery)
 
-Pending.
+```text
+specs/003-delivery: the technical context is already fixed by design-decisions.md and page 5: Ruby 3.4.x, Bundler, RSpec (random order), RuboCop with rubocop-rspec, SimpleCov; the folder layout on page 5; class names and members on page 6 and in the page 10 glossary. Nothing else is added. Pick any name page 10 leaves open and list it under "Decided in the run" in the plan. Fill the constitution check against .specify/memory/constitution.md.
+```
 
 ### `/speckit-tasks` (003-delivery)
 
-Pending.
+```text
+specs/003-delivery: tests first in every phase (write the spec, see it fail, then the code), each phase ends with its specs passing; every edge case in design-decisions.md within this spec's scope has a planned test, citing its DEC ID; every task cites its FR/NFR and DEC IDs where it helps; follow the brief's test split (rule 4). This spec is checked by CI, a Docker run, a Windows run from a clean checkout and a README check, not by new RSpec specs: its tasks are those checks and documents.
+```
 
 ## Whole specification
 
