@@ -160,8 +160,8 @@ A reviewer without Ruby 3.4, or who cannot get `bundle install` working, builds 
 
 1. **The image builds from a clean checkout** (NFR-04; DEC-01, DEC-36).
    - **Given** a clean checkout, **When** `docker build -t mable-transfers .` runs in its root, **Then**:
-     - Standard output: Docker's build log, not compared exactly; it shows the official Ruby image whose version equals `.ruby-version` and `bundle install` installing the locked gems without changing `Gemfile.lock`.
-     - Standard error: not compared.
+     - Standard output: not compared (BuildKit writes nothing there).
+     - Standard error: Docker's build log, not compared exactly; it shows the official Ruby image whose version equals `.ruby-version` and `bundle install` installing the locked gems without changing `Gemfile.lock`.
      - Exit status: 0
 2. **The sample files by default, with `output` mounted and `TZ` set** (NFR-04, AC-08.1; DEC-27, DEC-36, DEC-37).
    - **Given** the built image, **When** the README's run command runs it with no command, with the checkout's `output` folder mounted at the container's `output` folder and `TZ` set to the reviewer's time zone (for example `TZ=Australia/Sydney`), **Then**:
@@ -323,7 +323,7 @@ Each requirement cites the NFR or decision it serves. The README requirements (F
 
 **The checks before submission ([DEC-36](../../docs/design-analysis/design-decisions.md#dec-36), [NFR-04](../../docs/solution-design/03-non-functional-requirements.md#nfr-04))**
 
-- **FR-025** (NFR-04; DEC-36, DEC-37; page 10 pick 20): before submission, from a clean checkout of the pushed branch: (a) the Docker image MUST be built, the sample files run in it (User Story 3, scenarios 2 and 4) and the tests run in it (scenario 3); (b) on Windows, `bundle install` and `ruby bin/run` MUST give the sample report and the sample output file (User Story 2); (c) on Linux or macOS, or in CI, `bin/run` MUST give the same (User Story 1). Each result is recorded in the run report; a check that cannot be run on the machine at hand is listed there as left for the developer.
+- **FR-025** (NFR-04; DEC-36, DEC-37; page 10 pick 20): before submission, from a clean checkout of the pushed branch: (a) the Docker image MUST be built, the sample files run in it (User Story 3, scenarios 2 and 4) and the tests run in it (scenario 3); (b) on Windows, `bundle install` and `ruby bin/run` MUST give the sample report and the sample output file (User Story 2); (c) on Linux or macOS, or in a Linux container from the official `ruby:<version>` image with the clean checkout mounted, `bin/run` MUST give the same (User Story 1). Each result is recorded in the run report; a check that cannot be run on the machine at hand is listed there as left for the developer.
 
 **The submission ([DEC-38](../../docs/design-analysis/design-decisions.md#dec-38))**
 
@@ -344,13 +344,14 @@ Names and meanings as in the [page 10 glossary](../../docs/solution-design/10-tr
 - **`.gitattributes`**: one line that keeps `bin/run` with LF line endings in every checkout (FR-018).
 - **Clean checkout**: a fresh clone of the pushed branch in a new, empty folder (Conventions).
 - **Submission**: the link to the GitHub repository (DEC-38).
-- Used from `001` and `002`, unchanged: `.ruby-version`, `Gemfile`, `Gemfile.lock`, `.gitignore`, `.rspec`, `bin/run`, `Runner`, `data/`, `spec/fixtures/sample/`.
+- Changed here: `Gemfile.lock` (platforms added, gem versions unchanged, FR-017); `bin/run` (content unchanged; Git mode set to 100755 if needed, FR-018).
+- Used from `001` and `002`, unchanged: `.ruby-version`, `Gemfile`, `.gitignore`, `.rspec`, `Runner`, `data/`, `spec/fixtures/sample/`.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001** (NFR-04; DEC-35): on each of three platforms (Linux or macOS, or CI; Windows; Docker), the sample run from a clean checkout gives the sample report on standard output, nothing on standard error, exit status 0, and the sample output file byte for byte: 3 of 3 (any platform that cannot be run is listed as left for the developer, never counted as passed).
+- **SC-001** (NFR-04; DEC-35): on each of three platforms (Linux or macOS, or a Linux container from the official `ruby:<version>` image with the clean checkout mounted; Windows; Docker), the sample run from a clean checkout gives the sample report on standard output, nothing on standard error, exit status 0, and the sample output file byte for byte: 3 of 3 (any platform that cannot be run is listed as left for the developer, never counted as passed).
 - **SC-002** (NFR-04; DEC-36): 100% of the GitHub Actions runs on the pushed branch's latest commit succeed, with 0 test failures and 0 style offences.
 - **SC-003** (DEC-37): the README check finds every item of FR-001 to FR-014: 14 of 14, and every command and every relative link in the README works on a clean checkout.
 - **SC-004** (DEC-36): the coverage figure in the README equals the figure a fresh test run prints on the submitted commit.

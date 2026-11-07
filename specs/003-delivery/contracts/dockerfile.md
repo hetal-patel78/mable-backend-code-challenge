@@ -32,7 +32,7 @@ None of them adds `--user` (spec Clarifications) or `-it`.
 
 | Command | Standard output | Standard error | Exit status | Scenario |
 |---|---|---|---|---|
-| Build | build progress | build progress | 0 | US3-1 |
+| Build | (nothing; BuildKit writes no standard output) | build log | 0 | US3-1 |
 | Run, `TZ` and mount | the sample report, `<run time>` in that time zone | (nothing) | 0 | US3-2 |
 | Run with `-e LOG_LEVEL=info` added | the sample report | the six AC-09.5 info lines | 0 | US3-4 |
 | Run with the command `bin/run -h` | (nothing) | the two AC-09.2 usage lines | 1 | US3-4 |
