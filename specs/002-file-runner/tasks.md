@@ -141,10 +141,13 @@
   - a starting balance of `0.00` is accepted (DEC-10);
   - the reader is asked once, with the path given to `call` (`paths` is `['balances.csv']`);
   - `call` returns nil.
-- [ ] T025 [P] [US1] Write `spec/application/day_result_spec.rb`, applied results only [FR-022; DEC-26; P7]:
+- [ ] T025 [P] [US1] Write `spec/application/day_result_spec.rb`, applied and rejected results [FR-022; DEC-19, DEC-21, DEC-26; P7]:
   - the five members return what was given;
   - with two applied `TransferResult`s: `processed_count` 2, `applied_count` 2, `rejected_count` 0, `rejected_counts` `{}`, `all_rejected?` false;
   - with no results, `all_rejected?` is false;
+  - `rejected_counts` lists only the codes that occurred, in DEC-19 order, whatever the file order: results rejected `insufficient_funds`, `same_account`, `unknown_account` give `{ same_account: 1, unknown_account: 1, insufficient_funds: 1 }` in that order;
+  - a header row counts as processed and rejected (DEC-26): one rejected result gives `processed_count` 1, `rejected_count` 1;
+  - `all_rejected?` is true when every result is rejected, false when one is applied;
   - `DayResult::ALL_REJECTED_WARNING` is `All transfers were rejected; check this is the right file.` (DEC-21).
 - [ ] T026 [P] [US1] Write `spec/infrastructure/final_balances_csv_writer_spec.rb`, the happy path, inside `in_temp_folder` [FR-024, FR-025; AC-08.3, AC-09.7; DEC-27; P13; research R6]:
   - `default_path(Time.new(2026, 11, 7, 14, 30, 5))` is `output/final_balances_2026-11-07_143005.csv` (DEC-27);
@@ -234,7 +237,7 @@
 
 - [ ] T043 [US2] Create `lib/application/errors.rb` with a one-line comment and `InvalidBalancesFile < StandardError`: `new(problems)` (message `the balances file is invalid (<count>):` followed by `"\n  " + problem` for each; `<count>` `1 problem` or `<n> problems`), `InvalidBalancesFile.no_rows(path)` (message `the balances file has no rows: <path>` with `<path>` as `DisplayPath.of(path)` (P11), one problem), `problems`, `stop_reason` (`balances file invalid: <count>`) [FR-010; DEC-11, DEC-12; P8; item 6]
 - [ ] T044 [US2] Complete `lib/application/load_balances.rb` with the five steps of research R4: field count first (with the hint), the account number (with the hint), `include?` and the duplicate text `DuplicateAccount.new(number).message + " (first on line <M>)"`, the balance with `Money.balance` and `Account.check_opening_balance`, add only a row with no problem; problems as `Line <N>: <text>`; `UnreadableFile` with a line number becomes the last problem, one without is re-raised; then `InvalidBalancesFile.new(problems)` or `InvalidBalancesFile.no_rows(path)`; rescue only `InvalidAccountNumber`, `InvalidAmount` and `NegativeBalance` (depends on T043) [FR-007 to FR-011; DEC-06, DEC-11, DEC-12, DEC-31; research R4]
-- [ ] T045 [US2] Add to `lib/infrastructure/runner.rb` `STOPPING_ERRORS` (`InvalidBalancesFile`, `UnreadableFile` for now) and the rescue in `run`: `stderr.puts("Error: #{error.message}")`, `logger.error("Run stopped: #{error.stop_reason}")`, return 1 (depends on T043) [FR-034, FR-036; DEC-25, DEC-28; P8, P27; research R7]
+- [ ] T045 [US2] Add to `lib/infrastructure/runner.rb` `STOPPING_ERRORS` (`InvalidBalancesFile` for now) and the rescue in `run`: `stderr.puts("Error: #{error.message}")`, `logger.error("Run stopped: #{error.stop_reason}")`, return 1 (depends on T043) [FR-034, FR-036; DEC-25, DEC-28; P8, P27; research R7]
 - [ ] T046 [US2] Run `bundle exec rspec` until every example passes in random order and `bundle exec rubocop` reports zero offences (depends on T043 to T045)
 
 **Checkpoint**: every FR-01 scenario gives its exact streams through `Runner` and `bin/run`; `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences.
@@ -267,10 +270,7 @@
   - no rows: an empty transfers `FakeReader` raises `NoTransfers` with the message `the transfers file has no transfers: transfers.csv`; no output file exists; the reporter is never called; the log holds `INFO Run started: ...` and no `Run ended` (DEC-20; item 20);
   - `NoTransfers#stop_reason` is `transfers file has no transfers` (P8);
   - a file that cannot be read past a line: rows 1 (`...,100.01`, rejected) and `unreadable_at: 2` raise `UnreadableFile`; the warn line for line 1 was logged; no output file exists; the reporter is never called; no `Run ended` (DEC-04; AC-02.5; item 20).
-- [ ] T048 [P] [US3] Add to `spec/application/day_result_spec.rb` the rejected cases [FR-022; DEC-19, DEC-21, DEC-26; P7]:
-  - `rejected_counts` lists only the codes that occurred, in DEC-19 order, whatever the file order: results rejected `insufficient_funds`, `same_account`, `unknown_account` give `{ same_account: 1, unknown_account: 1, insufficient_funds: 1 }` in that order;
-  - a header row counts as processed and rejected (DEC-26): one rejected result gives `processed_count` 1, `rejected_count` 1;
-  - `all_rejected?` is true when every result is rejected, false when one is applied.
+- T048 is not used: its examples (rejected counts in DEC-19 order, a header row counted as processed and rejected, `all_rejected?`) are in T025, so they fail in T029 before T031 builds them.
 - [ ] T049 [P] [US3] Add to `spec/infrastructure/report_printer_spec.rb` the rejected lines and the warning [FR-027, FR-028; AC-02.1 to AC-02.3; DEC-06, DEC-19, DEC-21, DEC-26; page 10 picks 10 to 12; item 8]:
   - AC-02.3's day gives exactly AC-02.3's standard output, the warning after the summary and before the final balances (DEC-21);
   - AC-02.1's day gives exactly AC-02.1's standard output, with no warning (DEC-26);
@@ -287,14 +287,14 @@
   - AC-02.5: `bin/run balances.csv bad.csv` with line 2 `1111234522226789,"10.00`: `'a stopped run'` with the spec's two lines; and the `100.01` variant, whose standard error starts with the warn line (DEC-04);
   - AC-07.1: `'a completed run'` with the spec's standard output and warn line (DEC-15, DEC-16).
 - [ ] T051 [P] [US3] Create `spec/fixtures/acceptance/all_rejected_transfers.csv` holding the one line `from,to,amount`, and write `spec/acceptance/runner_run_all_rejected_spec.rb`, `RSpec.describe Runner, '#run'` with `describe 'with all rejected'`: `run_command` with `balances.csv` and this file as `transfers.csv` and the third argument; examples: standard output exactly AC-02.3's; standard error matches AC-02.3's two warn lines; exit status 0; the output file's bytes are `balances.csv`'s three lines, each ending with LF [AC-02.3; FR-044; DEC-06, DEC-21, DEC-34; item 2]
-- [ ] T052 [US3] Run `bundle exec rspec` and confirm the examples that need this phase's new code fail (domain errors escape, no rejected lines, no warning, no `NoTransfers`): all of T047, T049 and T051, and in T050 the AC-02.1, AC-02.2, AC-02.3 (both variants), AC-02.4, AC-07.1 and AC-02.5 `100.01` variant groups. These already pass, as P24 says: all of T048 (`DayResult`'s counting was built in T031 and first failed in T025 and T029), and T050's AC-02.5 main scenario group (the reader's `at_line` first failed in T008 and T010; the `Runner` has rescued `UnreadableFile` since T045) (depends on T047 to T051)
+- [ ] T052 [US3] Run `bundle exec rspec` and confirm the examples that need this phase's new code fail (domain errors escape, no rejected lines, no warning, no `NoTransfers`): all of T047, T049 and T051, and in T050 the AC-02.1, AC-02.2, AC-02.3 (both variants), AC-02.4, AC-07.1 and AC-02.5 groups (the main group fails until T056 adds `UnreadableFile` to the `Runner`'s rescue; the reader's `at_line` first failed in T008 and T010) (depends on T047 to T051)
 
 ### Implementation for User Story 3
 
 - [ ] T053 [US3] Add `NoTransfers < StandardError` to `lib/application/errors.rb`: `new(path)`, message `the transfers file has no transfers: <path>` with `<path>` as `DisplayPath.of(path)` (P11), `stop_reason` `transfers file has no transfers` [FR-016; DEC-20; P8]
 - [ ] T054 [US3] Complete `lib/application/process_daily_transfer.rb` (research R5): `malformed_row` for a row with `wrong_field_count?`; the frozen `Hash` of the five domain errors to their codes and the rescue that builds `TransferResult.rejected` with the code and `row.header_hint`; the warn line by position with masked values and `""` for an empty amount; `NoTransfers` when no row was read; the warn `DayResult::ALL_REJECTED_WARNING` when every result is rejected; `Run ended` with the counts per reason from the `DayResult`; every method within 10 lines and the class within 100 (depends on T053) [FR-013 to FR-017, FR-020, FR-021; DEC-14 to DEC-16, DEC-19 to DEC-21, DEC-28, DEC-29; P6, P7]
 - [ ] T055 [P] [US3] Complete `lib/infrastructure/report_printer.rb`: rejected lines (values as written, `""` for empty, `: <hint>` after the code), the `malformed_row: <K> fields, expected <TransfersCsvReader::FIELD_COUNT>` line (`. <hint>`), the counts per reason, and `Warning: <DayResult::ALL_REJECTED_WARNING>` as its own section when `all_rejected?` [FR-027, FR-028; DEC-06, DEC-21, DEC-26]
-- [ ] T056 [US3] Add `NoTransfers` to `Runner::STOPPING_ERRORS` in `lib/infrastructure/runner.rb` (depends on T053) [FR-034; DEC-20, DEC-25]
+- [ ] T056 [US3] Add `NoTransfers` and `UnreadableFile` to `Runner::STOPPING_ERRORS` in `lib/infrastructure/runner.rb` (depends on T053) [FR-034, FR-036; DEC-04, DEC-20, DEC-25]
 - [ ] T057 [US3] Run `bundle exec rspec` until every example passes in random order and `bundle exec rubocop` reports zero offences (depends on T053 to T056)
 
 **Checkpoint**: every FR-02 and FR-07 scenario gives its exact streams through `Runner`, and AC-02.3 through `bin/run`; `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences.
@@ -376,7 +376,7 @@
   - an unexpected error is not caught: with `balances.csv` and AC-01.1's `transfers.csv` present, `ProcessDailyTransfer.new` stubbed to return a stand-in whose `call` raises `RuntimeError`, `run_runner` raises that `RuntimeError` (page 10 pick 45).
 - [ ] T071 [P] [US5] Create `spec/fixtures/leading_zeros/balances.csv` (`0000123412341234,50.00` and `1111234522226789,100.00`) and `spec/fixtures/leading_zeros/transfers.csv` (`0000123412341234,1111234522226789,10.00`) [FR-043; DEC-08, DEC-34]
 - [ ] T072 [P] [US5] Write `spec/acceptance/runner_run_wrong_arguments_spec.rb`, `RSpec.describe Runner, '#run'` with `describe 'with wrong arguments'`: `run_command('balances.csv', files: {})`; examples: standard output empty; standard error exactly the two usage lines; exit status 1 [AC-09.2; FR-044; DEC-22, DEC-34; page 10 pick 3]
-- [ ] T073 [US5] Run `bundle exec rspec` and confirm the examples that need this phase's new code fail (no usage check, no start checks, no `LOG_LEVEL`): in T070 the AC-09.2 scenario groups, the AC-09.3 scenario groups, the AC-09.5 scenario groups at info level (sample files, stopped run, rejections) and T072. These already pass, as P24 says: AC-09.6 (the report has shown full numbers since T033, and before T074 there is no info log line to check), AC-09.3a (the reader's `cannot_open` first failed in T008; `UnreadableFile` is rescued by the `Runner` since T045 and T039), the AC-09.5 scenario groups at warn level (unset, `warn`, `debug`, ` info `; the warn default is T035's), AC-09.7 (`default_path` first failed in T026), AC-09.8 (shown by every scenario), the leading-zeros run (matching first failed in T024 and T008) and the not-caught-bug example (a regression guard on T045's rescue list, which names only the five run-stopping errors) (depends on T070 to T072)
+- [ ] T073 [US5] Run `bundle exec rspec` and confirm the examples that need this phase's new code fail (no usage check, no start checks, no `LOG_LEVEL`): in T070 the AC-09.2 scenario groups, the AC-09.3 scenario groups, the AC-09.5 scenario groups at info level (sample files, stopped run, rejections) and T072. These already pass, as P24 says: AC-09.6 (the report has shown full numbers since T033, and before T074 there is no info log line to check), AC-09.3a (the reader's `cannot_open` first failed in T008; the `Runner`'s rescue of `UnreadableFile` first failed in T052, in the AC-02.5 main group, and was added in T056), the AC-09.5 scenario groups at warn level (unset, `warn`, `debug`, ` info `; the warn default is T035's), AC-09.7 (`default_path` first failed in T026), AC-09.8 (shown by every scenario), the leading-zeros run (matching first failed in T024 and T008) and the not-caught-bug example (a regression guard on T045's rescue list, which names only the five run-stopping errors) (depends on T070 to T072)
 
 ### Implementation for User Story 5
 
@@ -455,7 +455,7 @@ Every edge case in the spec's [Edge Cases](spec.md#edge-cases) list, with the ta
 | Blank lines counted in line numbers | DEC-05, DEC-07 | T008, T039 (AC-01.3), T050 (AC-02.1) |
 | A quoted value over several lines is reported at its first line | DEC-07 | T008 |
 | Header hint: both files; none for digits or an empty first field; after a field-count problem | DEC-06 | T008, T038, T047, T049, T039 (AC-01.7), T050 (AC-02.2, AC-02.3) |
-| A header row counts as processed and rejected | DEC-26 | T048, T050 (AC-02.3) |
+| A header row counts as processed and rejected | DEC-26 | T025, T050 (AC-02.3) |
 | A balances row with the wrong number of fields reports only that | page 10 pick 7 | T038, T039 (AC-01.4, AC-01.6) |
 | Several problems in a row, in field order; duplicate before balance | DEC-12 | T038, T039 (AC-01.5, AC-01.10) |
 | The duplicate known gap (invalid or negative balance, wrong field count) | DEC-12 | T038, T039 (AC-01.10) |
@@ -467,7 +467,7 @@ Every edge case in the spec's [Edge Cases](spec.md#edge-cases) list, with the ta
 | A transfers file unreadable past a line: earlier transfers discarded | DEC-04 | T010, T047, T050 (AC-02.5) |
 | A transfers file unreadable at line 1: `UnreadableFile`, not `NoTransfers` | DEC-04, DEC-20 | T010 |
 | Bytes that are not UTF-8 | DEC-04 | T008 |
-| Every transfer rejected, a header-only file included | DEC-21 | T047, T048, T049, T050, T051 |
+| Every transfer rejected, a header-only file included | DEC-21 | T025, T047, T049, T050, T051 |
 | No retry; two equal rows both applied | DEC-15, DEC-16 | T047, T050 (AC-07.1) |
 | A transfers row with 1, 2, 4 or more fields | DEC-19, DEC-28 | T010, T047, T049, T050 (AC-02.1), T077 |
 | The output file already exists at the start | DEC-25 | T070 (AC-09.3) |
