@@ -6,9 +6,9 @@ The challenge as received is in [`docs/challenge/`](docs/challenge/MABLE_BACK_EN
 
 ## Status
 
-Design analysis. The findings from reviewing the developer's analysis, and the follow-up clarifications, have been answered. The answers are next consolidated into `docs/design-analysis/design-decisions.md`. No behaviour is decided yet and there is no implementation.
+Design analysis. The findings from reviewing the developer's analysis, and the follow-up clarifications, have been answered and consolidated into [`docs/design-analysis/design-decisions.md`](docs/design-analysis/design-decisions.md), which defines all behaviour and design. There is no implementation yet.
 
-The findings are in the Google Sheet [Mable challenge: design analysis findings](https://docs.google.com/spreadsheets/d/1XVG6noS4dteY7kQlzVXHi5_njcN6MwQjDlsQpP9FKG4/edit?usp=drivesdk), one tab per type: definite gaps (D), judgement calls (J), possible extras (X) and clarifications (C), each with the developer's answer. A copy of each tab is in [`docs/design-analysis/clarifications/`](docs/design-analysis/clarifications/).
+The findings are in the Google Sheet [Mable challenge: design analysis findings](https://docs.google.com/spreadsheets/d/1XVG6noS4dteY7kQlzVXHi5_njcN6MwQjDlsQpP9FKG4/edit?usp=drivesdk), one tab per type: definite gaps (D), judgement calls (J), possible extras (X), clarifications (C), big findings (B) and small findings (S), each with the developer's answer. A copy of each tab is in [`docs/design-analysis/clarifications/`](docs/design-analysis/clarifications/).
 
 ## Build
 
@@ -24,7 +24,7 @@ To be added once the implementation exists.
 
 ## Assumptions
 
-To be listed once the design analysis has produced `docs/design-analysis/design-decisions.md`.
+To be listed with the implementation. Until then, every assumption is recorded as a decision in [`docs/design-analysis/design-decisions.md`](docs/design-analysis/design-decisions.md).
 
 ## Repository layout
 
@@ -32,6 +32,7 @@ To be listed once the design analysis has produced `docs/design-analysis/design-
 |---|---|
 | `docs/challenge/` | The challenge brief and its two sample CSV files, unchanged |
 | `docs/design-analysis/handwritten/` | The developer's handwritten brainstorm pages and high-level design sketch, unchanged |
+| `docs/design-analysis/design-decisions.md` | The design decisions (`DEC-nn`): the single source of truth for behaviour and design |
 | `docs/design-analysis/clarifications/` | The review findings and the developer's answers, exported from the Google Sheet as HTML (one page per tab), unchanged |
 | `docs/prompts/` | The prompts given to the AI assistant, one log per phase |
 | `CLAUDE.md` | Project instructions for the AI assistant |
