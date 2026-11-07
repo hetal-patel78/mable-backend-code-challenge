@@ -56,13 +56,15 @@ To compare a run with the report: take `<run time>` from the name of the file th
 | C-15 | From another folder on Windows | `Remove-Item -Recurse output; cd docs; cmd /c "ruby ..\bin\run > ..\..\dout.txt"; $LASTEXITCODE; cd ..` | `0`; `dout.txt`, read with CRLF changed to LF, equals `report.txt` line by line except its last line, which is `Output file: ../output/final_balances_<run time>.csv` | edge case; AC-08.4; DEC-22, DEC-26 |
 | C-16 | Windows line endings in the input | `git ls-files --eol data/` | `w/crlf` for both files, and C-13 still gave the sample report | US2-3; DEC-04 |
 
-## Docker (User Story 3), from the clean checkout of C-08
+## Docker (User Story 3), in its own fresh clean checkout
+
+These checks run in a fresh clean checkout made only for them, with no earlier run in it (so no `output/` or `coverage/` from C-10 to C-12 is copied into the image): `git clone --branch main <origin url> $CHECKS/docker; cd $CHECKS/docker` (as T025 in tasks.md). Below, `$CLEAN` means this checkout.
 
 | ID | Check | Command | Expected | Refs |
 |---|---|---|---|---|
 | C-17 | The image builds | `docker build -t mable-transfers .; echo $?` | `0`; the build log shows `bundle install` using the locked versions, with no "lockfile" change error | US3-1; FR-022; DEC-01, DEC-36 |
 | C-18 | Time-zone data in the image | `docker run --rm mable-transfers test -f /usr/share/zoneinfo/Australia/Sydney; echo $?` | `0` (otherwise plan item 7) | US3-2; FR-022; DEC-37 |
-| C-19 | Sample files, `output` mounted, `TZ` set | `mkdir -p output; docker run --rm -e TZ=Australia/Sydney -v "$(pwd)/output:/app/output" mable-transfers >$CHECKS/dout.txt 2>$CHECKS/derr.txt; echo $?` | `0`; the report matches; `derr.txt` empty; the file is in `$CLEAN/output/`, equal to `final.csv`; `<run time>` is Sydney's local time at the run (`TZ=Australia/Sydney date`) | US3-2; FR-023; DEC-27, DEC-36, DEC-37 |
+| C-19 | Sample files, `output` mounted, `TZ` set | `mkdir -p output; docker run --rm -e TZ=Australia/Sydney -v "$(pwd)/output:/app/output" mable-transfers >$CHECKS/dout.txt 2>$CHECKS/derr.txt; echo $?` | `0`; the report matches; `derr.txt` empty; the file is in this checkout's `output/` folder, equal to `final.csv`; `<run time>` is Sydney's local time at the run (`TZ=Australia/Sydney date`) | US3-2; FR-023; DEC-27, DEC-36, DEC-37 |
 | C-20 | Tests in the container | `docker run --rm mable-transfers bundle exec rspec; echo $?` | `0 failures`, `Randomized with seed`, `0` | US3-3; FR-023; DEC-34, DEC-36 |
 | C-21 | Log level and exit status pass through | `docker run --rm -e LOG_LEVEL=info mable-transfers >$CHECKS/o.txt 2>$CHECKS/e.txt; echo $?`; `docker run --rm mable-transfers bin/run -h >$CHECKS/o2.txt 2>$CHECKS/e2.txt; echo $?` | `0`, `$CHECKS/o.txt` the report, `$CHECKS/e.txt` the six AC-09.5 lines (timestamps and pid aside); `1`, `$CHECKS/o2.txt` empty, `$CHECKS/e2.txt` the usage message | US3-4; AC-09.5, AC-09.2; DEC-25, DEC-28 |
 | C-22 | No `TZ` | `docker run --rm -v "$(pwd)/output:/app/output" mable-transfers` | exit 0; the file name carries the UTC time (`date -u`) | edge case; DEC-37 |
