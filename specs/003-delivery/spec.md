@@ -201,7 +201,15 @@ Every push to the GitHub repository starts a GitHub Actions run that installs th
 **Acceptance Scenarios**:
 
 1. **A push runs CI and it passes** (NFR-04; DEC-36).
-   - **Given** the finished code pushed to GitHub, **When** the push lands, **Then** one workflow run starts for that commit, with one job on the latest Ubuntu runner, using the Ruby version read from `.ruby-version`; it installs the gems from the committed `Gemfile.lock` unchanged, runs `bundle exec rspec` (0 failures, random order, exit status 0) and `bundle exec rubocop` (no offences, exit status 0), and the run's status is success.
+   - **Given** the finished code pushed to GitHub, **When** the push lands, **Then** one workflow run starts for that commit, with one job on the latest Ubuntu runner, using the Ruby version read from `.ruby-version`, and it installs the gems from the committed `Gemfile.lock` unchanged; for `bundle exec rspec` in that run:
+     - Standard output: RSpec's summary with `0 failures` and a `Randomized with seed` line (random order).
+     - Standard error: not compared.
+     - Exit status: 0
+   - And, for `bundle exec rubocop` in that run:
+     - Standard output: RuboCop's summary line, `no offenses detected`.
+     - Standard error: not compared.
+     - Exit status: 0
+   - And the workflow produces one run for the commit, and its conclusion is success.
 2. **A failing check fails the run** (NFR-04; DEC-36).
    - **Given** a commit where a spec fails or RuboCop finds an offence, **When** it is pushed, **Then** that step exits with a non-zero status and the run's status is failure. (Checked by reading the workflow: each command is its own step, and no step ignores errors. No failing commit is pushed to prove it; decided in the run, item 9.)
 3. **No threshold and no matrix** (NFR-04; DEC-36; page 4).

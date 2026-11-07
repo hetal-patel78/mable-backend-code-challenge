@@ -30,7 +30,7 @@ It changes no behaviour of the program and adds no class, no message, no RSpec s
 
 **Constraints**: one Ruby version, written in `.ruby-version` and the Dockerfile only; `Gemfile.lock` installs unchanged, frozen, on Windows, the CI runner and the Docker image; no coverage minimum, no CI matrix, no Ruby version in the workflow; nothing added to the Dockerfile beyond [DEC-36](../../docs/design-analysis/design-decisions.md#dec-36); no `.dockerignore`; every text file stored with LF; nothing out of scope on [page 4](../../docs/solution-design/04-scope.md).
 
-**Scale/Scope**: 5 files created or changed (`README.md`, `.github/workflows/ci.yml`, `Dockerfile`, `.gitattributes`, `Gemfile.lock`), 40 checks, 6 user stories.
+**Scale/Scope**: 5 files created or changed (`README.md`, `.github/workflows/ci.yml`, `Dockerfile`, `.gitattributes`, `Gemfile.lock`), 41 checks, 6 user stories.
 
 ## Constitution Check
 
