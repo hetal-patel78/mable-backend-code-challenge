@@ -331,7 +331,7 @@ A scripted check over `specs/`, the solution design and `design-decisions.md` th
 4. 001 plan D1 pins Ruby 3.4.12, the latest 3.4.x when the plan was written.
 5. Part 2 (implementation) is next.
 
-Medium and low `/speckit-analyze` issues left after round 3, not changed in this run:
+Medium and low `/speckit-analyze` issues left after round 3. The three marked "Resolved" were fixed by the independent review after Part 1; the rest are not changed in this run:
 
 - **001-domain** (2 low)
   - Low: the "Run outcome" bullets under User Story 5's scenarios 1, 2 and 4 (spec.md lines 281 to 288) start at column 0.
