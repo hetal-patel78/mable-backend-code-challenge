@@ -7,6 +7,7 @@ Phase 1 of the [plan](plan.md). This spec is checked by these commands, not by R
 - `001-domain` and `002-file-runner` are implemented: `bundle exec rspec` passes in random order and `bundle exec rubocop` reports no offences.
 - Git and Bash (Git Bash on Windows) for the repository checks; Ruby at the version in `.ruby-version` for the Ruby checks; Docker for the Docker checks; Windows with RubyInstaller at that version and PowerShell for the Windows checks (any version: the program's output is captured through `cmd /c`, so the files hold the program's own bytes and PowerShell's redirection changes nothing); the GitHub CLI `gh` (or the Actions page) for the CI checks.
 - Scratch files go in a temporary folder outside the repository, called `$CHECKS` below (`CHECKS=$(mktemp -d)`). `$REPO` is the working repository; `$CLEAN` is a clean checkout.
+- The Windows checks (C-13 to C-16, C-26, C-41) run in PowerShell and need their own scratch folder, because a Git Bash path such as `/tmp/tmp.XXXX` cannot be opened there: `$env:CHECKS = (New-Item -ItemType Directory (Join-Path $env:TEMP "checks-003")).FullName`. Copy `report.txt`, `usage.txt` and `final.csv` from the Bash `$CHECKS` into that folder before C-13 (`final.csv` keeps its LF line endings).
 
 ## Expected texts
 
@@ -68,19 +69,20 @@ To compare a run with the report: take `<run time>` from the name of the file th
 | C-24 | An existing file of the same name in the mount | `mkdir -p output; echo keep > output/existing.csv; docker run --rm -v "$(pwd)/output:/app/output" mable-transfers bin/run data/mable_account_balances.csv data/mable_transactions.csv output/existing.csv; echo $?; cat output/existing.csv` | standard output (nothing); standard error `Error: output file already exists: output/existing.csv. Delete it or give another output path.` then `E, [<timestamp> #<pid>] ERROR -- : Run stopped: start checks failed (output file already exists)`; `1`; `keep` | edge case; AC-09.3; DEC-25, DEC-27 |
 | C-25 | A reviewer's own files, mounted | `mkdir $CHECKS/mine; cp data/*.csv $CHECKS/mine/; docker run --rm -v "$CHECKS/mine:/app/mine" -v "$(pwd)/output:/app/output" mable-transfers bin/run mine/mable_account_balances.csv mine/mable_transactions.csv; echo $?` | `0`; the sample report (last line `Output file: output/final_balances_<run time>.csv`); the copies are scratch files, never committed | edge case; DEC-22, DEC-37 |
 | C-26 | An image built from a Windows checkout starts `bin/run` | in the C-13 clone: `git ls-files --eol bin/run` then `docker build -t mable-transfers-win .; docker run --rm mable-transfers-win; $LASTEXITCODE; docker rmi mable-transfers-win` | `w/lf` for `bin/run`; `0` and the sample report | edge case; FR-018; DEC-22 |
+| C-41 | The README's PowerShell Docker command, as written | in PowerShell on Windows with Docker Desktop, in the C-13 clone (after C-26 built the image, or after `docker build -t mable-transfers .`): run the README's command exactly as written, `docker run --rm -e TZ=Australia/Sydney -v "${PWD}/output:/app/output" mable-transfers`, with standard output and standard error captured through `cmd /c` to `dockerout.txt` and `dockererr.txt`; then `$LASTEXITCODE` | `0`; `dockerout.txt` equals `report.txt` (with `<run time>` filled in); `dockererr.txt` is 0 bytes; the sample output file is in the clone's `output/` folder and equals `final.csv` byte for byte; if it cannot run, recorded under C-28 as left for the developer | US5-2; FR-005; SC-003; DEC-37 |
 | C-27 | Docker on a Linux host writes as root | on a Linux host, after C-19: `ls -l output/` | the file belongs to root, as the README says (on Docker Desktop the owner is the host user; record which was seen) | edge case; spec Clarifications; DEC-36, DEC-37 |
 
 ## Hand checks not run (all stories)
 
 | ID | Check | Expected | Refs |
 |---|---|---|---|
-| C-28 | Every hand check (C-13 to C-16 on Windows, C-17 to C-27 with Docker) that could not run on the machine at hand | listed in the run report as left for the developer, with the reason (no Ruby 3.4 for Windows, no Docker, no Linux host); none marked passed | FR-025, SC-001; edge case |
+| C-28 | Every hand check (C-13 to C-16 and C-41 on Windows, C-17 to C-27 with Docker) that could not run on the machine at hand | listed in the run report as left for the developer, with the reason (no Ruby 3.4 for Windows, no Docker, no Linux host); none marked passed | FR-025, SC-001; edge case |
 
 ## README (User Story 5)
 
 | ID | Check | Command | Expected | Refs |
 |---|---|---|---|---|
-| C-29 | Every README command works as written | each command in the README equals one already run in C-09 to C-25 (or, for `bin/run b.csv t.csv out/day1.csv`, run it on the clean checkout with copies of the sample files) | each gives the outcome the README says | US5-2; FR-001 to FR-005; DEC-37 |
+| C-29 | Every README command works as written | each command in the README equals one already run in C-09 to C-26 and C-41 (C-41 runs the PowerShell Docker command); the 2-argument form `bin/run b.csv t.csv` and the 3-argument form `bin/run b.csv t.csv out/day1.csv` are each run on the clean checkout with copies of the sample files | each gives the outcome the README says | US5-2; FR-001 to FR-005; DEC-37 |
 | C-30 | Exact texts match page 2 | `diff` the README's sample report block with AC-08.1, and its usage block with AC-09.2 | `diff` prints nothing | US5-3; FR-002, FR-003; DEC-22, DEC-25, DEC-26 |
 | C-31 | The README check | read the README against R-01 to R-14 in [readme.md](contracts/readme.md#the-readme-check-c-31) | 14 of 14 present, in order | US5-1; SC-003; DEC-37 |
 | C-32 | Every relative link resolves | `grep -oE '\]\([^)#]+' README.md \| sed 's/](//' \| grep -v '^http' \| while read p; do test -e "$p" \|\| echo "missing $p"; done` | prints nothing; links to sections open on GitHub | US5-5; DEC-37, DEC-38 |

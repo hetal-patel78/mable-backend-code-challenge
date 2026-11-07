@@ -8,7 +8,7 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 
 **Prerequisites**: `001-domain` and `002-file-runner` are implemented on the branch this work starts from (brief Part 2 step 2).
 
-**Tests**: this spec adds no RSpec spec (brief rule 4; FR-030). Its tests are the checks C-01 to C-40 in [quickstart.md](quickstart.md). In every phase the check comes first: run it, see it fail (or, for a phase that adds no file, see that it exists and is ready), then make the change, then run it again until it passes. Every phase ends with its checks passing, `bundle exec rspec` passing in random order and `bundle exec rubocop` reporting no offences (constitution, Development workflow). Each result is recorded in `docs/spec-kit/implementation-run-report.md` (Part 2 section) with the platform, date, commit and evidence; a check that cannot run on the machine at hand is recorded as left for the developer, never as passed (FR-025; C-28).
+**Tests**: this spec adds no RSpec spec (brief rule 4; FR-030). Its tests are the checks C-01 to C-41 in [quickstart.md](quickstart.md). In every phase the check comes first: run it, see it fail (or, for a phase that adds no file, see that it exists and is ready), then make the change, then run it again until it passes. Every phase ends with its checks passing, `bundle exec rspec` passing in random order and `bundle exec rubocop` reporting no offences (constitution, Development workflow). Each result is recorded in `docs/spec-kit/implementation-run-report.md` (Part 2 section) with the platform, date, commit and evidence; a check that cannot run on the machine at hand is recorded as left for the developer, never as passed (FR-025; C-28).
 
 **Organization**: by user story, in the order the files depend on each other: the repository files, then CI (US4), the Ruby runs (US1, US2), Docker (US3), the README (US5, which needs the commands and the coverage figure proved first), then the push and the submission (US6).
 
@@ -27,7 +27,7 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 
 - [ ] T001 At `$REPO`, run `bundle exec rspec` (0 failures, `Randomized with seed`) and `bundle exec rubocop` (no offences), and record both in `docs/spec-kit/implementation-run-report.md` as the starting point (NFR-05, NFR-06; DEC-34, DEC-36). If either fails, stop: the defect belongs to `001-domain` or `002-file-runner`.
 - [ ] T002 Read `.ruby-version` and record the exact version in the run report; check it is a bare version number such as `3.4.7` and the latest Ruby 3.4.x release (FR-015; DEC-01; plan item 1). A `ruby-` prefix is reported as a cross-spec finding against `001-domain` FR-036, not worked around.
-- [ ] T003 [P] Create `$CHECKS` outside the repository and save the expected texts listed in [quickstart.md](quickstart.md#expected-texts): `report.txt` (the sample report, AC-08.1 with `<run time>`), `final.csv` (the sample output file, LF, final LF), `usage.txt` (AC-09.2), `info.txt` (AC-09.5), copied character for character from [spec.md](spec.md#conventions-used-in-the-scenarios) (DEC-35, DEC-22, DEC-28).
+- [ ] T003 [P] Create `$CHECKS` outside the repository (and, for the Windows checks, the PowerShell `$env:CHECKS` folder from the quickstart Prerequisites) and save the expected texts listed in [quickstart.md](quickstart.md#expected-texts): `report.txt` (the sample report, AC-08.1 with `<run time>`), `final.csv` (the sample output file, LF, final LF), `usage.txt` (AC-09.2), `info.txt` (AC-09.5), copied character for character from [spec.md](spec.md#conventions-used-in-the-scenarios) (DEC-35, DEC-22, DEC-28).
 
 **Checkpoint**: the suite and RuboCop pass; the expected texts are ready.
 
@@ -96,7 +96,7 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 
 **Independent Test**: C-13 to C-16 in PowerShell on Windows with RubyInstaller at the version in `.ruby-version`. If no such Ruby is available, they are left for the developer (C-28). This story adds no file.
 
-- [ ] T018 [US2] Make the Windows clean checkout: `git clone -c core.autocrlf=true --branch <this implementation branch> $REPO $env:CHECKS\win`; then `$env:BUNDLE_FROZEN='true'; bundle install` succeeds and `git status --porcelain` prints nothing (C-13 first part; FR-017; DEC-01; plan item 15).
+- [ ] T018 [US2] Make the Windows clean checkout: (with `$env:CHECKS` set as in the quickstart Prerequisites and `report.txt`, `usage.txt`, `final.csv` copied there) `git clone -c core.autocrlf=true --branch <this implementation branch> $REPO $env:CHECKS\win`; then `$env:BUNDLE_FROZEN='true'; bundle install` succeeds and `git status --porcelain` prints nothing (C-13 first part; FR-017; DEC-01; plan item 15).
 - [ ] T019 [US2] Run C-13: `cmd /c "ruby bin/run > ..\wout.txt 2> ..\werr.txt"` from the project root (cmd keeps the bytes; plain PowerShell redirection would not); `$LASTEXITCODE` is 0; `wout.txt` equals `report.txt` with `<run time>` filled in, byte for byte, with `/` in `Output file: output/final_balances_<run time>.csv`; `werr.txt` is 0 bytes; the output file's bytes equal `final.csv` (LF, not CRLF) (US2 scenario 1; AC-08.1, AC-08.3; DEC-22, DEC-35, DEC-37; spec item 3; page 10 pick 17).
 - [ ] T020 [US2] Run C-14: `cmd /c "ruby bin/run -h > ..\hout.txt 2> ..\herr.txt"`; `$LASTEXITCODE` is 1; `hout.txt` is 0 bytes; `herr.txt` equals `usage.txt` byte for byte (US2 scenario 2; AC-09.2; DEC-22, DEC-25).
 - [ ] T021 [US2] Run C-15: `cmd /c "ruby ..\bin\run > ..\..\dout.txt"` from `docs`; exit 0; `dout.txt` is the sample report byte for byte except its last line, which is `Output file: ../output/final_balances_<run time>.csv` (edge case "A run from another folder on Windows"; AC-08.4; DEC-22, DEC-26).
@@ -132,7 +132,7 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 - [ ] T032 [US3] Run C-23: no mount; exit 0; the report on standard output; no `output/` on the host (edge case "Docker with no output mount"; DEC-37).
 - [ ] T033 [US3] Run C-24: a typed output path that already exists in the mounted `output/`; standard output empty; standard error `Error: output file already exists: output/existing.csv. Delete it or give another output path.` then `E, [<timestamp> #<pid>] ERROR -- : Run stopped: start checks failed (output file already exists)`; exit 1; the file still holds `keep` (edge case "Docker with a mount and an existing file of the same name"; AC-09.3; DEC-25, DEC-27).
 - [ ] T034 [US3] Run C-25: copies of the sample files in a mounted scratch folder, passed as typed paths; exit 0; the sample report; the copies stay in `$CHECKS`, never committed (edge case "Docker with typed paths"; DEC-22, DEC-37; spec item 6).
-- [ ] T035 [US3] Run C-26: in a fresh Windows checkout made with `core.autocrlf=true` (as T018, after T025), `git ls-files --eol bin/run` shows `w/lf`; build `mable-transfers-win`, run it with no command (exit 0, the sample report), then remove that image (edge case "`bin/run` on Linux, macOS and in Docker"; FR-018; DEC-22; spec Clarifications).
+- [ ] T035 [US3] Run C-26: in a fresh Windows checkout made with `core.autocrlf=true` (as T018, after T025), `git ls-files --eol bin/run` shows `w/lf`; build `mable-transfers-win`, run it with no command (exit 0, the sample report), then remove that image; then run C-41, the README's PowerShell Docker command as written (exit 0, the sample report on standard output, nothing on standard error, the sample file in `output/`) (edge case "`bin/run` on Linux, macOS and in Docker"; FR-018; DEC-22; spec Clarifications).
 - [ ] T036 [US3] Run C-27 on a Linux host if one is available (the file in `output/` belongs to root); on Docker Desktop record the owner seen instead (edge case "Docker on a Linux host"; DEC-36, DEC-37). Record C-17 to C-27 in the run report.
 
 **Checkpoint**: C-04 and C-17 to C-26 pass (C-27 recorded), or are left for the developer (C-28); the suite and RuboCop still pass.
@@ -163,7 +163,7 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 
 ### Checks again
 
-- [ ] T047 [US5] Run C-29 (each README command equals one proved in T013 to T036, and `bin/run b.csv t.csv out/day1.csv` run once on the clean checkout with copies of the sample files), C-30 (`diff` of the README's report and usage blocks with AC-08.1 and AC-09.2 prints nothing), C-31 (14 of 14, in order), C-32 (every relative link resolves) and the local part of C-33 (the README's line equals T038); record them and commit `README.md` (US5 scenarios 1 to 5; SC-003, SC-004; DEC-36, DEC-37).
+- [ ] T047 [US5] Run C-41 if not already run in T035 (the README's PowerShell Docker command as written, or recorded under C-28 as left for the developer), then C-29 (each README command equals one proved in T013 to T036 or C-41, and both `bin/run b.csv t.csv` and `bin/run b.csv t.csv out/day1.csv` run once on the clean checkout with copies of the sample files), C-30 (`diff` of the README's report and usage blocks with AC-08.1 and AC-09.2 prints nothing), C-31 (14 of 14, in order), C-32 (every relative link resolves) and the local part of C-33 (the README's line equals T038); record them and commit `README.md` (US5 scenarios 1 to 5; SC-003, SC-004; DEC-36, DEC-37).
 
 **Checkpoint**: C-29 to C-32 pass and the README's figure equals T038; the suite and RuboCop still pass.
 
@@ -211,7 +211,7 @@ Every edge case in the spec, and every decision edge case within this spec's sco
 | Line endings in a Windows checkout | C-16, C-26 | T022, T035 | DEC-04 |
 | Input files read only through the CSV library (CRLF, no final newline, BOM) | C-40 | T058 | DEC-04, DEC-22 |
 | Docker on a Linux host | C-27 | T036 | DEC-36, DEC-37 |
-| A Windows reviewer with Docker Desktop (PowerShell command) | C-29 | T039, T047 | DEC-37 |
+| A Windows reviewer with Docker Desktop (PowerShell command) | C-41, C-29 | T035, T047 | DEC-37 |
 | A run from another folder on Windows | C-15 | T021 | DEC-22, DEC-26 |
 | No Ruby 3.4 on the Windows machine, or no Docker | C-28 | T055 | brief Part 2 step 3 |
 | A newer Ruby 3.4.x released after `.ruby-version` is set | C-04 | T002, T025 | DEC-01 |
