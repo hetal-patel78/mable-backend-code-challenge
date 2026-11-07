@@ -1,0 +1,108 @@
+# Research: File reading, the day's run and the runner
+
+Phase 0 of the [plan](plan.md). The Technical Context had no open item: the language, tools and layout are fixed by [`design-decisions.md`](../../docs/design-analysis/design-decisions.md), [page 5](../../docs/solution-design/05-high-level-design.md) and `001`'s [research](../001-domain/research.md). This page records how each fixed choice is applied where Ruby, its standard library or the tools need a specific technique. Each entry gives the decision, the rationale and the alternatives considered. P-numbers are the plan's "Decided in the run" items.
+
+## R1. Reading a CSV file row by row with its line number
+
+- **Decision**: `CsvRows#each` opens the file with `CSV.open(path, 'r:bom|utf-8')` and the CSV library's default options, then reads with `csv.shift` in a loop. It keeps a running count of the physical lines already read, starting at 0. Before each `shift` the row's line number is that count plus 1, so a row spanning several lines (a quoted value with a newline) gets the line where it starts (DEC-07). After each `shift` the count grows by the number of line breaks in `csv.line` (the raw text of the row; a last line with no final break adds 1 when it is not empty, so the count stays a count of physical lines). The line given to `UnreadableFile.at_line` is the count plus 1 at the failing `shift`. Then:
+  - the row is **blank** when `csv.line`, the raw text of the row, has only spaces, tabs, CR and LF (`/\A[ \t\r\n]*\z/`): it is skipped and not counted, but its line still counts (DEC-05);
+  - otherwise each field is trimmed of spaces and tabs at both ends (`/\A[ \t]+|[ \t]+\z/`), a missing field (`nil`, as in `,,`) becomes `""`, and a `Row` is yielded with `expected_size` (2 or 3) and, for the first non-blank row only, `header_hint: CsvRows::HEADER_HINT` when its first field is not empty and has no digit (`!~ /[0-9]/`) (DEC-06).
+- **Rationale**: DEC-04 asks for the standard library: `CSV` handles quoted values, CR LF and a missing final newline by itself, and `bom|utf-8` drops a byte-order mark (page 6). The line number is not taken from `csv.lineno`: in the csv gem that value counts rows parsed or skipped, so a quoted newline inside a value is not counted and every later row would get a line number that is too low. Counting the line breaks of the raw text `csv.line` gives physical lines, including empty ones, because the default `skip_blanks: false` returns an empty row (raw text a single line break) for an empty line. Testing the raw line rather than the parsed fields keeps `,,` (three empty fields) a row and a line of spaces blank, as DEC-05 says. Trimming only spaces and tabs follows spec clarification 1; spaces inside a value stay, so `1 0` stays invalid.
+- **Relation to DEC-32** (plan P29): DEC-32 says "The transfers file is read one row at a time (`CSV.foreach`)". `CSV.open` with `shift` keeps that rule: one row at a time, never the whole file. `CSV.foreach` is not used because it exposes neither the raw line (`csv.line`) that DEC-05 and DEC-07 need nor the physical-line count built from it. This is listed for the developer's review as consistent with DEC-32's rule; if the reviewer judges the named mechanism binding, it is raised under brief rule 5.
+- **Alternatives considered**: `CSV.foreach` (named by DEC-32; yields rows but does not give the CSV object, so neither the line number nor the raw line is available); the `strip:` option (strips all whitespace and also inside quotes, depending on the version); `skip_blanks: true` (a line of spaces would not be skipped, and line numbers would need counting by hand).
+
+## R2. Files that cannot be opened or read
+
+- **Decision**: `CsvRows#each` rescues, around the whole read:
+  - `CSV::MalformedCSVError` (which includes `CSV::InvalidEncodingError` for bytes that are not valid UTF-8): raises `UnreadableFile.at_line(path, line)` with the line noted before the failing `shift`, after every earlier row has been yielded (DEC-04);
+  - `SystemCallError` (for example `Errno::ENOENT`, `Errno::EACCES`, `Errno::EISDIR`): raises `UnreadableFile.cannot_open(path, error)` (DEC-23).
+  The reason text of an `Errno` error is its message up to ` @ ` (plan P9): `Permission denied @ rb_sysopen - x.csv` gives `Permission denied`; `Is a directory @ io_fread - x.csv` gives `Is a directory`.
+- **Rationale**: an unclosed quote raises `MalformedCSVError` from `shift`; invalid bytes raise `InvalidEncodingError`, its subclass, so one rescue covers both DEC-04 cases. On Linux a folder opens and fails on the first read (`EISDIR`); on Windows it fails on open (`EACCES`); rescuing around the whole read gives `cannot read file` in both (plan P21). The readers never check existence (page 6): the `Runner` does, so a missing file only reaches a reader when a caller skips the start checks, and it still gets a clear message.
+- **Alternatives considered**: reading the whole file first to find the bad line (the rows before it would not be given one at a time); `CSV`'s `liberal_parsing` (accepts broken quoting that DEC-04 says must stop the run); passing Ruby's own message (repeats the path with call details).
+
+## R3. Showing a path
+
+- **Decision**: `DisplayPath.of(path, folder = Dir.pwd)` expands `path` against `folder`, takes `Pathname#relative_path_from(folder)`, and returns that relative path when it has no `..` part, or exactly one leading `..` part; otherwise, and when the two paths have no common root (another Windows drive raises `ArgumentError`), it returns the expanded full path (plan P10).
+- **Rationale**: page 2 shows `../output/final_balances_2026-11-07_143005.csv` from `docs` and `/tmp/day1.csv` in full; one `../` step is the narrowest rule that gives both, and it lets a test show a file in a second temporary folder in full (spec item 3) when the scenario runs from a subfolder of the first temporary folder, whatever folder the system keeps temporary folders in. Every component that builds a message or log text applies it to the real path it holds (plan P11), so `DisplayPath` stays the one owner of the rule.
+- **Alternatives considered**: any number of `../` steps (two temporary folders share a parent, so the "full path" case could never be tested); comparing lengths (gives different answers for the same layout depending on folder names).
+
+## R4. `LoadBalances` problem by problem
+
+- **Decision**: for each row, in this order (page 6 `LoadBalances`, FR-007):
+  1. `row.wrong_field_count?`: one problem `expected 2 fields, found <K>`, followed by `. <hint>` when `row.header_hint`; next row;
+  2. `AccountNumber.new(fields[0])`, rescuing `InvalidAccountNumber`: a problem with its message, followed by `. <hint>` when `row.header_hint`;
+  3. when the number is valid and `repository.include?(number)`: a problem `DuplicateAccount.new(number).message` followed by ` (first on line <M>)`, where `M` comes from a `Hash` of first lines keyed by `number.to_s`;
+  4. `Money.balance(fields[1])` then `Account.check_opening_balance(money)`, rescuing `InvalidAmount` and `NegativeBalance`: a problem with its message;
+  5. when the row added no problem: `repository.add(Account.new(number, money))` and the row's line recorded as the first line of that number.
+  Each problem is stored as `Line <N>: <problem>`. An `UnreadableFile` with a `line_number` adds `Line <N>: <error.line_problem>` as the last problem; one without a line number is re-raised unchanged. At the end, any problem raises `InvalidBalancesFile.new(problems)`; no row and no problem raises `InvalidBalancesFile.no_rows(path)`.
+- **Rationale**: the order is page 6's, so the problems come out in field order (page 10 picks 6, 13) and the known gap behaves as AC-01.10 and spec clarification 2 state (only an added row records a first line, page 10 pick 30). The duplicate text is taken from the domain error (`001` plan D21), so the domain stays its one owner. Problems are checked before "no rows" so a file whose first line cannot be read reports that line, not "no rows".
+- **Alternatives considered**: catching `DuplicateAccount` from `add` (the balance would have to be checked first, and the duplicate would come after the balance problem, against page 10 pick 13); a separate no-rows error (page 10 pick 32 rejects it).
+
+## R5. `ProcessDailyTransfer` step by step
+
+- **Decision**: `call` runs, in this order: output path defaulted to `FinalBalancesCsvWriter.default_path(run_time)` when nil; `logger.info("Run started: balances <DisplayPath.of(b)>, transfers <DisplayPath.of(t)>")` (the paths are the real ones, plan P11); `LoadBalances.new(balances_reader, repository).call(b)`; total before; `transfers_reader.each_row(t)` turning each `Row` into a `TransferResult` and logging it; `NoTransfers.new(t)` when no row was read; `logger.warn(DayResult::ALL_REJECTED_WARNING)` when every result is rejected; total after, and `TotalChanged.new(before, after)` when they differ; `writer.write(repository.all, output_path)`; the `DayResult`; `reporter.print(day_result)`; `logger.info("Run ended: ...")`; the `DayResult` is returned.
+  - A row with `wrong_field_count?` becomes `TransferResult.rejected(..., reason: :malformed_row, header_hint: row.header_hint)` with no domain object built.
+  - Otherwise `AccountNumber.new(from)`, `AccountNumber.new(to)`, `Money.amount(amount)`, `Transfer.new(from:, to:, amount:)`, `TransferService#apply`, then `TransferResult.applied`. A rescue of the five domain errors, listed once in a frozen `Hash` from error class to reason code, gives `TransferResult.rejected` with that code and `row.header_hint`.
+  - `TransferService` is built once per `call`, with the repository passed in.
+  - A total is `repository.all.map(&:balance).reduce(:+)` (`Money#+`; page 10 pick 38).
+  - Log texts (FR-020, FR-021): applied `Line <N> applied: <mf> -> <mt> <Money.amount(amount).to_s>` at info; rejected `Line <N> rejected: ` then, by position, `<mf>`, `-> <mt>`, `<amount as written, "" when empty>`, only those the row has, then the reason code, joined by single spaces, at warn. Masking: `value.length <= 4 ? '****' : ('*' * (value.length - 4)) + value[-4..]`.
+- **Rationale**: the order is FR-013's; logging each row as it is read keeps the warn lines before an `UnreadableFile` (AC-02.5) and keeps "Run started" and the row lines on a stopped run (spec clarification 3). Building the values one by one, in field order, gives the DEC-19 order with the domain's own check order inside `Transfer` (`001`). Nothing is caught except the domain errors, so `NoTransfers`, `TotalChanged`, `UnreadableFile` and `OutputNotWritable` reach the `Runner`.
+- **Alternatives considered**: logging all results at the end (warn lines would be lost when the file cannot be read past a line); a `case` on the error class (longer than one lookup table).
+
+## R6. Writing the output file
+
+- **Decision**: `FinalBalancesCsvWriter.default_path(run_time)` returns `"output/final_balances_#{run_time.strftime('%Y-%m-%d_%H%M%S')}.csv"` (local time, 24-hour clock). `write(accounts, path)`:
+  1. `FileUtils.mkdir_p(File.dirname(path))`;
+  2. `File.open(path, File::WRONLY | File::CREAT | File::EXCL | File::BINARY)`;
+  3. for each account, `file.write("#{account.number},#{account.balance}\n")`;
+  4. on `SystemCallError` or `IOError` in step 1 or 2: `OutputNotWritable.new(path, error)`, nothing deleted; in step 3: close and delete the file, then `OutputNotWritable.new(path, error)`.
+- **Rationale**: `File::EXCL` makes the open fail with `EEXIST` when any file or folder is already there at that moment, so a file that appeared after the start checks is never touched (page 6 pick 40) and a folder at the path gives "cannot write output file" (page 10 pick 14). `File::BINARY` stops Windows turning LF into CR LF (page 10 pick 17). Writing as it goes needs no extra memory (page 9: O(1) extra space). Folders already created stay when a deeper one fails (spec clarification 4). `Time#strftime` uses the time's own zone, which is local for `Time.now`.
+- **Alternatives considered**: `File.write` (overwrites); `CSV.open(path, 'w')` (no exclusive create; uses the system's line ending); building the whole text first (O(m) extra space, and the partial-write case could not happen).
+
+## R7. The runner
+
+- **Decision**: `Runner#run(arguments)`:
+  1. unless the count is 0, 2 or 3: print the two usage lines on `stderr`, return 1;
+  2. paths: typed paths `File.expand_path(arg)`, defaults `File.expand_path('data/<name>', PROJECT_ROOT)`; these real (absolute) paths are passed on as they are (plan P11);
+  3. logger (plan P16);
+  4. `run_time = Time.now`, once;
+  5. output path: the third argument expanded as in step 2, or `File.expand_path(FinalBalancesCsvWriter.default_path(run_time), PROJECT_ROOT)`;
+  6. start checks: `File.exist?` for each input file, `File.file?` for the output (plan P28); every problem printed, with the path shown by `DisplayPath.of`, as an `Error:` line in the order balances, transfers, output, then one `logger.error("Run stopped: start checks failed (<reasons>)")`, return 1;
+  7. build `BalancesCsvReader.new`, `TransfersCsvReader.new`, `FinalBalancesCsvWriter.new`, `AccountRepository.new`, `ReportPrinter.new(output: stdout)`;
+  8. `ProcessDailyTransfer.new(run_time:, balances_reader:, transfers_reader:, writer:, repository:, reporter:, logger:).call(balances, transfers, output)`;
+  9. return 0; `rescue *STOPPING_ERRORS => error`: `stderr.puts("Error: #{error.message}")`, `logger.error("Run stopped: #{error.stop_reason}")`, return 1.
+  `PROJECT_ROOT` is `File.expand_path('../..', __dir__)`, the folder holding `bin/` and `lib/`.
+- **Rationale**: FR-031's order. The usage check comes before the logger is used, so a wrong-argument run logs nothing (page 10 pick 3). Returning the status rather than calling `exit` keeps every runner behaviour testable in one process (page 6 pick 42).
+- **Alternatives considered**: `OptionParser` (named options are out of scope, page 4); calling `exit` in the `Runner`.
+
+## R8. RuboCop limits that shape the code
+
+- **Decision**: methods stay within 10 lines and `Metrics/AbcSize`; classes within 100 lines; `ProcessDailyTransfer` takes its six parts as named keywords collected in `**parts` and checks that exactly the six names are present (plan P6). Spec files follow `001`'s conventions (one expectation per example, examples of at most 5 lines, at most 3 levels of nesting).
+- **Research note (RuboCop and spec files)**: `rubocop-rspec`'s own `config/default.yml` sets `Metrics/BlockLength` with `inherit_mode: merge: [Exclude]` and `Exclude: ["**/*_spec.rb", "**/spec/**/*"]`. Once `.rubocop.yml` declares `plugins: [rubocop-rspec]` (`001` plan D15), spec files, including the long `spec/infrastructure/runner_spec.rb` (one `RSpec.describe Runner` holding every page 2 scenario, P18), are not checked by that cop. Zero offences is reachable under DEC-36's default settings: no setting is added, and no DEC-36 amendment or blocker is needed.
+- **Rationale**: DEC-36 keeps RuboCop's defaults. `Metrics/ParameterLists` allows 5 parameters and counts keyword arguments, so seven separate keywords would be an offence; `**parts` counts once and keeps the names at the call site. Splitting `ProcessDailyTransfer` into more classes would add names page 6 does not have.
+- **Alternatives considered**: a `.rubocop.yml` exception (changes the defaults); a parts value class (a DTO, ruled out by DEC-30).
+
+## R9. Test helpers and fakes
+
+- **Decision** (plan P17):
+  - `FakeReader.new(rows, unreadable_at: nil, error: nil)`: `each_row(path)` records the path; when `error` is given it raises that error object before yielding any row (for example `UnreadableFile.cannot_open(path, Errno::EACCES.new)`); otherwise it yields the given `Row`s, and when `unreadable_at` is set then raises `UnreadableFile.at_line(path, unreadable_at)` after them.
+  - `FakeReporter`: `print(day_result)` records each call; `printed` returns them.
+  - `ChangingTotalRepository` (plan P23).
+  - `memory_logger(level = Logger::INFO)` returns a `Logger` on a `StringIO`; `log_lines(logger)` returns each line without the `Logger` prefix, as `"<LEVEL> <text>"`.
+  - `in_temp_folder { |folder| ... }` makes a folder with `Dir.mktmpdir`, changes into it with `Dir.chdir` for the block, and removes it after; `write_file(name, text)` writes bytes with `File.binwrite`, creating folders; `fixture_path(*parts)` points into `spec/fixtures/`.
+  - `run_runner(*arguments, env: {})` runs `Runner.new(stdout:, stderr:, env:).run(arguments)` with two `StringIO`s and returns a `Struct` of `stdout`, `stderr` and `status`; `run_scenario(files:, arguments:, env:, folder:, read: [])` also returns `output_file` and `files`, the bytes (or `:folder`, or nil) of each path named in `read:`, read before the temporary folder is removed (tasks T021); `stream_pattern(text)` turns an expected text into an anchored `Regexp`, with `<timestamp>` as `\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{6}`, `<pid>` as `\d+` and `<reason from the system>` as `.+`; `run_command(*arguments, files:)` copies the given fixture files into a new temporary folder, runs `bin/run` as a process with `chdir:` that folder, and returns `stdout`, `stderr`, `status` and `output_file` (plan P25; tasks T021).
+  - `template_a(transfer:, balances:)` and `template_r(line:, reason:)` build the spec's Templates A and R; `balances_row(line, *fields, header_hint: nil)` and `transfers_row(line, *fields, header_hint: nil)` build `Row`s with 2 and 3 expected fields.
+- **Rationale**: DEC-34 asks for small builders and fakes; each helper keeps one kind of set-up out of the examples. `Dir.chdir` with a block restores the folder even when an example fails; the specs run one at a time, so changing the process's folder is safe.
+- **Alternatives considered**: `instance_double` for every fake reader (the rows and the unreadable line are clearer as data); stubbing `Dir.pwd` (tests would depend on how the code finds the folder).
+
+## R10. Line endings in the end-to-end specs
+
+- **Decision**: `run_command` replaces each `"\r\n"` with `"\n"` in the captured standard output and standard error; the output file is read with `File.binread` and compared with the expected bytes, LF only.
+- **Rationale**: Ruby on Windows writes CR LF to a pipe in text mode, so a byte comparison of the streams would fail there (spec clarification 5); the program's streams are not changed for a test. The output file is written in binary mode (R6), so its bytes are the same everywhere.
+- **Alternatives considered**: switching the program's standard output to binary mode (new behaviour); comparing the streams only on Linux.
+
+## R11. Sample copies and fixture bytes
+
+- **Decision**: `data/` and `spec/fixtures/sample/` hold copies of `docs/challenge/mable_account_balances.csv` and `docs/challenge/mable_transactions.csv`, made with `cp` and checked with `git diff --no-index` against the originals. Byte-sensitive reading cases are written by the tests (plan P20).
+- **Rationale**: DEC-22 and DEC-34 need the copies; Git stores them like the originals, so they stay equal on every checkout. The repository converts line endings on checkout on this machine (`core.autocrlf`), so a fixture meant to hold CR LF or no final newline could change; writing those bytes in the test keeps them exact.
+- **Alternatives considered**: a `.gitattributes` file marking fixtures as binary (a new repository setting for something the tests can do themselves).

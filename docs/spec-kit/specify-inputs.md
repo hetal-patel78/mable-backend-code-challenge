@@ -131,15 +131,29 @@ Rules:
 
 ### `/speckit-clarify` (002-file-runner)
 
-Pending.
+```text
+specs/002-file-runner. There is no user to answer: for each question, pick the answer that design-decisions.md and the solution design support (or, for a small gap, the most reasonable choice consistent with them), and write it into the spec's Clarifications section and the sections it affects. Focus on gaps that change a test or an exact output: CSV value trimming, the duplicate known gap, info-level logging on a stopped run, output folder creation failure, and comparing the end-to-end streams on Windows.
+```
+
+Questions asked and the answers chosen (session 2026-11-07; each is also in the spec's "Decided in the run", items 18 to 22):
+
+1. When a value in either file has tabs around it as well as spaces, are the tabs trimmed too? Answer: yes; spaces and tabs around each value are trimmed (DEC-04, DEC-05); spaces or tabs inside a value are kept.
+2. Does the duplicate known gap also cover a first copy rejected for a reason other than an invalid balance, such as the wrong number of fields or a negative balance? Answer: yes; any first copy not added because of its own problem leaves the later copy unseen as a duplicate, and the run stops either way (DEC-12, page 6 known gap).
+3. With `LOG_LEVEL=info`, which info lines appear in a run that passes the start checks and then stops? Answer: `Run started` and any row lines already logged, then the `Error:` line(s) and the error log line; never `Run ended`. A run stopped by the arguments or start checks logs no info line (DEC-28).
+4. If a missing folder on the output path cannot be created, what happens? Answer: `OutputNotWritable` with the AC-09.4 message `cannot write output file <path>: <reason from the system>`; folders already created are left in place (DEC-25, DEC-27).
+5. How do the end-to-end specs compare standard output and standard error when `bin/run` runs on Windows, where Ruby writes CR LF to a pipe? Answer: turn CR LF into LF in the captured streams before the exact comparison; compare the output file byte for byte, LF only (DEC-34, NFR-04, page 2 pick 17).
 
 ### `/speckit-plan` (002-file-runner)
 
-Pending.
+```text
+Plan specs/002-file-runner. It builds on 001-domain: plan against specs/001-domain/plan.md, data-model.md and contracts/domain-api.md, use exactly their names, members, errors and message strings for every domain item, and do not re-plan the domain. The technical context is already fixed by design-decisions.md and page 5: Ruby 3.4.x, Bundler, RSpec (random order), RuboCop with rubocop-rspec, SimpleCov; the folder layout on page 5; class names and members on page 6 and in the page 10 glossary. Nothing else is added. Pick any name page 10 leaves open and list it under "Decided in the run" in the plan. Fill the constitution check against .specify/memory/constitution.md.
+```
 
 ### `/speckit-tasks` (002-file-runner)
 
-Pending.
+```text
+Write the tasks for specs/002-file-runner. Tests first in every phase (write the spec, see it fail, then the code), each phase ends with its specs passing; every edge case in design-decisions.md within this spec's scope has a planned test, citing its DEC ID; every task cites its FR/NFR and DEC IDs where it helps; follow the brief's test split (rule 4): every page 2 scenario, including those of FR-03 to FR-06 that 001 owns, runs through the Runner with real CSV files and exact standard output, standard error and exit status, and exactly five end-to-end runs of bin/run.
+```
 
 ## 003-delivery
 
