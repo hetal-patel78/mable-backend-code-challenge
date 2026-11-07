@@ -178,10 +178,7 @@ Only accounts from the balances file exist. A transfer to or from any other vali
      - Exit status: 0
 3. **Both accounts unknown** (FR-05; DEC-17, page 7.6).
    - **Given** a repository that holds neither account, **When** a `Transfer` from `9999888877776666` to `8888777766665555` of `10.00` is applied, **Then** `UnknownAccount` is raised naming the from account, `account 9999888877776666 is not loaded`, because the from account is looked up first (domain outcome). The reason code is `unknown_account` whichever side is unknown.
-   - Run outcome, with `transfers.csv` holding `9999888877776666,8888777766665555,10.00`:
-     - Standard output contains `  Line 1  rejected  9999888877776666 -> 8888777766665555  10.00  unknown_account` **(derived)**.
-     - Standard error: `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************6666 -> ************5555 10.00 unknown_account` **(derived)**, then the all-rejected warn line.
-     - Exit status: 0
+   - Run outcome: none of its own (not a page 2 criterion; the reason code `unknown_account` is the same as AC-05.1 and AC-05.2).
 4. **`find` never creates an account** (FR-05; DEC-17, DEC-31).
    - **Given** an empty repository, **When** `find` is called with `9999888877776666`, **Then** it raises `UnknownAccount`, and afterwards `include?` for that number is false and `all` is empty (domain outcome).
    - Run outcome: none of its own (covered by AC-05.1).
