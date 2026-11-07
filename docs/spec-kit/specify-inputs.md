@@ -136,7 +136,9 @@ Plan specs/002-file-runner. It builds on 001-domain: plan against specs/001-doma
 
 ### `/speckit-tasks` (002-file-runner)
 
-Pending.
+```text
+Write the tasks for specs/002-file-runner. Tests first in every phase (write the spec, see it fail, then the code), each phase ends with its specs passing; every edge case in design-decisions.md within this spec's scope has a planned test, citing its DEC ID; every task cites its FR/NFR and DEC IDs where it helps; follow the brief's test split (rule 4): every page 2 scenario, including those of FR-03 to FR-06 that 001 owns, runs through the Runner with real CSV files and exact standard output, standard error and exit status, and exactly five end-to-end runs of bin/run.
+```
 
 ## 003-delivery
 
