@@ -44,9 +44,9 @@ Phase 1 of the [plan](plan.md). This spec adds no class and no runtime data (FR-
 - **Rules**: a frozen `bundle install` succeeds and leaves it unchanged on Windows, the CI runner and in the image (SC-005).
 - **Checks**: C-03, C-09, C-13, C-17, C-07.
 
-## `bin/run` (checked here; built by `002-file-runner`)
+## `bin/run` (built by `002-file-runner`; mode and first line added and checked here)
 
-- **Holds**: Git mode `100755`; first line `#!/usr/bin/env ruby`; LF line endings in the index and in every checkout (FR-018).
+- **Holds**: Git mode `100755`; first line `#!/usr/bin/env ruby`; LF line endings in the index and in every checkout (FR-018). `002` requires none of the three; this spec sets the mode and the first line if missing (spec item 16) and changes nothing else in the file.
 - **Checks**: C-01, C-26.
 
 ## Clean checkout

@@ -16,7 +16,7 @@ Phase 0 of the [plan](plan.md). The spec has no `NEEDS CLARIFICATION` item: its 
 
 ## R-3 `bin/run` starts on every system
 
-- **Decision**: `bin/run` (from `002-file-runner`) is stored as mode `100755`, starts with `#!/usr/bin/env ruby` and is stored with LF. `.gitattributes` holds exactly `bin/run text eol=lf`, so every checkout gives it LF, Windows included (FR-018; spec Clarifications). If the mode is wrong, `git update-index --chmod=+x bin/run` sets it (plan item 14).
+- **Decision**: `bin/run` (from `002-file-runner`) is stored as mode `100755`, starts with `#!/usr/bin/env ruby` and is stored with LF; `002` requires neither the mode nor the first line, so this spec adds them if missing (spec item 16). `.gitattributes` holds exactly `bin/run text eol=lf`, so every checkout gives it LF, Windows included (FR-018; spec Clarifications). If the mode is wrong, `git update-index --chmod=+x bin/run` sets it; if the first line is missing, this spec adds it (plan item 14).
 - **Rationale**: Linux, macOS and Docker start `bin/run` directly ([DEC-22](../../docs/design-analysis/design-decisions.md#dec-22)). A CRLF first line makes the kernel look for `ruby\r`, which fails with "No such file or directory". Docker Desktop on Windows gives every copied file the executable bit, so only the line ending matters there, and `.gitattributes` keeps it LF.
 - **Alternatives considered**: `* text=auto eol=lf` for every file (changes how other files check out on Windows, which nothing asks for; the spec fixes the one line); `CMD ["ruby", "bin/run"]` (the README's normal command is `bin/run`).
 
