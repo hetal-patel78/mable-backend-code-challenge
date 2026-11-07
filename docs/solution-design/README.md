@@ -25,7 +25,7 @@ What is in scope, and everything the decisions leave out, such as several compan
 ## Design (how it is built)
 
 ### [5. High-level design](05-high-level-design.md)
-One diagram of the whole program: where the CSV files are read, the domain models in the middle, where errors go, and where the report and output file go. It also shows where a new input format or a new transfer rule would be added.
+Four small diagrams of the whole program: where the CSV files are read, the domain models in the middle, where errors go, and where the report and output file go. It also shows where a new input format or a new transfer rule would be added.
 
 ### [6. Components](06-components.md)
 Each component's job, its inputs and outputs, and what it does not do. `Account` is the aggregate root: the one model that owns a balance and guards the no-overdraft rule. Value checks live in the domain; checks on the shape of a file row live in the file-reading layer ([DEC-30](../design-analysis/design-decisions.md#dec-30)).
