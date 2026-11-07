@@ -79,7 +79,7 @@ Created by this spec. The layout follows [page 5](../../docs/solution-design/05-
 .rubocop.yml                  # plugins: rubocop-rspec (default settings otherwise)
 .gitignore                    # coverage/ and output/
 Gemfile                       # csv, bigdecimal, logger; dev/test: rspec, simplecov, rubocop, rubocop-rspec
-Gemfile.lock                  # committed; platforms x86_64-linux and x64-mingw-ucrt
+Gemfile.lock                  # committed; platforms x86_64-linux and x64-mingw-ucrt (003 completes the list)
 
 lib/
 └── domain/
@@ -106,7 +106,7 @@ spec/
     └── transfer_service_spec.rb
 ```
 
-Added later, not by this spec: `lib/application/`, `lib/infrastructure/`, `bin/run`, `data/`, `spec/application/`, `spec/infrastructure/`, `spec/acceptance/`, `spec/fixtures/` (`002`); the README's content, CI workflow and Dockerfile (`003`).
+Added later, not by this spec: `lib/application/`, `lib/infrastructure/`, `bin/run`, `data/`, `spec/application/`, `spec/infrastructure/`, `spec/acceptance/`, `spec/fixtures/` (`002`); the README's content, CI workflow and Dockerfile (`003`); the completed `PLATFORMS` list of `Gemfile.lock` (`003`, plan item 2, which changes no gem version).
 
 **Structure Decision**: a single Ruby project with code under `lib/` in the three layer folders of DEC-30, of which this spec creates `lib/domain/` only, and specs under `spec/` mirroring the code, one spec file per class (DEC-34). The errors hold only their messages, so `errors.rb` has no spec file; each error and its exact message are tested in the spec of the class that raises it (D3, D21).
 
@@ -153,7 +153,7 @@ Names and details that page 6 and the page 10 glossary leave open, and small tec
 | D11 | The header hint text is passed in by the caller as `header_hint:`; the domain does not define the hint text | DEC-06, FR-023 | The hint comes from the reader's header mark (`002`), and the same text is used by `LoadBalances`; one owner for the text | A constant in `TransferResult` (a second owner) |
 | D12 | `TransferService.new(repository)` and `TransferService#apply(transfer)`; `apply` returns nil | page 6 `TransferService`, DEC-18 | The repository is the part it works on, the transfer is the request; success is "no error" | `call`; passing the repository on every call |
 | D13 | Code files load their own dependencies with `require_relative`; `spec_helper.rb` puts `lib/` on the load path and specs `require 'domain/<file>'`; `.rspec` holds `--require spec_helper` | DEC-34 | Each file states what it uses; specs read the same way as the code's layers | `require_relative '../../lib/...'` in every spec; one file that requires everything |
-| D14 | `Gemfile`: the runtime gems at top level, the four tools in `group :development, :test`, with no version constraints; `Gemfile.lock` pins the versions and lists the platforms `x86_64-linux` and `x64-mingw-ucrt` | DEC-01, DEC-36, FR-037 | The lock is the one place for versions; both platforms let CI, Docker and Windows install from the same lock | Version constraints in the `Gemfile` as well; a lock for one platform only |
+| D14 | `Gemfile`: the runtime gems at top level, the four tools in `group :development, :test`, with no version constraints; `Gemfile.lock` pins the versions; this spec adds the two platforms its own runs need, `x86_64-linux` and `x64-mingw-ucrt`, and `003` completes the `PLATFORMS` list (`003` plan item 2) | DEC-01, DEC-36, FR-037 | The lock is the one place for versions; the two platforms let this spec's suite run on Linux and Windows from the same lock, and `003` adds the rest (`ruby`, `aarch64-linux`, `x86_64-darwin`, `arm64-darwin`) so Docker on ARM64 and macOS also install it frozen | Version constraints in the `Gemfile` as well; a lock for one platform only |
 | D15 | `.rubocop.yml` holds only `plugins: [rubocop-rspec]`; every other setting is RuboCop's default, and the target Ruby version comes from `.ruby-version` | DEC-36, FR-031 | DEC-36 asks for default settings with `rubocop-rspec`; the plugin must be declared to load | Enabling new cops; changing limits |
 | D16 | Every code and spec file starts with `# frozen_string_literal: true`, and every class has a one-line comment saying what it is (from the page 10 glossary) | DEC-30, DEC-36, FR-032 | RuboCop's defaults require both; a one-line "what it is" is not design reasoning, which stays in the README | Disabling `Style/Documentation` (changes the defaults) |
 | D17 | Specs follow `rubocop-rspec` defaults: one expectation per example, a short `attempt(error_class)` helper that runs a refused call and rescues only that error, and balances compared as one array | DEC-34, DEC-36 | Keeps tests orthogonal and the style check clean without changing settings | `aggregate_failures` everywhere; disabling `RSpec/MultipleExpectations` |

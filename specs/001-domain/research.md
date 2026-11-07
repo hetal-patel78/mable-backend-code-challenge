@@ -10,8 +10,8 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
 
 ## R2. Gems and the lock file
 
-- **Decision**: the `Gemfile` lists `csv`, `bigdecimal` and `logger` at top level, and `rspec`, `simplecov`, `rubocop` and `rubocop-rspec` in `group :development, :test`, with no version constraints. `bundle install` writes `Gemfile.lock`, then `bundle lock --add-platform x86_64-linux x64-mingw-ucrt` adds both platforms, and the lock is committed (plan D14).
-- **Rationale**: DEC-01 commits the lock, which pins every version in one place. A lock made on one operating system lists only that platform; CI and Docker run on Linux and the developer works on Windows, so both are added and `bundle install` works everywhere from the same lock. The `Gemfile` declares no `ruby` line, so `.ruby-version` stays the one place for the version.
+- **Decision**: the `Gemfile` lists `csv`, `bigdecimal` and `logger` at top level, and `rspec`, `simplecov`, `rubocop` and `rubocop-rspec` in `group :development, :test`, with no version constraints. `bundle install` writes `Gemfile.lock`, then `bundle lock --add-platform x86_64-linux x64-mingw-ucrt` adds those two platforms, and the lock is committed (plan D14); `003` completes the `PLATFORMS` list (its plan item 2) without changing a version.
+- **Rationale**: DEC-01 commits the lock, which pins every version in one place. A lock made on one operating system lists only that platform; CI and Docker run on Linux and the developer works on Windows, so both are added and `bundle install` works on those two from the same lock. Docker on an ARM64 host and macOS need more platforms; `003` owns portability (NFR-04) and adds them. The `Gemfile` declares no `ruby` line, so `.ruby-version` stays the one place for the version.
 - **Alternatives considered**: pessimistic version constraints in the `Gemfile` (a second place for versions); a `ruby file: '.ruby-version'` line (makes every other 3.4 patch fail `bundle install`, which NFR-04 does not ask for).
 
 ## R3. RuboCop with `rubocop-rspec`

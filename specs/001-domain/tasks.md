@@ -32,7 +32,7 @@
 
 - [ ] T001 Create `.ruby-version` containing `3.4.12` and a final newline [FR-036; DEC-01; D1; research R1]
 - [ ] T002 Create `Gemfile`: `# frozen_string_literal: true`, `source 'https://rubygems.org'`, then `gem 'bigdecimal'`, `gem 'csv'`, `gem 'logger'` at top level, then `group :development, :test do` with `gem 'rspec'`, `gem 'rubocop'`, `gem 'rubocop-rspec'`, `gem 'simplecov'`; no version constraints and no `ruby` line [FR-037; DEC-01, DEC-36; D14; research R2]
-- [ ] T003 Run `bundle install`, then `bundle lock --add-platform x86_64-linux x64-mingw-ucrt`, and keep the resulting `Gemfile.lock` for commit [FR-037; DEC-01; D14; research R2]
+- [ ] T003 Run `bundle install`, then `bundle lock --add-platform x86_64-linux x64-mingw-ucrt`, and keep the resulting `Gemfile.lock` for commit; `003` later completes its `PLATFORMS` list, so do not add more here [FR-037; DEC-01; D14; research R2]
 - [ ] T004 [P] Create `.rspec` with the two lines `--require spec_helper` and `--format documentation` [FR-039; DEC-34; D13; research R11]
 - [ ] T005 [P] Create `.rubocop.yml` containing only `plugins:` with the one item `- rubocop-rspec` [FR-031; DEC-36; D15; research R3]
 - [ ] T006 [P] Create `.gitignore` with the lines `coverage/` and `output/` [FR-041; DEC-27, DEC-36]
