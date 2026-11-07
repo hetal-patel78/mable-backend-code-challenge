@@ -287,7 +287,7 @@
   - AC-02.5: `bin/run balances.csv bad.csv` with line 2 `1111234522226789,"10.00`: `'a stopped run'` with the spec's two lines; and the `100.01` variant, whose standard error starts with the warn line (DEC-04);
   - AC-07.1: `'a completed run'` with the spec's standard output and warn line (DEC-15, DEC-16).
 - [ ] T051 [P] [US3] Create `spec/fixtures/acceptance/all_rejected_transfers.csv` holding the one line `from,to,amount`, and write `spec/acceptance/runner_run_all_rejected_spec.rb`, `RSpec.describe Runner, '#run'` with `describe 'with all rejected'`: `run_command` with `balances.csv` and this file as `transfers.csv` and the third argument; examples: standard output exactly AC-02.3's; standard error matches AC-02.3's two warn lines; exit status 0; the output file's bytes are `balances.csv`'s three lines, each ending with LF [AC-02.3; FR-044; DEC-06, DEC-21, DEC-34; item 2]
-- [ ] T052 [US3] Run `bundle exec rspec` and confirm the new examples of T047 to T051 fail (domain errors escape, no rejected lines, no warning, no `NoTransfers`) (depends on T047 to T051)
+- [ ] T052 [US3] Run `bundle exec rspec` and confirm the examples that need this phase's new code fail (domain errors escape, no rejected lines, no warning, no `NoTransfers`): all of T047, T049 and T051, and in T050 the AC-02.1, AC-02.2, AC-02.3 (both variants), AC-02.4, AC-07.1 and AC-02.5 `100.01` variant groups. These already pass, as P24 says: all of T048 (`DayResult`'s counting was built in T031 and first failed in T025 and T029), and T050's AC-02.5 main scenario group (the reader's `at_line` first failed in T008 and T010; the `Runner` has rescued `UnreadableFile` since T045) (depends on T047 to T051)
 
 ### Implementation for User Story 3
 
