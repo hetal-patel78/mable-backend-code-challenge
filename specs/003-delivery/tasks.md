@@ -26,7 +26,7 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 **Purpose**: confirm what this spec builds on, and prepare the expected texts the checks compare.
 
 - [ ] T001 At `$REPO`, run `bundle exec rspec` (0 failures, `Randomized with seed`) and `bundle exec rubocop` (no offences), and record both in `docs/spec-kit/implementation-run-report.md` as the starting point (NFR-05, NFR-06; DEC-34, DEC-36). If either fails, stop: the defect belongs to `001-domain` or `002-file-runner`.
-- [ ] T002 Read `.ruby-version` and record the exact version in the run report; check it is a bare version number such as `3.4.7` and the latest Ruby 3.4.x release (FR-015; DEC-01; plan item 1). A `ruby-` prefix is reported as a cross-spec finding against `001-domain` FR-036, not worked around.
+- [ ] T002 Read `.ruby-version` and record the exact version in the run report; check it is a bare version number such as `3.4.12` (as pinned by `001` plan D1) and the latest Ruby 3.4.x release (FR-015; DEC-01; plan item 1). A `ruby-` prefix is reported as a cross-spec finding against `001-domain` FR-036, not worked around.
 - [ ] T003 [P] Create `$CHECKS` outside the repository (and, for the Windows checks, the PowerShell `$env:CHECKS` folder from the quickstart Prerequisites) and save the expected texts listed in [quickstart.md](quickstart.md#expected-texts): `report.txt` (the sample report, AC-08.1 with `<run time>`), `final.csv` (the sample output file, LF, final LF), `usage.txt` (AC-09.2), `info.txt` (AC-09.5), copied character for character from [spec.md](spec.md#conventions-used-in-the-scenarios) (DEC-35, DEC-22, DEC-28).
 
 **Checkpoint**: the suite and RuboCop pass; the expected texts are ready.

@@ -4,7 +4,7 @@ Phase 0 of the [plan](plan.md). The spec has no `NEEDS CLARIFICATION` item: its 
 
 ## R-1 The Ruby version in one place, copied once
 
-- **Decision**: `.ruby-version` (from `001-domain`) holds the bare version number, for example `3.4.7`. The Dockerfile's first line is `FROM ruby:` followed by exactly that text. The CI workflow gives `ruby/setup-ruby` no version, so it reads `.ruby-version`. When the version changes, `.ruby-version` and the Dockerfile change in the same commit (FR-015; plan item 1).
+- **Decision**: `.ruby-version` (from `001-domain`) holds the bare version number, for example `3.4.12`, as pinned by `001` plan D1. The Dockerfile's first line is `FROM ruby:` followed by exactly that text. The CI workflow gives `ruby/setup-ruby` no version, so it reads `.ruby-version`. When the version changes, `.ruby-version` and the Dockerfile change in the same commit (FR-015; plan item 1).
 - **Rationale**: [DEC-01](../../docs/design-analysis/design-decisions.md#dec-01) pins the version "in `.ruby-version` and in the Dockerfile"; Docker cannot read `.ruby-version`, so the Dockerfile is the one copy, and C-04 compares the two.
 - **Alternatives considered**: a build argument read from `.ruby-version` by a wrapper command (a second way to build the image); a version in the workflow (page 10 pick 50 rejects it).
 
