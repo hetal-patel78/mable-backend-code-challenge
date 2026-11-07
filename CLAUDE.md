@@ -8,7 +8,7 @@ Solution for the Mable back-end take-home challenge (`docs/challenge/MABLE_BACK_
 - Every decision gets a stable ID (`DEC-nn`). Reference the ID in a code comment or test name where it makes the link clearer. In documents, link it as `design-decisions.md#dec-nn`, for example `design-decisions.md#dec-04`.
 
 ## Current stage
-**Design analysis.** The developer has answered every finding and clarification in the review sheet (D: definite gaps, J: judgement calls, X: possible extras, C: clarifications), and the answers are saved in `docs/design-analysis/clarifications/`. The answers were challenged once more, as big findings (B) decided by the developer and small findings (S) decided by the assistant and agreed by the developer. `design-decisions.md` is written from all of them as the single source of truth, and the developer has agreed every assistant's pick in it. The solution design starts only when the developer says so.
+**Solution design.** The design analysis is complete: `docs/design-analysis/design-decisions.md` is the single source of truth, and the developer has agreed every assistant's pick in it. The solution design is being written in `docs/solution-design/`, following the developer's brief in `docs/solution-design/solution-design-brief.md`, including its stops for the developer's review.
 
 **Language and version:** Ruby, the latest 3.4.x release, tested with RSpec.
 
@@ -20,10 +20,10 @@ Design decisions belong to the developer. Once the design analysis has started, 
 - The developer's answers to review findings go in `docs/design-analysis/clarifications/`, kept unchanged, as the input to `design-decisions.md`. Where a later answer differs from an earlier one, the later one wins.
 
 ## Development approach
-Each step is written from the one before it. Step 1 is in progress; each later step starts only when the developer says so.
+Each step is written from the one before it. Step 2 is in progress; each later step starts only when the developer says so.
 
-1. **Design analysis (in progress):** review the developer's analysis against the challenge, raise findings (definite gaps, judgement calls, possible extras), agree answers with the developer, and consolidate them into `design-decisions.md`.
-2. **Solution design document (planned):** high-level design, components, logical flows, alternatives considered and trade-offs, in `docs/solution-design/`.
+1. **Design analysis (done):** review the developer's analysis against the challenge, raise findings (definite gaps, judgement calls, possible extras), agree answers with the developer, and consolidate them into `design-decisions.md`.
+2. **Solution design document (in progress):** high-level design, components, logical flows, alternatives considered and trade-offs, in `docs/solution-design/`.
 3. **GitHub Spec Kit specification (planned):** constitution, spec, plan, tasks.
 4. **Implementation (planned):** test-first, through the Spec Kit tasks.
 

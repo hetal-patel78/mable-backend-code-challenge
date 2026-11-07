@@ -179,3 +179,32 @@ The developer reviewed the 4 assistant's picks the review added to "To review":
 > Agree all 4
 
 Outcome: the 4 picks moved to "Agreed by the developer". "To review" is empty.
+
+## 2. Solution design
+
+<a id="p16"></a>**P16. Write the solution design**
+
+The prompt was given as an attached text file, with the message "Now read the attached prompt and start the Solution  Design and run the parallel execution whenever possible so SD is created fast". The file's opening lines:
+
+> I have finished my design decisions. I agree with the assistant's picks in the "To review" table of design-decisions.md; please move them to "Agreed by the developer".
+>
+> Now I want you to turn the decisions into a solution design document. First, save this brief as docs/solution-design/solution-design-brief.md, then follow it exactly, including its stops for my review.
+
+The rest of the file is the brief itself, saved unchanged as [`docs/solution-design/solution-design-brief.md`](../solution-design/solution-design-brief.md).
+
+Outcome: the brief was saved. The "To review" table was already empty, so no picks needed moving. Step 1 of the brief was done: the sources were read, and the proposed outline, names, open questions and small decisions were given to the developer for approval.
+
+<a id="p17"></a>**P17. Approve the outline**
+
+> Approve
+
+Outcome: the outline of `docs/solution-design/` and the proposed names (`AccountRepository`, `TransferService`, `UnknownAccount`, `DuplicateAccount`, `InsufficientFunds`, `LoadBalances`, `ProcessDailyTransfer`, `DayResult`, `BalancesCsvReader`, `TransfersCsvReader`, `FinalBalancesCsvWriter`, `ReportPrinter`, `Runner`) were approved. Step 2 of the brief was done: the parent page `docs/solution-design/README.md` was written, and work stopped for the developer's review.
+
+<a id="p18"></a>**P18. Approve the parent page, and how pages are committed and measured** (described, not quoted)
+
+The developer approved the parent page ("Looks good"), then answered two open questions:
+
+- Q1, how each page is committed and pushed: "Commit and push each page", as the brief says.
+- Q2, how cost and scale are stated: "no timing test for this one also update the main prompt accordingly."
+
+Outcome: cost and scale are stated as growth rates, checked by design review, with no timing test. At the developer's request, the brief in `docs/solution-design/solution-design-brief.md` was updated to say so. Step 3 of the brief started.
