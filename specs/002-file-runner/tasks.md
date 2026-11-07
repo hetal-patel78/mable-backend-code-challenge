@@ -503,7 +503,7 @@ Every edge case in the spec's [Edge Cases](spec.md#edge-cases) list, with the ta
 - **Phase 2 (Foundational)**: after Phase 1. Blocks every user story.
 - **Phase 3 (US1, MVP)**: after Phase 2. Builds the happy path of every class and `bin/run`.
 - **Phase 4 (US2)**: after Phase 3.
-- **Phase 5 (US3)**: after Phase 3; it can run before or after Phase 4, but both edit `runner_spec.rb`, `runner.rb` and `lib/application/errors.rb`, so run them one after the other.
+- **Phase 5 (US3)**: after Phase 4 (T056 adds to the `Runner`'s `STOPPING_ERRORS`, which T045 creates, and both phases edit `runner_spec.rb`, `runner.rb` and `lib/application/errors.rb`, so they run one after the other).
 - **Phase 6 (US4)**: after Phase 5 (AC-08.2 needs rejections; the stopping-error list grows in order).
 - **Phase 7 (US5)**: after Phase 6 (AC-09.4 and the full stopping-error list).
 - **Phase 8 (US6)**: after Phases 4 and 5.
