@@ -8,7 +8,7 @@ Solution for the Mable back-end take-home challenge (`docs/challenge/MABLE_BACK_
 - Every decision gets a stable ID (`DEC-nn`). Reference the ID in a code comment or test name where it makes the link clearer. In documents, link it as `design-decisions.md#dec-nn`, for example `design-decisions.md#dec-04`.
 
 ## Current stage
-**Initial analysis and setup.** The project instructions and the prompt log are being set up. The design analysis starts only when the developer says so.
+**Design analysis.** The developer's handwritten analysis has been reviewed and the findings raised (D: definite gaps, J: judgement calls, X: possible extras), followed by clarifications (C). The developer has answered all of them, and the answers are stored in `docs/design-analysis/clarifications/`. Next, they are consolidated into `design-decisions.md`.
 
 Design decisions belong to the developer. Once the design analysis has started, small decisions (edge cases, validation details, wording, test cases) may be made by the assistant when they are consistent with the developer's answers: record each in `design-decisions.md` with its reason and the rejected options, mark it as the assistant's pick, and list them for the developer to review. Anything that changes the design, conflicts with the developer's answers, or adds scope must be asked.
 
@@ -18,9 +18,9 @@ Design decisions belong to the developer. Once the design analysis has started, 
 - The developer's answers to review findings go in `docs/design-analysis/clarifications/`, kept unchanged, as the input to `design-decisions.md`. Where a later answer differs from an earlier one, the later one wins.
 
 ## Development approach
-Each step is written from the one before it. Only step 1 may start, and only when the developer says so.
+Each step is written from the one before it. Step 1 is in progress; each later step starts only when the developer says so.
 
-1. **Design analysis (next):** review the developer's analysis against the challenge, raise findings (definite gaps, judgement calls, possible extras), agree answers with the developer, and consolidate them into `design-decisions.md`.
+1. **Design analysis (in progress):** review the developer's analysis against the challenge, raise findings (definite gaps, judgement calls, possible extras), agree answers with the developer, and consolidate them into `design-decisions.md`.
 2. **Solution design document (planned):** high-level design, components, logical flows, alternatives considered and trade-offs, in `docs/solution-design/`.
 3. **GitHub Spec Kit specification (planned):** constitution, spec, plan, tasks.
 4. **Implementation (planned):** test-first, through the Spec Kit tasks.
@@ -44,8 +44,8 @@ Keep the rubric in `docs/challenge/MABLE_BACK_END_CODE_TEST.md` in view at every
 ## Prompt log
 The design and code are generated with an AI assistant, so the prompts that shaped them are kept.
 - One file per phase, in `docs/prompts/`:
-  - Initial analysis and setup (project instructions, analysis inputs): `prompts-initial-analysis-and-setup-phase.md`. This is the current log.
-  - Design phase (design analysis and solution design): `prompts-design-phase.md`. Planned.
+  - Initial analysis and setup (project instructions, analysis inputs): `prompts-initial-analysis-and-setup-phase.md`.
+  - Design phase (design analysis and solution design): `prompts-design-phase.md`. This is the current log.
   - Spec creation phase (Spec Kit specification): `prompts-spec-creation-phase.md`. Planned.
   - Implementation phase: `prompts-implementation-phase.md`. Planned.
   - Review and refactor phase (the developer's review after implementation): `prompts-refactor-phase.md`. Planned.
