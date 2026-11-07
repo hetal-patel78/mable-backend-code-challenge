@@ -20,7 +20,7 @@ Started by [P24](../prompts/prompts-spec-creation-phase.md#p24), from the branch
 | 4. Clarify, plan and tasks | Done: 001 7 rounds (2 earlier, 5 continuation), 002 10 rounds (1 earlier, 9 continuation), 003 26 rounds (12 earlier, 14 continuation); each ended on a round with 0 defects. All three spec branches pushed: 001-domain, 002-file-runner, 003-delivery |
 | 5. Cross-check | Done: 3 rounds (round 1 found 1 medium defect, round 2 found 2 low, round 3 found 0 and was clean) |
 | 6. Scripted checks | Done: 3 rounds (round 1 failed 3 checks, round 2 failed 1, round 3 passed all 7) |
-| 7. Merge and push | In progress: the three spec branches merged into `spec-kit-specs` with their small commits kept (no squash). `spec-kit-specs` is not yet pushed, and `main` is not pushed until an independent review by Claude Opus 5.5 approves it (round 1 found 1 medium defect, fixed) |
+| 7. Merge and push | In progress: the three spec branches merged into `spec-kit-specs` with their small commits kept (no squash). `spec-kit-specs` is not yet pushed, and `main` is not pushed until an independent review by Claude Opus 5.5 approves it (rounds 1 and 2 found 3 defects in total, all fixed) |
 | 8. Stop | Pending: after step 7 completes |
 
 ### Check results
@@ -115,7 +115,8 @@ Step 7 review before pushing `main`. Every round is by an independent Claude Opu
 
 | Round | Reviewer | Defects found | Result |
 |---|---|---|---|
-| 1 | Claude Opus 5.5 (opus), independent | 1 (medium: this report stated the step 7 pushes and an approval before they happened) | Fixed; awaiting round 2 |
+| 1 | Claude Opus 5.5 (opus), independent | 1 (medium: this report stated the step 7 pushes and an approval before they happened) | Fixed |
+| 2 | Claude Opus 5.5 (opus), independent | 2 | Fixed |
 
 ### Decided in the run
 
@@ -280,6 +281,10 @@ None. An early review claimed RuboCop could not reach zero offences under DEC-36
   - The Phase dependencies section of tasks.md now says Phase 5 follows Phase 4, as T056 needs (002).
   - The clean checkout is one description everywhere: a fresh clone of the pushed branch into a new empty folder outside the working repository, with `$BRANCH` and `$SRC` in quickstart C-08, C-13, C-26, the Docker checkout and tasks (003). The 003 entries under "Decided in the run" match the final spec and plan (no `.gitattributes`, `CMD ["ruby", "bin/run"]`).
   - The entries under "Decided in the run" in this report are brought in line with the final plans for 001, 002 and 003.
+- **Before pushing `main`**
+  - This report no longer states step 7 pushes or approval before they happen (round 1).
+  - The `ProcessDailyTransfer` constructor shows `run_time: Time.now` in 002 plan P6 and in this report (round 2, DEC-30).
+  - The AC-09.1 test description gives the default output path as the project root joined with `default_path` (round 2).
 
 ### Left for the developer
 
