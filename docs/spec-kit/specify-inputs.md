@@ -130,7 +130,9 @@ Questions asked and the answers chosen (session 2026-11-07; each is also in the 
 
 ### `/speckit-plan` (002-file-runner)
 
-Pending.
+```text
+Plan specs/002-file-runner. It builds on 001-domain: plan against specs/001-domain/plan.md, data-model.md and contracts/domain-api.md, use exactly their names, members, errors and message strings for every domain item, and do not re-plan the domain. The technical context is already fixed by design-decisions.md and page 5: Ruby 3.4.x, Bundler, RSpec (random order), RuboCop with rubocop-rspec, SimpleCov; the folder layout on page 5; class names and members on page 6 and in the page 10 glossary. Nothing else is added. Pick any name page 10 leaves open and list it under "Decided in the run" in the plan. Fill the constitution check against .specify/memory/constitution.md.
+```
 
 ### `/speckit-tasks` (002-file-runner)
 
