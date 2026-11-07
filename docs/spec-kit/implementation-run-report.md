@@ -128,6 +128,7 @@ Step 6 scripted checks. The table shows the final round (round 3). Round 1 faile
   - Each single-row example is the only row of `transfers.csv`, on line 1.
   - The exact Ruby 3.4.x version is set by the plan, not the spec.
   - A `TransferResult` keeps every field of its row, in order, after trimming. A malformed row gives "N fields, expected 3", and the log takes from, to and amount by position.
+  - `AccountNumber.new(text)` has `to_s` for the full text and compares by text (`==`, `eql?`, `hash`), with no other reader.
   - Money equality and comparison use the amount only, so -0 equals 0. The written minus sign only decides whether a value counts as negative. A Money made by adding or taking away is negative only when its amount is below 0.
   - `Account#withdraw` and `#deposit` do not check that the amount is above $0. That rule stays in `Transfer`, which `TransferService` relies on.
   - Ruby 3.4.12 goes in `.ruby-version`, the highest 3.4.x release on 2026-11-08.
@@ -135,7 +136,7 @@ Step 6 scripted checks. The table shows the final round (round 3). Round 1 faile
   - `Money.amount(text)` and `Money.balance(text)` set the word "amount" or "balance" in the messages. Money members are `text`, `to_s`, `+`, `-`, `<=>` (with `Comparable`), `==`, `eql?`, `hash`, `negative?`, `positive?`, and `Money.new(value, text = nil)`.
   - `Account.new(number, balance)` and `Account.check_opening_balance(balance)`, which raises `NegativeBalance`. `Transfer.new(from:, to:, amount:)` takes keywords.
   - `TransferResult.applied(line_number:, fields:)` and `.rejected(line_number:, fields:, reason:, header_hint: nil)`. `REASON_CODES` is a frozen list of symbols in DEC-19 order, and an unknown reason raises `ArgumentError`. 002 supplies the header hint text. `TransferService.new(repository)` and `#apply(transfer)` return nil.
-  - Files load their own dependencies with `require_relative`. The Gemfile lists the runtime gems at top level and the four tools in group `:development, :test`, with no version constraints and no ruby line. Gemfile.lock pins the platforms x86_64-linux and x64-mingw-ucrt.
+  - Files load their own dependencies with `require_relative`. The Gemfile lists the runtime gems at top level and the four tools in group `:development, :test`, with no version constraints and no ruby line. Gemfile.lock pins the platforms x86_64-linux and x64-mingw-ucrt, and 003 completes the list.
   - `.rubocop.yml` holds only `plugins: [rubocop-rspec]`. Every file has a frozen_string_literal comment and each class a one-line comment, because RuboCop's defaults require both.
   - Specs follow rubocop-rspec defaults, with one expectation per example. A helper `attempt(error_class)` rescues only the named error. "Deposit is never called" is proven by the receiving balance staying unchanged, not by a spy.
   - `AccountNumber`, `Money`, `Transfer` and `TransferResult` freeze when built. SimpleCov starts at the top of `spec_helper`, filtering `/spec/`.
@@ -143,8 +144,8 @@ Step 6 scripted checks. The table shows the final round (round 3). Round 1 faile
   - Tasks follow code dependency (US4, US6, US2, US5, US3, US1), not priority. Each error and test builder is added in the phase whose test first needs it. The service-level views of AC-04.x, AC-05.x and US6 scenario 4 are tested in the US1 phase, where `TransferService` is built.
   - DEC-09's own examples (100, 100.5, 100.50 valid; 100., +100, $100 invalid) are tested alongside the table rows.
 - **002-file-runner**
-  - Runner scenarios run in the same process, in a temporary folder. The test writes the CSV files there, so they are not fixture files. This keeps the end-to-end runs at 5.
-  - The five end-to-end runs are AC-08.1, AC-08.2, AC-02.3, AC-01.4 and AC-09.2 (one argument).
+  - Runner scenarios (`spec/infrastructure/runner_spec.rb`, grouped by FR) call `Runner` in the same process, in a temporary folder. The test writes the CSV files there, so they are not fixture files, and passes `output/final_balances_2026-11-07_143005.csv` as the third argument. This keeps the end-to-end runs at 5.
+  - The five end-to-end runs are AC-08.1, AC-08.2, AC-02.3, AC-01.4 and AC-09.2 (one argument). Each runs `bin/run` as a separate process (`Open3.capture3` with `RbConfig.ruby`, `LOG_LEVEL` removed) with a temporary folder as the current folder, and passes the default output name as the third argument.
   - AC-09.1 uses a stand-in `ProcessDailyTransfer`. AC-08.4 uses `../` paths from a subfolder.
   - AC-09.7 checks `default_path` for two run times one second apart, and checks that two runs give the same output.
   - AC-08.3 also reads the AC-08.2 output back in as a balances file.
@@ -167,13 +168,15 @@ Step 6 scripted checks. The table shows the final round (round 3). Round 1 faile
   - A Row Data value and one `CsvRows` class hold the shared CSV rules and `HEADER_HINT`. There is no base class.
   - Both readers expose `each_row(path)` and `FIELD_COUNT` (2 or 3), and read row by row. LoadBalances reads every row before any transfer runs.
   - `LoadBalances.new(reader, repository).call(path)`. `ProcessDailyTransfer.new(run_time:, **parts)` takes exactly the six named parts, and `call(balances_path, transfers_path, output_path = nil)` returns the DayResult.
-  - DayResult is a Data value with counts, `rejected_counts` in DEC-19 order, `all_rejected?`, and `ALL_REJECTED_WARNING`. The report and the run-end log count the same results.
+  - DayResult is a Data value with `results`, `total_before`, `total_after`, `accounts` and `output_path`, and the counts, `rejected_counts` in DEC-19 order (only the reasons that occurred), `all_rejected?`, and `ALL_REJECTED_WARNING`. The report and the run-end log count the same results.
   - Each run-stopping error builds its own message and `stop_reason`. The reason from the system is the message up to Ruby's " @ " call details.
-  - `DisplayPath.of(path, folder)` shows a path relative to the current folder when the file is in it, below it, or below its parent (one `../` step), and in full otherwise. The Runner converts each path once, and later parts use that text.
+  - `DisplayPath.of(path, folder = Dir.pwd)` shows a path relative to the current folder when the file is in it, below it, or below its parent (one `../` step), and in full otherwise. The Runner resolves each path to a real, absolute path and passes only real paths on, so `DayResult.output_path` holds the real path. The shown form is built with `DisplayPath` where each text is built: in the run-stopping errors' messages, in the `Run started` line and in the `Runner`'s start-check lines. `ReportPrinter` alone works out the shown output path.
+  - `CsvRows` reads with `CSV.open` and `csv.shift`, not `CSV.foreach`, because DEC-05 and DEC-07 need the raw line and the physical-line count (plan P29).
   - `Runner.new(stdout:, stderr:, env:).run(arguments)` returns 0 or 1. `ReportPrinter.new(output:, current_folder:).print(day_result)`. The logger is at info when `LOG_LEVEL` is `casecmp?('info')`, otherwise warn.
   - The writer creates missing folders with `mkdir_p`, opens the file with `WRONLY|CREAT|EXCL|BINARY`, writes LF only, and deletes the file only if it created it before raising `OutputNotWritable`.
   - An applied amount is shown and logged as `Money.amount(text).to_s`. A rejected value is shown as written, and an empty value as `""`.
-  - Page 2 scenarios are in `spec/infrastructure/runner_spec.rb`, grouped by FR. The five end-to-end specs are `RSpec.describe Runner` in `spec/acceptance/runner_<case>_spec.rb`.
+  - Page 2 scenarios are in `spec/infrastructure/runner_spec.rb`, grouped by FR. The five end-to-end specs are `RSpec.describe Runner, '#run'` in `spec/acceptance/runner_run_<case>_spec.rb`, each with one inner `describe 'with <case>'` (`sample files`, `mixed rejections`, `all rejected`, `invalid balances`, `wrong arguments`), so RuboCop's default cops pass with no setting changed.
+  - Test helpers are in `spec/support/` (`fakes.rb`, `files.rb`, `runs.rb`, `report_templates.rb`, and the row builders in `builders.rb`).
   - Fixture files hold only the DEC-34 cases and the end-to-end inputs. Byte-sensitive cases are written by the tests with `File.binwrite`. No `.gitattributes` file is added for them.
   - A folder at the input path is the "exists but cannot be opened" case. A fake account that raises `Errno::ENOSPC` on its second line tests the partial write. `ChangingTotalRepository` returns the real accounts on the first `all` call, and from the second, the first account with 1.00 less, giving 66750.00 to 66749.00.
   - The phases run outside-in. The User Story 6 phase adds no code.
@@ -192,22 +195,23 @@ Step 6 scripted checks. The table shows the final round (round 3). Round 1 faile
   - No `.dockerignore`. The Dockerfile adds nothing beyond DEC-36.
   - The README keeps the challenge link and an updated layout table, and replaces the Status and "To be added" sections.
   - The submission branch is `main`, the default branch the submission link opens, after the merged implementation is pushed to it. The submission checks, clean checkouts and the coverage figure are taken on its latest commit.
-  - `.gitattributes` gets one line, `bin/run text eol=lf`. With `core.autocrlf=true` on Windows, `bin/run` would otherwise get CRLF line endings, and the Docker image would fail on its shebang line. `* text=auto eol=lf` was rejected as wider than needed.
-  - The Docker default command is `CMD ["bin/run"]` in exec form, not run through `bundle exec`, so the exit status is the program's. A command after the image name replaces it.
+  - No `.gitattributes` file is created, and `bin/run` is not forced to LF in checkouts. With `core.autocrlf=true` on Windows every text file, `bin/run` included, gets CRLF, which RuboCop's default `Layout/EndOfLine` expects there. A check runs `bundle exec rubocop` in a fresh `core.autocrlf=true` Windows clone and expects `no offenses detected`.
+  - The Docker default command is `CMD ["ruby", "bin/run"]` in exec form, not run through `bundle exec`, so the exit status is the program's and a CRLF first line cannot stop it starting. A command after the image name replaces it, and every in-container call of the program is `ruby bin/run ...`.
+  - The Docker checks run from a Linux, macOS or WSL shell, not Git Bash, which breaks the mounts. The Windows Docker checks (C-26 and C-41) run in PowerShell. C-19 creates `output/` on the host before the first mounted run.
   - The container runs as the image's default user, root, with no `--user`. The README says in one line that the output file may belong to root on a Linux host.
   - The README sections follow the order of DEC-37: build, test and run (with Ruby, on Windows and with Docker); input files; log level and exit status; assumptions; design; test coverage; storage, production items and known limitations; how this was built; repository layout; the challenge.
   - `.ruby-version` holds the bare version number, with no `ruby-` prefix. The Dockerfile's first line is `FROM ruby:` followed by the same text, and check C-04 compares them.
   - `Gemfile.lock` lists the platforms ruby, x64-mingw-ucrt, x86_64-linux, aarch64-linux, x86_64-darwin and arm64-darwin, added with `bundle lock --add-platform`. No gem versions change.
   - `.github/workflows/ci.yml` is named CI and runs on push with no branch filter. It has one job, `checks`, on ubuntu-latest, with five steps: checkout, ruby/setup-ruby (which reads `.ruby-version`), `bundle install` with `BUNDLE_FROZEN=true`, `bundle exec rspec`, and `bundle exec rubocop`. `actions/checkout@v5` and `ruby/setup-ruby@v1` are pinned to major versions. The bundler cache is not used.
   - Frozen installs use `BUNDLE_FROZEN=true` in CI, Docker and the checks, not `--frozen` or deployment mode. The README tells a reviewer to run plain `bundle install`.
-  - The Dockerfile has exactly six instructions: `FROM ruby:<version>`, `WORKDIR /app`, `COPY . .`, `ENV BUNDLE_FROZEN=true`, `RUN bundle install`, and `CMD ["bin/run"]`. There is no `USER` line. If the default `ruby:<version>` image lacks `/usr/share/zoneinfo`, the `-bookworm` variant is used, since installing tzdata would add a package FR-024 does not allow.
+  - The Dockerfile has exactly six instructions: `FROM ruby:<version>`, `WORKDIR /app`, `COPY . .`, `ENV BUNDLE_FROZEN=true`, `RUN bundle install`, and `CMD ["ruby", "bin/run"]`. There is no `USER` line. If the default `ruby:<version>` image lacks `/usr/share/zoneinfo`, the `-bookworm` variant is used, since installing tzdata would add a package FR-024 does not allow.
   - The README's Docker commands are: build with `docker build -t mable-transfers .`; run with `-v "$(pwd)/output:/app/output"` in a POSIX shell, or `-v "${PWD}/output:/app/output"` in PowerShell; both runs use `--rm` and `-e TZ=Australia/Sydney`. The test run is `docker run --rm mable-transfers bundle exec rspec`. There is no `--user` and no `-it`.
   - The coverage figure is SimpleCov's printed `Line Coverage` line from a full run on a clean checkout of the final code. After the push it is compared with the CI log of the latest `main` commit.
   - The README title and the challenge link keep the challenge's own name. FR-014's "no company named" is read as the company whose balances are processed.
   - The checks are commands in `quickstart.md`, with results in the run report. No script or folder is added for them. Line endings are checked with `git ls-files --eol`, and copies of the challenge files by Git blob ID, so both give the same result on a Windows checkout.
   - If `bin/run` is not stored as mode 100755, the fix is `git update-index --chmod=+x bin/run`, with no content change.
   - The Windows checks clone with `git clone -c core.autocrlf=true`, so the data files get CRLF line endings, and they use PowerShell's `$LASTEXITCODE`.
-  - During development, the clean checkout is a fresh clone of the implementation branch from the local repository. The final repeat runs on a fresh clone of `origin/main` after the push. If no Linux or macOS machine is available, US1's checks run in one official `ruby:<version>` container with the clean checkout mounted, and the run report says so.
+  - A clean checkout is always made with `git clone --branch $BRANCH $SRC` into a new empty folder outside the working repository. During development `$BRANCH` is the implementation branch and `$SRC` the local repository, standing in for the pushed branch. The final repeat runs on a fresh clone of `origin` `main` after the push. If no Linux or macOS machine is available, US1's checks run in one official `ruby:<version>` container with the clean checkout mounted, and the run report says so.
   - The CI run is checked on the pushed implementation branch and again on `main`. If the code changes after the coverage figure was taken, the figure is updated and C-33 is repeated.
 
 ### Changed in the run
@@ -241,6 +245,7 @@ None.
   - Plan P24's phase rule, the phase checkpoints (after T017 and T078) and the test order in Phases 3, 4, 5 and 7 (T031, T045, T052, T073) now follow constitution IV and brief rule 5; T059 no longer rescues `TotalChanged` in a `before` block.
   - US5 scenarios 1 and 6, the AC-09.5 variants, the AC-08.3 third argument and the AC-08.4 scenarios now state standard output, error and exit code, and their tasks match.
   - The components contract's loading table (two rows) and the checklist's item count are corrected.
+  - Pre-merge review: the Phase dependencies section of tasks.md now says Phase 5 follows Phase 4, as T056 needs; the 002 entries under "Decided in the run" match the final spec and plan P-items (paths, end-to-end runs, spec file names, DayResult, helpers).
 - **003-delivery**
   - Windows check commands: byte-for-byte stream comparison, `$env:CHECKS`, `$REPO`, `$LASTEXITCODE`, clone paths and output redirection.
   - Docker checks: the README-command check (C-41), C-29 run as written, the Dockerfile first-line check, the C-21 redirect, the fresh-checkout folders, and the expected output folder.
@@ -260,6 +265,7 @@ None.
   - Plan, research and checklist state the spec's item counts correctly; the rejected alternatives in plan item 3 and research R-2 and R-5 are corrected, including R-5's CI matrix citation.
   - US2 scenario 4 and US4 scenario 2 now state standard output, error and exit code.
   - Quickstart expected texts and checks C-21, C-23 and C-26 compare a run's output the same way.
+  - Pre-merge review: the clean checkout is one description everywhere (a fresh clone of the pushed branch into a new empty folder outside the working repository, with `$BRANCH` and `$SRC` in quickstart C-08, C-13, C-26, the Docker checkout and tasks); the 003 entries under "Decided in the run" match the final spec and plan (no `.gitattributes`, `CMD ["ruby", "bin/run"]`).
 - **Cross-check**
   - The Gemfile.lock platform list in 001 plan D14 and in 003's Decided list now agree (X1).
   - 001 no longer gives a run outcome for a scenario that no spec runs, since its spec says every run outcome goes through the 002 runner (XC2-01).
@@ -272,17 +278,14 @@ Medium and low `/speckit-analyze` issues left after round 3, not changed in this
 - **001-domain** (2 low)
   - Low: the "Run outcome" bullets under User Story 5's scenarios 1, 2 and 4 (spec.md lines 281 to 288) start at column 0.
   - Low: the plan says three times that the seven error classes have no spec file of their own.
-- **002-file-runner** (2 medium, 6 low)
-  - Medium: tasks.md "Phase dependencies" says Phase 5 (US3) can run before or after Phase 4, which contradicts Phase 5's stated dependency.
+- **002-file-runner** (1 medium, 5 low)
   - Medium: plan P29 and research R1 read the transfers file with `CSV.open` and `csv.shift`, while DEC-32 names `CSV.foreach`.
-  - Low: some 002 entries in this report, such as the DisplayPath line in Decided in the run, no longer match plan P11.
   - Low: research R9 says FakeReporter records only `printed` calls, while T019 also records `file_existed`.
   - Low: tasks.md does not say how the new support helpers reach the examples.
   - Low: the nesting depth of variant scenarios is unclear against the three-level cap in the conventions.
   - Low: the edge-case row for an invalid balances file with an empty transfers file cites T028, which the analyzer flags as not matching that case.
   - Low: the parent-folder path rule is worded two ways (FR-029, plan P10 and the command-line contract say "exactly one leading ../").
-- **003-delivery** (1 medium, 4 low)
-  - Medium: the source of the clean checkout is described differently across quickstart.md (C-08, C-13, C-26 and the Docker checkout) and elsewhere.
+- **003-delivery** (4 low)
   - Low: quickstart.md C-43 and T059 (and T050) name different paths for the `git ls-files --eol` check.
   - Low: T059 sits in Phase 5, after T022, so the task IDs are out of sequence.
   - Low: plan "Decided in the run" item 19 uses history wording.
