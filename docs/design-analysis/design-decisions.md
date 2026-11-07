@@ -5,7 +5,7 @@ This file is the single source of truth for how the solution to the [Mable back-
 How to read it:
 
 - Each decision has a stable ID (`DEC-01`, `DEC-02` and so on). Link to one as `design-decisions.md#dec-nn`.
-- Each decision gives the **rule**, the **reason**, the options **rejected**, and **From**: the review findings and answers it comes from. D, J, X, C, B and S are the tabs of the review sheet, saved in [`clarifications/`](clarifications/). P-numbers (P4, P6, P7, P11, P12, P14, P15) are prompts in the [design prompt log](../prompts/prompts-design-phase.md); R1 to R3 are the questions from the independent review, answered in P14.
+- Each decision gives the **rule**, the **reason**, the options **rejected**, and **From**: the review findings and answers it comes from. D, J, X, C, B and S are the tabs of the review sheet, saved in [`clarifications/`](clarifications/). P-numbers (P4, P6, P7, P11, P12, P14, P15, P19) are prompts in the [design prompt log](../prompts/prompts-design-phase.md); R1 to R3 are the questions from the independent review, answered in P14.
 - A rule marked **[assistant's pick]** was decided by the AI assistant, where the developer's answers left a small detail open. Its reason and rejected options are in [To review](#to-review) or, once the developer agreed it, in [Agreed by the developer](#agreed-by-the-developer).
 
 ## Contents
@@ -209,12 +209,14 @@ The balances file is invalid when any of these is true:
 - Every row is checked, and every problem is reported as an error on stderr, each with its line number ([DEC-07](#dec-07)). A row with several problems reports each one, all with the same line number. **[assistant's pick]**
 - Then the run stops: no transfer is applied, the transfers file is not processed, no output file is written and the exit status is 1.
 - A duplicate account is reported on the line where it repeats, naming the line where it first appeared. The repository rejects the duplicate ([DEC-31](#dec-31)); the balances loader only remembers where each account first appeared, to add that line to the message.
+- Before checking a row's balance, the balances loader asks the repository whether the account number is already there (`include?`, [DEC-31](#dec-31)). If it is, the duplicate is reported, naming the line where the account first appeared.
+- If the first copy of an account is itself an invalid row, it was never added, so the duplicate is reported only after that row is fixed. This is a known gap; the run stops either way.
 
 **Reason:** the user can fix every problem in one go, and nothing runs on doubtful balances.
 
 **Rejected:** stopping at the first bad row (one fix per run); loading the valid rows and skipping the bad ones (transfers touching skipped accounts would then fail as unknown); reporting a duplicate without the first line.
 
-**From:** C2, C10, J8, D2, D15, S4, Page 2 of the handwritten analysis.
+**From:** C2, C10, J8, D2, D15, S4, P19, Page 2 of the handwritten analysis.
 
 ## 5. Applying the transfers
 
@@ -382,12 +384,13 @@ The program starts from `bin/run`, which takes positional arguments:
 **Rule**
 - If an input file is missing or cannot be read, the program prints a clear error on stderr, writes no output and exits with status 1.
 - Both input files are checked for existence before anything is read, and every missing file is reported. **[assistant's pick]**
+- Every problem found by the checks at the start, a missing input file or an output file that already exists ([DEC-25](#dec-25)), is reported together, one error line each, before the run stops.
 
 **Reason:** the user gets a clear message instead of a stack trace.
 
 **Rejected:** letting Ruby's own error reach the user.
 
-**From:** D15, D2.
+**From:** D15, D2, P19.
 
 <a id="dec-24"></a>
 ### DEC-24 Total of all balances is checked
@@ -517,13 +520,18 @@ The report is printed on stdout once, at the end of a completed run, after the o
 - Class and file names are plain domain words such as `Account`, `Money` and `Transfer`. There are no base classes, no suffixes such as `AggregateRoot` or `ValueObject`, and no domain events, factories, commands, DTOs or mappers.
 - The code is organised in three folders: `domain`, `application` and `infrastructure`. A new folder is added only when it holds several files.
 - The class that runs the day takes the run time as a constructor argument, defaulting to the current time. **[assistant's pick]** `bin/run` passes nothing; tests pass a fixed time so the output file name is known.
+- The runner reads the clock once. When no output path is given, it gets the default path for that time from the output writer ([DEC-27](#dec-27)), checks it at the start, and passes the same run time and output path to the class that runs the day.
+- The balances reader, the transfers reader, the output writer, the repository, the report printer and the logger are all passed in to the class that runs the day. The runner builds the real ones; tests pass fakes. The class that runs the day prints the report through the report printer after the output file is written ([DEC-26](#dec-26)).
+- The errors are named for what went wrong:
+  - raised by the domain models: `InvalidAccountNumber`, `InvalidAmount`, `SameAccount`, `NegativeBalance`, `UnknownAccount`, `DuplicateAccount` and `InsufficientFunds`;
+  - errors that stop the run: `InvalidBalancesFile`, `NoTransfers`, `UnreadableFile`, `TotalChanged` and `OutputNotWritable`.
 - The design reasoning is explained in the README, not in the code.
 
 **Reason:** the rubric asks for domain models that hold their own logic and for separation of concerns. Light DDD keeps the thinking without the ceremony. Passing the time in keeps the tests independent of the clock.
 
 **Rejected:** full DDD terms and structure (heavy for a small program); tests stubbing `Date.today` or `Time.now` (tests would depend on internals); a `RUN_DATE` environment variable (a second setting).
 
-**From:** X5, D12, B4.
+**From:** X5, D12, B4, P19.
 
 <a id="dec-31"></a>
 ### DEC-31 In-memory repository
@@ -531,6 +539,7 @@ The report is printed on stdout once, at the end of a completed run, after the o
 **Rule**
 - A thin in-memory repository holds the accounts and is the one place for these rules:
   - `add` rejects a duplicate account;
+  - `include?` tells whether an account number is already there, so the balances loader can report a duplicate before checking a row's balance ([DEC-12](#dec-12)); **[assistant's pick]** for the name
   - `find` raises an unknown-account error, which the transfer step turns into a rejected transfer with the reason `unknown_account`;
   - `all` returns the accounts in the order they were loaded, for the report and the output CSV.
 - The repository does not know line numbers. The balances loader adds them to the duplicate-account message ([DEC-12](#dec-12)).
@@ -539,7 +548,7 @@ The report is printed on stdout once, at the end of a completed run, after the o
 
 **Rejected:** no repository, with the accounts in a plain collection passed around (the rules would be spread out).
 
-**From:** X4, C10.
+**From:** X4, C10, P19.
 
 <a id="dec-32"></a>
 ### DEC-32 Reading large files
@@ -704,7 +713,9 @@ The README gives:
 <a id="to-review"></a>
 ## To review
 
-None. Every assistant's pick has been reviewed and agreed by the developer.
+| Decision | Pick | Reason | Rejected |
+|---|---|---|---|
+| [DEC-31](#dec-31) | The repository's membership method is named `include?` | It is Ruby's usual name for a membership question, as on `Hash` and `Array` | `exists?`, `has_account?` |
 
 <a id="agreed-by-the-developer"></a>
 ## Agreed by the developer
