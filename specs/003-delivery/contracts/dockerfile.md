@@ -11,7 +11,7 @@ What the Dockerfile must hold, and the commands the README gives (FR-022 to FR-0
 | 3 | `COPY . .` | Copies the project in (DEC-36) |
 | 4 | `ENV BUNDLE_FROZEN=true` | The install fails instead of changing `Gemfile.lock` (plan item 6) |
 | 5 | `RUN bundle install` | Installs the locked gems, development gems included, so the tests run in the image |
-| 6 | `CMD ["bin/run"]` | Exec form: `bin/run` with no arguments, directly, not through `bundle exec`; a command after the image name replaces it (spec Clarifications) |
+| 6 | `CMD ["ruby", "bin/run"]` | Exec form: `ruby bin/run` with no arguments, directly, not through `bundle exec`; Ruby ignores a CRLF line ending on the `#!` line, so an image built from a Windows checkout still starts it; a command after the image name replaces it (spec Clarifications; spec item 17) |
 
 Nothing else: no `apt-get`, no `USER`, no `ENTRYPOINT`, no `EXPOSE`, no other gem, no comment that explains the design, and no `.dockerignore` file in the repository (FR-024).
 
@@ -35,7 +35,7 @@ None of them adds `--user` (spec Clarifications) or `-it`.
 | Build | (nothing; BuildKit writes no standard output) | build log | 0 | US3-1 |
 | Run, `TZ` and mount | the sample report, `<run time>` in that time zone | (nothing) | 0 | US3-2 |
 | Run with `-e LOG_LEVEL=info` added | the sample report | the six AC-09.5 info lines | 0 | US3-4 |
-| Run with the command `bin/run -h` | (nothing) | the two AC-09.2 usage lines | 1 | US3-4 |
+| Run with the command `ruby bin/run -h` | (nothing) | the two AC-09.2 usage lines | 1 | US3-4 |
 | Tests | RSpec in documentation format, 0 failures, SimpleCov's line | (nothing required) | 0 | US3-3 |
 | Run with no `TZ` | the sample report, `<run time>` in UTC | (nothing) | 0 | edge case |
 | Run with no mount | the sample report | (nothing) | 0; no file on the host | edge case |

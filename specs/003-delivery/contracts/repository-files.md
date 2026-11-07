@@ -1,14 +1,10 @@
 # Contract: repository files and the submission listing
 
-`.gitattributes`, the `Gemfile.lock` platforms, `bin/run`'s storage, and what the pushed `main` must and must not hold (FR-015 to FR-019, FR-026 to FR-030; [DEC-01](../../../docs/design-analysis/design-decisions.md#dec-01), [DEC-22](../../../docs/design-analysis/design-decisions.md#dec-22), [DEC-27](../../../docs/design-analysis/design-decisions.md#dec-27), [DEC-36](../../../docs/design-analysis/design-decisions.md#dec-36), [DEC-38](../../../docs/design-analysis/design-decisions.md#dec-38)).
+the `Gemfile.lock` platforms, `bin/run`'s storage, and what the pushed `main` must and must not hold (FR-015 to FR-019, FR-026 to FR-030; [DEC-01](../../../docs/design-analysis/design-decisions.md#dec-01), [DEC-22](../../../docs/design-analysis/design-decisions.md#dec-22), [DEC-27](../../../docs/design-analysis/design-decisions.md#dec-27), [DEC-36](../../../docs/design-analysis/design-decisions.md#dec-36), [DEC-38](../../../docs/design-analysis/design-decisions.md#dec-38)).
 
-## `.gitattributes`
+## No `.gitattributes`
 
-Exactly one line, ending with LF, and nothing else:
-
-```
-bin/run text eol=lf
-```
+The repository holds no `.gitattributes` file (`test ! -e .gitattributes`, C-02) and no attribute that changes how a file is checked out. A Windows checkout made with `core.autocrlf=true` therefore gives every Ruby file, `bin/run` included, CRLF, and `bundle exec rubocop` reports `no offenses detected` in it (C-43), because RuboCop's default `Layout/EndOfLine` (`native`) wants CRLF on Windows. RuboCop's settings are not changed (DEC-36).
 
 ## `Gemfile.lock`
 
@@ -26,7 +22,7 @@ bin/run text eol=lf
 - Git mode `100755` (`git ls-files -s bin/run`); fixed, if needed, with `git update-index --chmod=+x bin/run` (plan item 14).
 - First line exactly `#!/usr/bin/env ruby`.
 - `bundle exec rubocop bin/run` reports no offence. If it reports one, the only change this spec makes is `# frozen_string_literal: true` on line 2; any other offence is a cross-spec finding against `002-file-runner`, fixed there test-first.
-- Stored with LF (`git ls-files --eol bin/run` shows `i/lf`); checked out with LF everywhere (`w/lf`), by `.gitattributes`.
+- Stored with LF (`git ls-files --eol bin/run` shows `i/lf`). The working copy follows the machine's Git setting: LF on Linux and macOS, CRLF in a Windows checkout with `core.autocrlf=true` (`w/crlf`), where it is started as `ruby bin/run` (also in Docker: the image's command is `ruby bin/run`), which ignores the line ending of the `#!` line.
 
 ## Every text file
 
@@ -34,7 +30,7 @@ bin/run text eol=lf
 
 ## The pushed `main`: must be tracked (`git ls-files`)
 
-`README.md`, `Gemfile`, `Gemfile.lock`, `.ruby-version`, `.gitignore`, `.gitattributes`, `.rspec`, `.rubocop.yml`, `Dockerfile`, `.github/workflows/ci.yml`, `bin/run`, `lib/domain/`, `lib/application/`, `lib/infrastructure/`, `spec/` (with `spec/fixtures/sample/mable_account_balances.csv` and `spec/fixtures/sample/mable_transactions.csv`), `data/mable_account_balances.csv`, `data/mable_transactions.csv`, `docs/`, `specs/` (US6 scenario 1).
+`README.md`, `Gemfile`, `Gemfile.lock`, `.ruby-version`, `.gitignore`, `.rspec`, `.rubocop.yml`, `Dockerfile`, `.github/workflows/ci.yml`, `bin/run`, `lib/domain/`, `lib/application/`, `lib/infrastructure/`, `spec/` (with `spec/fixtures/sample/mable_account_balances.csv` and `spec/fixtures/sample/mable_transactions.csv`), `data/mable_account_balances.csv`, `data/mable_transactions.csv`, `docs/`, `specs/` (US6 scenario 1).
 
 ## The pushed `main`: must not be tracked
 
@@ -53,4 +49,4 @@ These blob IDs must be equal, pair by pair (`git rev-parse HEAD:<path>`; plan it
 
 ## What this spec adds, and nothing more (FR-030, SC-007)
 
-Compared with the tip of `002-file-runner`'s implementation, this spec's commits touch only `README.md`, `.github/workflows/ci.yml`, `Dockerfile`, `.gitattributes`, `Gemfile.lock` (platforms), `bin/run` (its Git mode and, if missing or different, its first line `#!/usr/bin/env ruby`; and, only if RuboCop then reports it, `# frozen_string_literal: true` on line 2; nothing else; spec item 16) and documents under `docs/` and `specs/`. No file under `lib/`, `spec/` or `data/` changes.
+Compared with the tip of `002-file-runner`'s implementation, this spec's commits touch only `README.md`, `.github/workflows/ci.yml`, `Dockerfile`, `Gemfile.lock` (platforms), `bin/run` (its Git mode and, if missing or different, its first line `#!/usr/bin/env ruby`; and, only if RuboCop then reports it, `# frozen_string_literal: true` on line 2; nothing else; spec item 16) and documents under `docs/` and `specs/`. No file under `lib/`, `spec/` or `data/` changes.

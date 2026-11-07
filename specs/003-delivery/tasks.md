@@ -8,7 +8,7 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 
 **Prerequisites**: `001-domain` and `002-file-runner` are implemented on the branch this work starts from (brief Part 2 step 2).
 
-**Tests**: this spec adds no RSpec spec (brief rule 4; FR-030). Its tests are the checks C-01 to C-42 in [quickstart.md](quickstart.md). In every phase the check comes first: run it, see it fail (or, for a phase that adds no file, see that it exists and is ready), then make the change, then run it again until it passes. Every phase ends with its checks passing, `bundle exec rspec` passing in random order and `bundle exec rubocop` reporting no offences (constitution, Development workflow). Each result is recorded in `docs/spec-kit/implementation-run-report.md` (Part 2 section) with the platform, date, commit and evidence; a check that cannot run on the machine at hand is recorded as left for the developer, never as passed (FR-025; C-28).
+**Tests**: this spec adds no RSpec spec (brief rule 4; FR-030). Its tests are the checks C-01 to C-43 in [quickstart.md](quickstart.md). In every phase the check comes first: run it, see it fail (or, for a phase that adds no file, see that it exists and is ready), then make the change, then run it again until it passes. Every phase ends with its checks passing, `bundle exec rspec` passing in random order and `bundle exec rubocop` reporting no offences (constitution, Development workflow). Each result is recorded in `docs/spec-kit/implementation-run-report.md` (Part 2 section) with the platform, date, commit and evidence; a check that cannot run on the machine at hand is recorded as left for the developer, never as passed (FR-025; C-28).
 
 **Organization**: by user story, in the order the files depend on each other: the repository files, then CI (US4), the Ruby runs (US1, US2), Docker (US3), the README (US5, which needs the commands and the coverage figure proved first), then the push and the submission (US6).
 
@@ -35,18 +35,18 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 
 ## Phase 2: Foundational: the repository files (FR-016, FR-017, FR-018)
 
-**Purpose**: what CI, Docker and the Windows run all depend on: `bin/run` stored so it starts everywhere, the one-line `.gitattributes`, and a `Gemfile.lock` that installs unchanged on every platform. Blocks every user story.
+**Purpose**: what CI, Docker and the Windows run all depend on: `bin/run` stored so it starts on Linux and macOS (and run as `ruby bin/run` on Windows and in Docker), no `.gitattributes` (spec item 17), and a `Gemfile.lock` that installs unchanged on every platform. Blocks every user story.
 
 ### Checks first
 
-- [ ] T004 At `$REPO`, run C-01, C-02, C-03 and C-05 ([quickstart.md](quickstart.md#repository-files-foundational)) and record the results before any change: C-02 must fail (no `.gitattributes`) and C-03 must fail (the `PLATFORMS` list lacks the six platforms of [repository-files.md](contracts/repository-files.md#gemfilelock)) (FR-016 to FR-018; DEC-01, DEC-22).
+- [ ] T004 At `$REPO`, run C-01, C-02, C-03 and C-05 ([quickstart.md](quickstart.md#repository-files-foundational)) and record the results before any change: C-02 already passes (there is no `.gitattributes`) and must keep passing, and C-03 must fail (the `PLATFORMS` list lacks the six platforms of [repository-files.md](contracts/repository-files.md#gemfilelock)) (FR-016 to FR-018; DEC-01, DEC-22).
 
 ### Implementation
 
-- [ ] T005 Create `.gitattributes` at the repository root holding exactly the one line `bin/run text eol=lf`, ending with LF, and nothing else (FR-018; DEC-22; spec Clarifications).
+- [ ] T005 Do not create a `.gitattributes` file: a LF-forced `bin/run` would be reported by RuboCop's default `Layout/EndOfLine` (`native`) on every Windows checkout, and DEC-36 forbids changing RuboCop's settings. Confirm `test ! -e .gitattributes` (C-02); if another spec added one, remove it and report it as a cross-spec finding (FR-018; DEC-22, DEC-36; spec Clarifications and item 17).
 - [ ] T006 Run `git add --renormalize bin/run`. If C-01 showed a mode other than `100755`, run `git update-index --chmod=+x bin/run` (content unchanged; plan item 14). If C-01 showed a first line other than `#!/usr/bin/env ruby`, make that line the first line of `bin/run` (add it if missing, replace a different interpreter line) and change nothing else in the file yet; this spec adds that requirement because `002` does not have it (spec item 16; FR-018; DEC-22). RuboCop inspects an extensionless file only when its first line is a Ruby shebang, so `bin/run` comes under RuboCop for the first time now: run `bundle exec rubocop bin/run`. If it reports an offence, the only extra change allowed is the one RuboCop needs, the `# frozen_string_literal: true` magic comment on line 2; any other offence in `bin/run` is reported as a cross-spec finding against `002-file-runner` and fixed there test-first, not here. Then re-run `bundle exec rspec` to confirm the end-to-end runs still pass. If C-01 listed `bin/run`, or a file this spec owns under `docs/` or `specs/`, with `i/crlf`, renormalize that file to LF in the index (FR-018; DEC-22, DEC-04; plan item 13). An `i/crlf` file under `lib/`, `spec/`, `data/` or another spec's files is reported as a cross-spec finding and fixed in `001-domain` or `002-file-runner`, not here (FR-030; C-34). An `i/crlf` file under `docs/challenge/` is reported as a blocker, because `docs/challenge/` is never edited.
 - [ ] T007 Run `bundle lock --add-platform ruby x64-mingw-ucrt x86_64-linux aarch64-linux x86_64-darwin arm64-darwin` at `$REPO`, then `git diff Gemfile.lock`: only the `PLATFORMS` section (and, where Bundler lists a gem per platform, new lines for the same versions) may change; no gem version changes (FR-017; DEC-01; plan item 2). Do not change `Gemfile` (FR-016, checked by C-05).
-- [ ] T008 Re-run C-01, C-02, C-03 and C-05 (all pass), then `bundle exec rspec` and `bundle exec rubocop` (zero offences, now including `bin/run`); record the results and commit `.gitattributes`, `Gemfile.lock` and, if changed, `bin/run` (its mode, its first line if it was missing or different, and the line-2 comment if T006 added it), by explicit path.
+- [ ] T008 Re-run C-01, C-02, C-03 and C-05 (all pass), then `bundle exec rspec` and `bundle exec rubocop` (zero offences, now including `bin/run`); record the results and commit `Gemfile.lock` and, if changed, `bin/run` (its mode, its first line if it was missing or different, and the line-2 comment if T006 added it), by explicit path.
 
 **Checkpoint**: C-01, C-02, C-03 and C-05 pass; the suite and RuboCop still pass.
 
@@ -94,15 +94,16 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 
 **Goal**: on Windows, `ruby bin/run` gives exactly the Linux result, with an LF output file, even with CRLF input files (NFR-04; DEC-04, DEC-22, DEC-37; page 10 pick 20).
 
-**Independent Test**: C-13 to C-16 in PowerShell on Windows with RubyInstaller at the version in `.ruby-version`. If no such Ruby is available, they are left for the developer (C-28). This story adds no file.
+**Independent Test**: C-13 to C-16 and C-43 in PowerShell on Windows with RubyInstaller at the version in `.ruby-version`. If no such Ruby is available, they are left for the developer (C-28). This story adds no file.
 
 - [ ] T018 [US2] Make the Windows clean checkout: (with `$env:CHECKS` and `$REPO` set as in the quickstart Prerequisites and `report.txt`, `usage.txt`, `final.csv` copied there) `git clone -c core.autocrlf=true --branch <this implementation branch> $REPO $env:CHECKS\win`; then `$env:BUNDLE_FROZEN='true'; bundle install` succeeds and `git status --porcelain` prints nothing (C-13 first part; FR-017; DEC-01; plan item 15).
 - [ ] T019 [US2] Run C-13: `cmd /c "ruby bin/run > ..\wout.txt 2> ..\werr.txt"` from the project root (cmd keeps the bytes; plain PowerShell redirection would not); `$LASTEXITCODE` is 0; `wout.txt`, with CRLF changed to LF (Ruby on Windows writes console streams in text mode), equals `report.txt` with `<run time>` filled in, line by line, with `/` in `Output file: output/final_balances_<run time>.csv`; `werr.txt` is 0 bytes; the output file's bytes equal `final.csv` (LF, not CRLF) (US2 scenario 1; AC-08.1, AC-08.3; DEC-22, DEC-35, DEC-37; spec item 3; page 10 pick 17).
 - [ ] T020 [US2] Run C-14: `cmd /c "ruby bin/run -h > ..\hout.txt 2> ..\herr.txt"`; `$LASTEXITCODE` is 1; `hout.txt` is 0 bytes; `herr.txt`, with CRLF changed to LF, equals `usage.txt` line by line (US2 scenario 2; AC-09.2; DEC-22, DEC-25).
 - [ ] T021 [US2] Run C-15: `cmd /c "ruby ..\bin\run > ..\..\dout.txt"` from `docs`; exit 0; `dout.txt`, with CRLF changed to LF, is the sample report line by line except its last line, which is `Output file: ../output/final_balances_<run time>.csv` (edge case "A run from another folder on Windows"; AC-08.4; DEC-22, DEC-26).
 - [ ] T022 [US2] Run C-16: `git ls-files --eol data/` shows `w/crlf` for both files, so T019 proved CRLF input gives the sample report (US2 scenario 3; edge case "Line endings in a Windows checkout"; DEC-04). Record C-13 to C-16 in the run report. At `$REPO`, run `bundle exec rspec` (0 failures, random order) and `bundle exec rubocop` (no offences) and record both in the run report.
+- [ ] T059 [US2] Run C-43 in the Windows clone of T018 (`core.autocrlf=true`, after its `bundle install`): `git ls-files --eol bin/run lib` shows `i/lf` and `w/crlf`, and `bundle exec rubocop` prints `no offenses detected` with `$LASTEXITCODE` 0, `bin/run` included, with RuboCop's default settings and without a `.gitattributes`, a `rubocop:disable` comment or any `.rubocop.yml` change (US2 scenario 4; FR-018, FR-025(b); DEC-36; NFR-05; spec item 17). If it reports `Layout/EndOfLine: Carriage return character missing` for any file, a file was forced to LF: remove the cause, never the cop. Record C-43 in the run report.
 
-**Checkpoint**: C-13 to C-16 pass (or are left for the developer, C-28).
+**Checkpoint**: C-13 to C-16 and C-43 pass (or are left for the developer, C-28).
 
 ---
 
@@ -118,7 +119,7 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 
 ### Implementation
 
-- [ ] T024 [US3] Create `Dockerfile` at the repository root with exactly the six instructions of [contracts/dockerfile.md](contracts/dockerfile.md), in order: `FROM ruby:<the text of .ruby-version>`, `WORKDIR /app`, `COPY . .`, `ENV BUNDLE_FROZEN=true`, `RUN bundle install`, `CMD ["bin/run"]`; no `apt-get`, `USER`, `ENTRYPOINT` or other instruction, and no `.dockerignore` (FR-022, FR-023, FR-024; DEC-01, DEC-36; spec Clarifications; plan items 1, 5 and 6).
+- [ ] T024 [US3] Create `Dockerfile` at the repository root with exactly the six instructions of [contracts/dockerfile.md](contracts/dockerfile.md), in order: `FROM ruby:<the text of .ruby-version>`, `WORKDIR /app`, `COPY . .`, `ENV BUNDLE_FROZEN=true`, `RUN bundle install`, `CMD ["ruby", "bin/run"]` (exec form; Ruby ignores a CRLF `#!` line, so an image built from a Windows checkout starts); no `apt-get`, `USER`, `ENTRYPOINT` or other instruction, and no `.dockerignore` (FR-022, FR-023, FR-024; DEC-01, DEC-36; spec Clarifications; plan items 1, 5 and 6).
 - [ ] T025 [US3] Re-run C-04 and C-42 (both pass: six instructions, none of `USER`, `ENTRYPOINT`, `EXPOSE`, `ADD`, `apt-get` or `gem install`, no `.dockerignore`), commit `Dockerfile`, and make a fresh clean checkout of the branch in `$CHECKS/docker` (as T012), so the image is built only from committed files.
 
 ### Checks on the built image (in `$CHECKS/docker`)
@@ -127,12 +128,12 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 - [ ] T027 [US3] Run C-18: `/usr/share/zoneinfo/Australia/Sydney` exists in the image. If it does not, change the first line of `Dockerfile` to `FROM ruby:<version>-bookworm`, commit, and repeat T025 to T027 (FR-022, FR-024; DEC-37; plan item 7).
 - [ ] T028 [US3] Run C-19: the POSIX run command of [contracts/dockerfile.md](contracts/dockerfile.md#commands-the-readme-gives) with `TZ=Australia/Sydney` and `output` mounted; exit 0; standard output equals the sample report with `<run time>` in Sydney time; standard error empty; the file in the host's `output/` equals `final.csv` (US3 scenario 2; FR-023; DEC-27, DEC-36, DEC-37).
 - [ ] T029 [US3] Run C-20: `docker run --rm mable-transfers bundle exec rspec`; 0 failures, random order, exit 0 (US3 scenario 3; FR-023; DEC-34, DEC-36).
-- [ ] T030 [US3] Run C-21: with `-e LOG_LEVEL=info`, exit 0, the report on standard output and the six AC-09.5 lines on standard error (timestamps and pid aside); with the command `bin/run -h`, exit 1, standard output empty, standard error equal to `usage.txt` (US3 scenario 4; AC-09.5, AC-09.2; DEC-25, DEC-28).
+- [ ] T030 [US3] Run C-21: with `-e LOG_LEVEL=info`, exit 0, the report on standard output and the six AC-09.5 lines on standard error (timestamps and pid aside); with the command `ruby bin/run -h`, exit 1, standard output empty, standard error equal to `usage.txt` (US3 scenario 4; AC-09.5, AC-09.2; DEC-25, DEC-28).
 - [ ] T031 [US3] Run C-22: no `TZ`; exit 0; the file name carries the UTC time (edge case "Docker with no TZ"; DEC-37).
 - [ ] T032 [US3] Run C-23: no mount; exit 0; the report on standard output; no `output/` on the host (edge case "Docker with no output mount"; DEC-37).
 - [ ] T033 [US3] Run C-24: a typed output path that already exists in the mounted `output/`; standard output empty; standard error `Error: output file already exists: output/existing.csv. Delete it or give another output path.` then `E, [<timestamp> #<pid>] ERROR -- : Run stopped: start checks failed (output file already exists)`; exit 1; the file still holds `keep` (edge case "Docker with a mount and an existing file of the same name"; AC-09.3; DEC-25, DEC-27).
 - [ ] T034 [US3] Run C-25: copies of the sample files in a mounted scratch folder, passed as typed paths; exit 0; the sample report; the copies stay in `$CHECKS`, never committed (edge case "Docker with typed paths"; DEC-22, DEC-37; spec item 6).
-- [ ] T035 [US3] Run C-26: in a fresh Windows checkout made with `core.autocrlf=true` (as T018, with `$REPO` and `$env:CHECKS` set, after T025, into `$env:CHECKS\win2`, with no `output/` folder; the same clone as the quickstart's C-26 and C-41), `git ls-files --eol bin/run` shows `w/lf`; build `mable-transfers-win`, run it with no command (exit 0, the sample report), then remove that image; then run `docker build -t mable-transfers .` in the same clone and C-41, the README's PowerShell Docker command as written (exit 0, the sample report on standard output, nothing on standard error, the sample file in `output/`) (edge case "`bin/run` on Linux, macOS and in Docker"; FR-018; DEC-22; spec Clarifications).
+- [ ] T035 [US3] Run C-26: in a fresh Windows checkout made with `core.autocrlf=true` (as T018, with `$REPO` and `$env:CHECKS` set, after T025, into `$env:CHECKS\win2`, with no `output/` folder; the same clone as the quickstart's C-26 and C-41), `git ls-files --eol bin/run` shows `i/lf` and `w/crlf`; build `mable-transfers-win`, run it with no command (exit 0, the sample report), then remove that image; then run `docker build -t mable-transfers .` in the same clone and C-41, the README's PowerShell Docker command as written (exit 0, the sample report on standard output, nothing on standard error, the sample file in `output/`) (edge case "`bin/run` on Linux, macOS and in Docker"; FR-018, FR-022; DEC-22; spec Clarifications and item 17).
 - [ ] T036 [US3] Run C-27 on a Linux host if one is available (the file in `output/` belongs to root); on Docker Desktop record the owner seen instead (edge case "Docker on a Linux host"; DEC-36, DEC-37). Record C-17 to C-27 in the run report. At `$REPO`, run `bundle exec rspec` (0 failures, random order) and `bundle exec rubocop` (no offences) and record both in the run report.
 
 **Checkpoint**: C-04, C-42 and C-17 to C-26 pass (C-27 recorded), or are left for the developer (C-28); the suite and RuboCop still pass.
@@ -173,18 +174,18 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 
 **Goal**: CI is green on the pushed branch and on `main`; every hand check is repeated from a clean checkout of `origin` `main`; the repository holds what it must and nothing generated; making it public is left to the developer (DEC-38, DEC-27, DEC-36; NFR-04).
 
-**Independent Test**: C-07, C-34 to C-39, and C-08 to C-27, C-29, C-33, C-41 and C-42 again on `main`.
+**Independent Test**: C-07, C-34 to C-39, and C-08 to C-27, C-29, C-33, C-41, C-42 and C-43 again on `main`.
 
 - [ ] T048 Run C-34 on this branch against the tip of `002-file-runner`'s implementation: `git diff --stat <002 tip> HEAD -- lib spec data` prints nothing (FR-030, SC-007; brief rule 4).
 - [ ] T049 [US4] After the review loop finds 0 defects and the branch is pushed (brief Part 2 step 2), run C-07 on the pushed head commit: one run, conclusion `success`, a frozen install, `0 failures`, `no offenses detected` (US4 scenario 1; FR-020, SC-002; DEC-36). A failure is fixed on the branch, test-first, and pushed again.
-- [ ] T050 [US6] After the implementation branches are merged and `main` is pushed (brief Part 2 step 4), make fresh clean checkouts of `origin` `main` and repeat C-08 to C-12 (as Phase 4), C-13 to C-16 (as Phase 5) and C-17 to C-27 and C-42 (as Phase 6, in their own fresh clean checkout of `origin` `main`, as T025 does, not the checkout of C-08) on them, C-29 (as T047, on a fresh clean checkout with copies of the sample files) and C-41 (as T035, in a fresh `core.autocrlf=true` Windows clone of `origin` `main`; recorded under C-28 if it cannot run), and C-33 against the CI log of the latest `main` commit. If the coverage line differs from the README's (the code changed after T038), update `## Test coverage` in `README.md` and commit it on the implementation branch (or a branch from `main`), have a separate review agent that did not write or fix the change approve it, then push `main` (brief rule 5; Part 2 step 4), and repeat C-33 (FR-025, FR-012; SC-001, SC-004; DEC-36, DEC-37).
+- [ ] T050 [US6] After the implementation branches are merged and `main` is pushed (brief Part 2 step 4), make fresh clean checkouts of `origin` `main` and repeat C-08 to C-12 (as Phase 4), C-13 to C-16 and C-43 (as Phase 5; C-43 is `bundle exec rubocop` in the fresh `core.autocrlf=true` clone, expecting `no offenses detected` and exit 0) and C-17 to C-27 and C-42 (as Phase 6, in their own fresh clean checkout of `origin` `main`, as T025 does, not the checkout of C-08) on them, C-29 (as T047, on a fresh clean checkout with copies of the sample files) and C-41 (as T035, in a fresh `core.autocrlf=true` Windows clone of `origin` `main`; recorded under C-28 if it cannot run), and C-33 against the CI log of the latest `main` commit. If the coverage line differs from the README's (the code changed after T038), update `## Test coverage` in `README.md` and commit it on the implementation branch (or a branch from `main`), have a separate review agent that did not write or fix the change approve it, then push `main` (brief rule 5; Part 2 step 4), and repeat C-33 (FR-025, FR-012; SC-001, SC-004; DEC-36, DEC-37).
 - [ ] T051 [P] [US6] Run C-35 on `main`: `git ls-files` lists every path of [repository-files.md](contracts/repository-files.md#the-pushed-main-must-be-tracked-git-ls-files) (US6 scenario 1; FR-026; DEC-38, DEC-01).
 - [ ] T052 [P] [US6] Run C-36 on `main`: `git ls-files output coverage` prints nothing, and `git status --porcelain` on the clean checkout after a run and a test run prints nothing (US6 scenario 2; FR-027, SC-006; DEC-27, DEC-36).
 - [ ] T053 [P] [US6] Run C-37 on `main`: `docs/challenge/` has no difference from the commit that added it, and the blob IDs of the copies in `data/` and `spec/fixtures/sample/` equal the challenge files' (US6 scenario 3; FR-028, SC-006; DEC-22).
 - [ ] T054 [US6] Run C-38: the latest `main` commit's GitHub Actions run has conclusion `success` (US6 scenario 4; FR-029, SC-002; DEC-36).
 - [ ] T055 [US6] Run C-39 and C-28: the run report's "left for the developer" list names making the repository public or sharing it with the reviewer at submission time, and every hand check that could not be run, with its reason (US6 scenario 4; FR-025, FR-029; DEC-38).
 
-**Checkpoint**: C-07 and C-34 to C-39 pass; every C-08 to C-27, C-29, C-41 and C-42 result on `main` is recorded as passed or left for the developer.
+**Checkpoint**: C-07 and C-34 to C-39 pass; every C-08 to C-27, C-29, C-41, C-42 and C-43 result on `main` is recorded as passed or left for the developer.
 
 ---
 
@@ -208,7 +209,7 @@ Every edge case in the spec, and every decision edge case within this spec's sco
 | Docker with typed paths | C-25 | T034 | DEC-22 |
 | A lock file made on Windows | C-03, C-09, C-13, C-17, C-07 | T007, T013, T018, T026, T049 | DEC-01 |
 | `bin/run` on Linux, macOS and in Docker | C-01, C-10, C-19, C-26 | T006, T014, T028, T035 | DEC-22 |
-| Line endings in a Windows checkout | C-16, C-26 | T022, T035 | DEC-04 |
+| Line endings in a Windows checkout | C-16, C-26, C-43 | T022, T035, T059 | DEC-04, DEC-36 |
 | Input files read only through the CSV library (CRLF, no final newline, BOM) | C-40 | T057 | DEC-04, DEC-22 |
 | Docker on a Linux host | C-27 | T036 | DEC-36, DEC-37 |
 | A Windows reviewer with Docker Desktop (PowerShell command) | C-41, C-29 | T035, T047 | DEC-37 |
@@ -226,7 +227,7 @@ Every edge case in the spec, and every decision edge case within this spec's sco
 ### Phase dependencies
 
 - **Phase 1 (Setup)**: none; starts once `001` and `002` are implemented.
-- **Phase 2 (Foundational)**: after Phase 1; blocks every story (`.gitattributes`, `bin/run`'s storage and the lock platforms are needed by CI, Windows and Docker).
+- **Phase 2 (Foundational)**: after Phase 1; blocks every story (`bin/run`'s storage and the lock platforms are needed by CI, Windows and Docker).
 - **Phase 3 (US4)**: after Phase 2.
 - **Phase 4 (US1)** and **Phase 5 (US2)**: after Phase 2; independent of each other and of US4.
 - **Phase 6 (US3)**: after Phase 2; T035 reuses the Windows clone method of Phase 5.
@@ -255,7 +256,7 @@ Every edge case in the spec, and every decision edge case within this spec's sco
 ```text
 # After Phase 2, on three machines at once:
 Machine A (Linux or macOS): T012 to T017 (US1)
-Machine B (Windows):        T018 to T022 (US2)
+Machine B (Windows):        T018 to T022 and T059 (US2)
 Machine C (Docker host):    T023 to T036 (US3)
 ```
 
