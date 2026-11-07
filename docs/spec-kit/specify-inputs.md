@@ -130,7 +130,37 @@ Pending.
 
 ### `/speckit-specify`
 
-Pending.
+```text
+Spec 003-delivery, short name "delivery": the third of the three specs in the Spec Kit brief (docs/spec-kit/spec-kit-brief.md, rule 3). The feature directory is specs/003-delivery. It builds on the finished 001-domain and 002-file-runner specs and changes none of their behaviour.
+
+Sources, in order of precedence: docs/design-analysis/design-decisions.md (DEC-01 to DEC-38, the source of truth); the solution design pages 01 (request summary and rubric), 03 (NFR-04), 04 (scope), 09 (portability and CI, README and submission, risks and known limitations) and 10 (assumptions, known limitations, glossary); page 02 for the exact sample-run output it checks; CLAUDE.md; the constitution.
+
+Owns exactly this requirement, and no other: NFR-04 Language version and portability.
+
+Builds:
+- The repository root README.md, giving everything DEC-37 lists: build, test and run instructions (bundle install and bin/run first, then Docker as the alternative, with the commands for running the program and the tests in the container); ruby bin/run on Windows; with Docker, mounting the output folder and setting TZ; that files must have no header (DEC-06); LOG_LEVEL and its two values (DEC-28); what exit statuses 0 and 1 mean (DEC-25); the assumptions (design-decisions.md, Assumptions); the design reasoning (DEC-30); what a version with persistent storage would need, and that remembering applied files across runs is out of scope (DEC-03); the production items (very large files DEC-32, database transactions and sagas DEC-18); the known limitations (page 9 and page 10); and a "How this was built" section on the design analysis, solution design, Spec Kit specification and test-first implementation with an AI assistant, with links to the documents and prompt logs (DEC-37, CLAUDE.md).
+- The coverage figure in the README, from SimpleCov, with no minimum (DEC-36).
+- A GitHub Actions workflow that runs RSpec and RuboCop on every push: one job on the latest Ubuntu runner, Ruby taken from .ruby-version (DEC-36; page 9 pick 50).
+- A Dockerfile, the fallback way to run: the official Ruby image matching .ruby-version, copies the project in, runs bundle install, and by default runs bin/run on the sample files (DEC-01, DEC-36).
+- The checks: the Docker image built from a clean checkout, then the sample files and the tests run in it; ruby bin/run run on Windows from a clean checkout on the sample files; CI passing after the push; and a check of what the submission holds, a link to the GitHub repository (DEC-36, DEC-37, DEC-38; NFR-04).
+- No test-data files beyond those 002 creates (data/ and spec/fixtures/), and no new RSpec specs: 003 is checked by CI, a Docker run, a Windows run and a README check (brief rule 4).
+
+User stories:
+1. A reviewer with Ruby 3.4 installs the gems and runs the sample files with one command, from any folder, and gets the exact AC-08.1 result (NFR-04; DEC-01, DEC-22, DEC-35).
+2. A reviewer on Windows runs ruby bin/run on the sample files and gets the same result (NFR-04; DEC-04, DEC-37).
+3. A reviewer without Ruby 3.4 builds the Docker image from a clean checkout, runs the sample files with the output folder mounted and TZ set, and runs the tests in the container (NFR-04; DEC-36, DEC-37).
+4. Every push runs the tests and the style checker on GitHub, and the run passes (NFR-04; DEC-36).
+5. A reviewer reads the README and finds how to build, test and run, the assumptions, the design reasoning, the coverage figure, the known limitations and how the solution was built (DEC-36, DEC-37).
+6. The submission is a link to the GitHub repository that holds everything needed and nothing generated (DEC-38, DEC-27, DEC-36).
+
+Each acceptance scenario states standard output, standard error and the exit code separately, copied character for character from page 2 (AC-08.1, AC-09.2, AC-09.5) and page 9's message table. Where a manual run happens at a real time, the output file name carries that run's time in place of 2026-11-07_143005; nothing else differs.
+
+Rules:
+- Names and members exactly as on page 6 and in the page 10 glossary; class names, messages and outputs exactly as in specs/001-domain/spec.md and specs/002-file-runner/spec.md.
+- No new behaviour of the program, and nothing out of scope on page 4 (no coverage threshold, no OS matrix, no help option, no gems beyond those the decisions name).
+- Cite NFR-04 and the DEC IDs on every requirement and scenario.
+- Decide small gaps consistently with design-decisions.md and list them in a "Decided in the run" section. Leave no [NEEDS CLARIFICATION].
+```
 
 ### `/speckit-clarify` (003-delivery)
 
