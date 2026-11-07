@@ -24,6 +24,7 @@ These are copied from [page 2](../../docs/solution-design/02-functional-requirem
 - The **exit status** is 0 for a completed run and 1 for a stopped run ([DEC-25](../../docs/design-analysis/design-decisions.md#dec-25)). In Docker, the exit status of `docker run` is the program's exit status.
 - Page 2's runs start at 2026-11-07 14:30:05 local time, from the project root, with the default log level (warn). The runs in this spec are made by hand, or by CI, at a real time: `<run time>` stands for that run's local date and time in the form `YYYY-MM-DD_HHMMSS`, and is the only part of any stream or file name that differs from page 2 (decided in the run, item 1).
 - Log lines use Ruby's standard log format. `<timestamp>` stands for the date and time to the microsecond and `<pid>` for the process number, which change on every run.
+- The **pushed branch** is `main`, the repository's default branch and the one the submission link opens, after the merged implementation is pushed to it (DEC-38; brief Part 2 step 4). Every submission check, every clean checkout and the README's coverage figure are taken on its latest commit (Clarifications).
 - A **clean checkout** is a fresh `git clone` of the pushed branch into a new, empty folder outside the working repository, with no `output/`, `coverage/` or installed gems carried over (decided in the run, item 2).
 - `<image>` is the Docker image name the README uses, `mable-transfers` (decided in the run, item 5).
 
@@ -62,6 +63,16 @@ Output file: output/final_balances_<run time>.csv
 1212343433335665,1725.60
 3212343433335755,48679.50
 ```
+
+## Clarifications
+
+### Session 2026-11-07
+
+- Q: Which branch do the submission checks, the clean checkout and the README's coverage figure apply to? → A: `main`, the repository's default branch, the one the submission link opens, after the merged implementation is pushed to it (DEC-38; brief Part 2 step 4).
+- Q: How is `bin/run` kept with LF line endings in a Windows checkout, so a Docker image built there still starts it (Git on Windows normally checks text files out with CRLF, and a CRLF first line makes `#!/usr/bin/env ruby` fail)? → A: a one-line `.gitattributes` at the repository root, `bin/run text eol=lf`, built by this spec; nothing else in it (DEC-22, DEC-36, NFR-04).
+- Q: What does the Docker image run by default: `bin/run` directly, or through `bundle exec`? → A: `bin/run` directly, as the Dockerfile's default command in exec form (`CMD ["bin/run"]`), so a container started with no command runs the sample files, the exit status of `docker run` is the program's, and any command given after the image name (such as `bundle exec rspec` or `bin/run -h`) replaces it (DEC-36, DEC-37).
+- Q: Which user does the container run as, given that on a Linux host the mounted `output` file then belongs to that user? → A: the official image's default user (root); the README's run command adds no `--user` option, and the README says in one line that on a Linux host the output file may belong to root (DEC-36, DEC-37; `--user` with an arbitrary user id can make Bundler warn on standard error).
+- Q: In what order does the README give its sections after build, test and run? → A: in DEC-37's order: build, test and run (the normal way, Windows, then Docker); the input files; `LOG_LEVEL` and exit statuses; the assumptions; the design reasoning; the test coverage; persistent storage, production items and known limitations; "How this was built"; then the repository layout and the link to the challenge (DEC-37).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -188,7 +199,7 @@ A reviewer opens the repository and reads `README.md` first. It tells them how t
 **Acceptance Scenarios**:
 
 1. **Every DEC-37 item is there** (DEC-37).
-   - **Given** the finished `README.md`, **When** it is checked against FR-001 to FR-014, **Then** every item is present, in the order build, test and run first, then the rest.
+   - **Given** the finished `README.md`, **When** it is checked against FR-001 to FR-014, **Then** every item is present, in the section order FR-001 sets.
 2. **Every command works as written** (NFR-04; DEC-37).
    - **Given** a clean checkout, **When** each command in the README is run as written (on Linux or macOS for the plain commands, on Windows for `ruby bin/run`, with Docker for the Docker commands), **Then** each gives the outcome the README says, as in User Stories 1 to 3.
 3. **Every exact text matches the program** (DEC-22, DEC-25, DEC-26).
@@ -211,7 +222,7 @@ The solution is submitted as a link to the GitHub repository, made public or sha
 **Acceptance Scenarios**:
 
 1. **What the repository holds** (DEC-38, DEC-01).
-   - **Given** the pushed branch, **When** `git ls-files` lists it, **Then** it includes `README.md`, `Gemfile`, `Gemfile.lock`, `.ruby-version`, `.gitignore`, `.rspec`, `Dockerfile`, the workflow file, `bin/run`, the code folders, `spec/` (with `spec/fixtures/sample/`), `data/mable_account_balances.csv`, `data/mable_transactions.csv`, `docs/` and `specs/`.
+   - **Given** the pushed branch, **When** `git ls-files` lists it, **Then** it includes `README.md`, `Gemfile`, `Gemfile.lock`, `.ruby-version`, `.gitignore`, `.gitattributes`, `.rspec`, `Dockerfile`, the workflow file, `bin/run`, the code folders, `spec/` (with `spec/fixtures/sample/`), `data/mable_account_balances.csv`, `data/mable_transactions.csv`, `docs/` and `specs/`.
 2. **Nothing generated** (DEC-27, DEC-36).
    - **Given** the same listing, **When** it is searched, **Then** no path is under `output/` or `coverage/`, and `git status` on a checkout after a run and a test run shows no untracked file.
 3. **The challenge files are unchanged** (CLAUDE.md, DEC-22).
@@ -229,7 +240,8 @@ The solution is submitted as a link to the GitHub repository, made public or sha
 - **Docker with typed paths** (DEC-22): files outside the image must be mounted; the README's commands use only the sample files, and a reviewer passing their own files mounts them the same way as `output`. The README says so in one line (decided in the run, item 6).
 - **A lock file made on Windows** (DEC-01): `Gemfile.lock` must also list the Linux platforms CI and Docker use, or a frozen install there fails (decided in the run, item 4).
 - **`bin/run` on Linux, macOS and in Docker** (DEC-22): it must start as `bin/run`, so it is committed as executable, starts with `#!/usr/bin/env ruby` and is stored with LF line endings (decided in the run, item 7). On Windows it is run as `ruby bin/run`.
-- **Line endings in a Windows checkout** (DEC-04): Git may give text files CRLF line endings on Windows; the CSV library reads them the same, and the output file is LF on every system (page 10 pick 17).
+- **Line endings in a Windows checkout** (DEC-04): Git may give text files CRLF line endings on Windows; the CSV library reads them the same, and the output file is LF on every system (page 10 pick 17). `bin/run` alone is always checked out with LF, by `.gitattributes` (FR-018), so a Docker image built from a Windows checkout still starts it; a CRLF first line would make `#!/usr/bin/env ruby` fail with "No such file or directory".
+- **Docker on a Linux host** (DEC-36, DEC-37): the container runs as the image's default user, root, so the file it writes in the mounted `output/` folder may belong to root; the README says so in one line, and the run command adds no `--user` option (Clarifications).
 - **A Windows reviewer with Docker Desktop** (DEC-37): the mount path differs between shells, so the README gives the Docker run command for a POSIX shell and for PowerShell (decided in the run, item 5).
 - **A run from another folder on Windows** (DEC-22, DEC-26): `ruby ..\bin\run` from `docs` shows `Output file: ../output/final_balances_<run time>.csv`, as in AC-08.4.
 - **No Ruby 3.4 on the Windows machine used for the check, or no Docker** (brief Part 2 step 3): the hand check that cannot be run is listed in the run report as left for the developer, never marked as passed.
@@ -243,11 +255,11 @@ Each requirement cites the NFR or decision it serves. The README requirements (F
 
 **The README ([DEC-37](../../docs/design-analysis/design-decisions.md#dec-37))**
 
-- **FR-001** (DEC-37, NFR-04; DEC-01, DEC-22): `README.md` at the repository root MUST give the build, test and run instructions first: the normal way (Ruby at the version in `.ruby-version`, `bundle install`, then `bin/run`; `bundle exec rspec` for the tests and `bundle exec rubocop` for the style check), then Docker as the alternative (FR-005).
+- **FR-001** (DEC-37, NFR-04; DEC-01, DEC-22): `README.md` at the repository root MUST give the build, test and run instructions first: the normal way (Ruby at the version in `.ruby-version`, `bundle install`, then `bin/run`; `bundle exec rspec` for the tests and `bundle exec rubocop` for the style check), then Docker as the alternative (FR-005). The README's sections MUST follow DEC-37's order: build, test and run (the normal way, Windows, then Docker; FR-001 to FR-005); the input files (FR-006); `LOG_LEVEL` and exit statuses (FR-007, FR-008); the assumptions (FR-009); the design reasoning (FR-010); the test coverage (FR-012); persistent storage, production items and known limitations (FR-011); "How this was built" (FR-013); then the repository layout and the link to the challenge (FR-014) (Clarifications).
 - **FR-002** (DEC-37, DEC-22; AC-09.1, AC-09.2): the run instructions MUST show `bin/run` with no arguments (the sample files in `data/`, output in `output/`), with 2 arguments and with 3 arguments, as in the AC-09.1 table; that typed paths are relative to the current folder and default paths to the project root; the default output name `output/final_balances_YYYY-MM-DD_HHMMSS.csv` from the local time the run started, and that an existing output file is never overwritten (DEC-25, DEC-27); and the usage message exactly as in AC-09.2.
 - **FR-003** (DEC-37, DEC-35; AC-08.1): the README MUST show the sample run's report exactly as in AC-08.1 (with the run time of page 2), so a reviewer can compare their own run with it (decided in the run, item 8).
 - **FR-004** (DEC-37, NFR-04): the README MUST say that on Windows the program runs as `ruby bin/run` (with the same arguments).
-- **FR-005** (DEC-37, DEC-36, NFR-04): the Docker instructions MUST give the command to build the image, the command to run the program with the checkout's `output` folder mounted at the container's `output` folder and `TZ` set, for a POSIX shell and for PowerShell, and the command to run the tests in the container; and MUST say that the container uses UTC for the file name unless `TZ` is set, and that the mount keeps the output CSV on the reviewer's machine.
+- **FR-005** (DEC-37, DEC-36, NFR-04): the Docker instructions MUST give the command to build the image, the command to run the program with the checkout's `output` folder mounted at the container's `output` folder and `TZ` set, for a POSIX shell and for PowerShell, and the command to run the tests in the container; and MUST say that the container uses UTC for the file name unless `TZ` is set, and that the mount keeps the output CSV on the reviewer's machine; and MUST say in one line that on a Linux host the output file may belong to root, because the container runs as the image's default user (Clarifications). The run command MUST NOT add a `--user` option.
 - **FR-006** (DEC-37, DEC-04, DEC-06): the README MUST describe both file formats (`account number,balance` and `from account number,to account number,amount`, CSV), and say that files must have no header and that a header row is a bad row.
 - **FR-007** (DEC-37, DEC-28, DEC-29): the README MUST explain `LOG_LEVEL`: `warn` (the default) and `info`, in any letter case, any other value falling back to `warn`; that log lines go to standard error with account numbers masked as `************6789`; and that the report alone goes to standard output.
 - **FR-008** (DEC-37, DEC-25; AC-09.8): the README MUST say that exit status 0 means the run completed, even if some or all transfers were rejected, and 1 means the run stopped, listing the reasons in AC-09.8.
@@ -263,7 +275,7 @@ Each requirement cites the NFR or decision it serves. The README requirements (F
 - **FR-015** (NFR-04; DEC-01): the Ruby version in the Dockerfile's base image MUST be exactly the version in `.ruby-version` (built by `001`), the latest Ruby 3.4.x release; when one changes, both change in the same commit.
 - **FR-016** (NFR-04; DEC-01): the runtime code MUST use only Ruby's standard library and the gems `csv`, `bigdecimal` and `logger`; the development gems MUST be only `rspec`, `simplecov`, `rubocop` and `rubocop-rspec` (checked here; built by `001`).
 - **FR-017** (NFR-04; DEC-01; decided in the run, item 4): the committed `Gemfile.lock` MUST install unchanged, with Bundler's frozen setting, on Windows, on the CI runner and in the Docker image; it MUST list the platforms needed for that (the plan picks them).
-- **FR-018** (NFR-04; DEC-22; decided in the run, item 7): `bin/run` (built by `002`) MUST be stored in Git as executable, begin with `#!/usr/bin/env ruby`, and have LF line endings in the repository, so it starts as `bin/run` on Linux, macOS and in Docker, and as `ruby bin/run` on Windows. Every text file in the repository MUST be stored with LF line endings.
+- **FR-018** (NFR-04; DEC-22; decided in the run, item 7): `bin/run` (built by `002`) MUST be stored in Git as executable, begin with `#!/usr/bin/env ruby`, and have LF line endings in the repository, so it starts as `bin/run` on Linux, macOS and in Docker, and as `ruby bin/run` on Windows. Every text file in the repository MUST be stored with LF line endings. A `.gitattributes` file at the repository root, built by this spec, MUST hold exactly the one line `bin/run text eol=lf`, so every checkout, Windows included, gives `bin/run` LF line endings and a Docker image built from a Windows checkout still starts it (Clarifications).
 - **FR-019** (NFR-04; DEC-04, DEC-22, page 3): the NFR-04 targets built in `001` and `002` MUST hold, checked by design review: files are read only through Ruby's CSV library (CRLF, a missing final newline and a byte-order mark give the same result, the last proved by `002`'s fixture test); default paths are found from the project root (AC-08.4, proved by `002`); one command runs the program after `bundle install`.
 
 **CI ([DEC-36](../../docs/design-analysis/design-decisions.md#dec-36))**
@@ -273,7 +285,7 @@ Each requirement cites the NFR or decision it serves. The README requirements (F
 
 **Docker ([DEC-36](../../docs/design-analysis/design-decisions.md#dec-36))**
 
-- **FR-022** (NFR-04; DEC-01, DEC-36; decided in the run, item 5): a `Dockerfile` at the repository root MUST build from the official Ruby image of exactly the `.ruby-version` version (the full image, not a slim one), copy the project in, run `bundle install` from the committed `Gemfile.lock`, and by default run `bin/run` with no arguments, so a container started with no command runs the sample files.
+- **FR-022** (NFR-04; DEC-01, DEC-36; decided in the run, item 5): a `Dockerfile` at the repository root MUST build from the official Ruby image of exactly the `.ruby-version` version (the full image, not a slim one), copy the project in, run `bundle install` from the committed `Gemfile.lock`, and by default run `bin/run` with no arguments, directly and not through `bundle exec`, as its default command in exec form (`CMD ["bin/run"]`), so a container started with no command runs the sample files, the exit status of `docker run` is the program's, and a command given after the image name (such as `bundle exec rspec` or `bin/run -h`) replaces it (Clarifications).
 - **FR-023** (NFR-04; DEC-36, DEC-37): in the container, the working folder MUST be the project root, so the report shows `Output file: output/final_balances_<run time>.csv`, the log shows `data/...` paths as in AC-09.5, and the README's mount of `output` receives the file; `bundle exec rspec` MUST run in the image and pass.
 - **FR-024** (NFR-04; DEC-36; decided in the run, item 13): the Dockerfile MUST add nothing else: no extra system packages, no other gems, no change to the program's behaviour, and no `.dockerignore` (a clean checkout has no `output/` or `coverage/`).
 
@@ -286,7 +298,7 @@ Each requirement cites the NFR or decision it serves. The README requirements (F
 - **FR-026** (DEC-38, DEC-01, DEC-22, DEC-34): the pushed repository MUST hold every file in User Story 6, scenario 1, and the code under the folder layout `001` sets.
 - **FR-027** (DEC-27, DEC-36): the pushed repository MUST NOT hold any file under `output/` or `coverage/`, and a run and a test run on a checkout MUST leave `git status` clean (both folders are in `.gitignore`, built by `001`).
 - **FR-028** (CLAUDE.md, DEC-22, DEC-34): `docs/challenge/` MUST be unchanged since the commit that added it; `data/` and `spec/fixtures/sample/` MUST hold byte-for-byte copies of its two CSV files; this spec adds no other test-data file.
-- **FR-029** (DEC-36, DEC-38): the latest commit of the pushed branch MUST have a successful GitHub Actions run. Making the repository public or sharing it with the reviewer is done by the developer at submission time and is listed in the run report as left for the developer.
+- **FR-029** (DEC-36, DEC-38): the latest commit of the pushed branch, `main`, MUST have a successful GitHub Actions run. Making the repository public or sharing it with the reviewer is done by the developer at submission time and is listed in the run report as left for the developer.
 - **FR-030** (brief rule 4): this spec MUST add no RSpec spec, no class and no change to the program's behaviour; it is checked by CI, a Docker run, a Windows run, the README check and the submission check.
 
 ### Key Entities *(include if feature involves data)*
@@ -297,6 +309,7 @@ Names and meanings as in the [page 10 glossary](../../docs/solution-design/10-tr
 - **Coverage figure**: SimpleCov's line coverage from a full test run on the final code, shown in the README (DEC-36).
 - **CI workflow** (`.github/workflows/ci.yml`): the GitHub Actions workflow that runs RSpec and RuboCop on every push (DEC-36).
 - **Dockerfile**: builds the Docker image, the fallback way to run (DEC-36).
+- **`.gitattributes`**: one line that keeps `bin/run` with LF line endings in every checkout (FR-018).
 - **Clean checkout**: a fresh clone of the pushed branch in a new, empty folder (Conventions).
 - **Submission**: the link to the GitHub repository (DEC-38).
 - Used from `001` and `002`, unchanged: `.ruby-version`, `Gemfile`, `Gemfile.lock`, `.gitignore`, `.rspec`, `bin/run`, `Runner`, `data/`, `spec/fixtures/sample/`.
@@ -333,7 +346,7 @@ Small gaps decided while writing this spec, consistent with `design-decisions.md
 | 4 | `Gemfile.lock` lists the platforms needed to install unchanged, frozen, on Windows, the Ubuntu CI runner and the Docker image; the plan picks the platform list | DEC-01, NFR-04 | A lock file made on Windows lists only the Windows platform, and a frozen install on Linux then fails; DEC-01 commits the lock file so every machine installs the same gems | Not freezing the install in CI and Docker (versions could drift); not committing the lock file (rejected by DEC-01) |
 | 5 | The Docker image is named `mable-transfers`, built from the full official `ruby:<version>` image (not slim), with the project root as its working folder; the README gives the run command for a POSIX shell and for PowerShell | DEC-36, DEC-37 | One name for every README command; the full image has the build tools a gem with a native part may need and the time-zone data `TZ` needs; the mount path is written differently in the two shells | A slim image (may lack build tools or time-zone data); one shell's syntax only; no fixed name |
 | 6 | The README says in one line that a reviewer's own files must be mounted into the container like `output` | DEC-22, DEC-37 | Typed paths are read inside the container; without the line a reviewer's first own-file run would fail with "file not found" | Leaving it out; a second mounted folder in the default command |
-| 7 | `bin/run` is stored executable in Git, starts with `#!/usr/bin/env ruby` and has LF line endings; every text file is stored with LF | DEC-22, NFR-04 | Linux, macOS and Docker start `bin/run` directly, which needs the executable mode, the line and LF (a CRLF first line fails); the repository already stores LF | Running `ruby bin/run` everywhere, also in Docker (the README's normal command is `bin/run`) |
+| 7 | `bin/run` is stored executable in Git, starts with `#!/usr/bin/env ruby` and has LF line endings, kept in every checkout by a one-line `.gitattributes` (Clarifications); every text file is stored with LF | DEC-22, NFR-04 | Linux, macOS and Docker start `bin/run` directly, which needs the executable mode, the line and LF (a CRLF first line fails); the repository already stores LF | Running `ruby bin/run` everywhere, also in Docker (the README's normal command is `bin/run`) |
 | 8 | The README shows the sample run's report exactly as in AC-08.1, with page 2's run time | DEC-37, DEC-35 | A reviewer can check their own run against it; using page 2's text keeps one copy of the expected output | No example output; a different run time |
 | 9 | The CI workflow is `.github/workflows/ci.yml`, triggered on push to any branch, with RSpec and RuboCop as separate steps; "a failing check fails the run" is checked by reading the workflow, not by pushing a failing commit | DEC-36, page 10 pick 50 | DEC-36 says every push; separate steps show which check failed; a deliberately failing push would add a broken commit to the history reviewers read | A pull-request trigger as well (not asked); one combined step; a failing test commit |
 | 10 | The README lists the ten assumptions with their reasons, worded as in `design-decisions.md`, linking there for the decisions | DEC-37, Assumptions | One wording for every assumption, so the README and the decisions cannot disagree | Shortened wording; only a link |
