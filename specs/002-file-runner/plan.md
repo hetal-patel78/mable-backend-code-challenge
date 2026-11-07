@@ -126,11 +126,11 @@ spec/
 │   ├── report_printer_spec.rb
 │   └── runner_spec.rb                   # the Runner's own behaviour and every page 2 scenario (P18)
 ├── acceptance/                          # exactly five end-to-end specs (P19)
-│   ├── runner_sample_files_spec.rb
-│   ├── runner_mixed_rejections_spec.rb
-│   ├── runner_all_rejected_spec.rb
-│   ├── runner_invalid_balances_spec.rb
-│   └── runner_wrong_arguments_spec.rb
+│   ├── runner_run_sample_files_spec.rb
+│   ├── runner_run_mixed_rejections_spec.rb
+│   ├── runner_run_all_rejected_spec.rb
+│   ├── runner_run_invalid_balances_spec.rb
+│   └── runner_run_wrong_arguments_spec.rb
 └── fixtures/                            # P20
     ├── sample/                          # copies of the two challenge files
     ├── reading/                         # blank lines, header row, byte-order mark, unclosed quote, empty, wrong field count
@@ -186,7 +186,7 @@ Names and details that page 6 and the page 10 glossary leave open, and small tec
 | P16 | The logger is `Logger.new(stderr, level:)` with `Logger`'s default formatter; the level is `Logger::INFO` when `env['LOG_LEVEL']` equals `info` ignoring case (`casecmp?`), and `Logger::WARN` otherwise | DEC-28, FR-035, spec item 13 | The default format is the one page 2 shows | A custom formatter |
 | P17 | Test helpers: `spec/support/fakes.rb` (`FakeReader`, `FakeReporter`, `ChangingTotalRepository`, `memory_logger` and `log_lines`), `spec/support/files.rb` (`in_temp_folder`, `write_file`, `fixture_path`), `spec/support/runs.rb` (`run_runner`, `stream_pattern`, `run_command`), `spec/support/report_templates.rb` (`template_a`, `template_r`), and row builders `balances_row` and `transfers_row` added to `spec/support/builders.rb` | DEC-34, research R9 | Small helpers keep each example to its point and the scenarios close to page 2 | Repeating set-up in every example |
 | P18 | The page 2 scenarios run through the runner live in `spec/infrastructure/runner_spec.rb`, grouped by FR, next to the `Runner`'s own examples | DEC-34, FR-042, FR-045 | DEC-34 sets one spec file per class; these specs test what the `Runner` shows | A separate scenarios folder (not in DEC-34's layout); one file per FR for the same class |
-| P19 | The five end-to-end specs are `RSpec.describe Runner, '<case>'` in `spec/acceptance/runner_<case>_spec.rb`: `sample files`, `mixed rejections`, `all rejected`, `invalid balances`, `wrong arguments` | DEC-34, FR-044, NFR-05 | RuboCop's default `RSpec/DescribeClass` and `RSpec/SpecFilePathFormat` then pass with no setting changed; the command they run ends in `Runner` | A string description such as `'bin/run'` (an offence under the default settings) |
+| P19 | The five end-to-end specs are `RSpec.describe Runner, '#run'` in `spec/acceptance/runner_run_<case>_spec.rb`, each with one inner `describe 'with <case>'`: `sample files`, `mixed rejections`, `all rejected`, `invalid balances`, `wrong arguments` | DEC-34, FR-044, NFR-05 | RuboCop's default `RSpec/DescribeClass`, `RSpec/DescribeMethod` (the second argument must start with `#` or `.`) and `RSpec/SpecFilePathFormat` (`runner*run*_spec.rb`) then pass together with no setting changed; the command they run ends in `Runner#run`; the case is the inner group, which none of those cops checks | A string description such as `'bin/run'`, or a free-text second argument such as `'sample files'` (offences under the default settings) |
 | P20 | Fixture files hold only the cases DEC-34 lists and the end-to-end inputs; cases that depend on exact bytes (Windows line endings, no final newline, tabs, a value over several lines, bytes that are not UTF-8) are written by the test into a temporary file with `File.binwrite` | DEC-34, FR-043 | Keeps the fixture list to DEC-34; a file written at test time keeps its bytes on every system, whatever Git does to line endings on checkout | A fixture per case; a `.gitattributes` file to protect fixture bytes |
 | P21 | The input file that exists but cannot be opened (AC-09.3a) is a folder at the input path | DEC-23, spec item 11 | It exists (the start check passes) and cannot be read as a file on Linux, macOS and Windows, even as an administrator | Removing read permission (does not work on Windows or as root) |
 | P22 | The partial-write test passes accounts whose second account raises `Errno::ENOSPC` when its number is asked for, so the writer has written one line before the failure | DEC-27, FR-026 | Reaches the "writing fails partway" path with a fake passed in, no stub of `File` | Filling a disk; stubbing `File#write` on every instance |
