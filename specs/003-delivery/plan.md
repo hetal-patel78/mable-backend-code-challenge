@@ -30,7 +30,7 @@ It changes no behaviour of the program and adds no class, no message, no RSpec s
 
 **Constraints**: one Ruby version, written in `.ruby-version` and the Dockerfile only; `Gemfile.lock` installs unchanged, frozen, on Windows, the CI runner and the Docker image; no coverage minimum, no CI matrix, no Ruby version in the workflow; nothing added to the Dockerfile beyond [DEC-36](../../docs/design-analysis/design-decisions.md#dec-36); no `.dockerignore`; every text file stored with LF; nothing out of scope on [page 4](../../docs/solution-design/04-scope.md).
 
-**Scale/Scope**: 5 files created or changed (`README.md`, `.github/workflows/ci.yml`, `Dockerfile`, `.gitattributes`, `Gemfile.lock`), and `bin/run` may also change (its mode and first line, FR-018), 42 checks, 6 user stories.
+**Scale/Scope**: 5 files created or changed (`README.md`, `.github/workflows/ci.yml`, `Dockerfile`, `.gitattributes`, `Gemfile.lock`), and `bin/run` may also change (its Git mode, its first line and, only if RuboCop reports it, the line-2 `# frozen_string_literal: true` comment; FR-018, spec item 16), 42 checks, 6 user stories.
 
 ## Constitution Check
 
@@ -88,7 +88,7 @@ Gemfile.lock             # changed: platforms added, gem versions unchanged (FR-
 Gemfile                  # from 001
 .gitignore               # from 001: output/ and coverage/
 .rspec                   # from 001
-bin/run                  # from 002; here: stored executable, LF, first line "#!/usr/bin/env ruby" added if missing (FR-018)
+bin/run                  # from 002; here: stored executable, LF, first line "#!/usr/bin/env ruby" set if missing or different, and the line-2 `# frozen_string_literal: true` comment only if RuboCop reports it (FR-018, spec item 16)
 lib/
 ├── domain/              # from 001
 ├── application/         # from 002
@@ -100,7 +100,7 @@ specs/                   # the Spec Kit specs, plans and tasks
 .specify/, .claude/      # the Spec Kit set-up
 ```
 
-**Structure Decision**: a single project, as `001-domain` and `002-file-runner` set it. This spec adds four files at fixed places (the README and the Dockerfile at the root, as DEC-36 and DEC-37 name them; `.gitattributes` at the root, where Git reads it; the workflow in `.github/workflows/`, where GitHub Actions reads it) and changes the platform list in `Gemfile.lock` and, if needed, `bin/run`'s mode and first line. No folder is added except `.github/workflows/`, which GitHub requires.
+**Structure Decision**: a single project, as `001-domain` and `002-file-runner` set it. This spec adds four files at fixed places (the README and the Dockerfile at the root, as DEC-36 and DEC-37 name them; `.gitattributes` at the root, where Git reads it; the workflow in `.github/workflows/`, where GitHub Actions reads it) and changes the platform list in `Gemfile.lock` and, if needed, `bin/run`'s Git mode, first line and, only if RuboCop reports it, the line-2 frozen-string-literal comment. No folder is added except `.github/workflows/`, which GitHub requires.
 
 ## Phase 0: Research
 
