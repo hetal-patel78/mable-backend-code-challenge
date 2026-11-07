@@ -30,13 +30,13 @@ Phase 1 of the [plan](plan.md). This spec adds no class and no runtime data (FR-
 ## Dockerfile and the image `mable-transfers`
 
 - **Holds**: six instructions, as in [contracts/dockerfile.md](contracts/dockerfile.md) (FR-022).
-- **Rules**: base image `ruby:<the text of .ruby-version>`, the full image (or its `-bookworm` variant, plan item 7); working folder `/app`, the project root (FR-023); frozen `bundle install`; default command `CMD ["bin/run"]` in exec form; nothing else: no extra package, no other gem, no `.dockerignore` (FR-024); runs as the image's default user, root (spec Clarifications).
+- **Rules**: base image `ruby:<the text of .ruby-version>`, the full image (or its `-bookworm` variant, plan item 7); working folder `/app`, the project root (FR-023); frozen `bundle install`; default command `CMD ["ruby", "bin/run"]` in exec form; nothing else: no extra package, no other gem, no `.dockerignore` (FR-024); runs as the image's default user, root (spec Clarifications).
 - **Checks**: C-04, C-17 to C-26, C-42 (the file read against its contract: six instructions, none of the forbidden ones, no `.dockerignore`).
 
-## `.gitattributes`
+## No `.gitattributes`
 
-- **Holds**: exactly one line, `bin/run text eol=lf`, ending with LF (FR-018; spec Clarifications).
-- **Checks**: C-02, C-26.
+- **Holds**: nothing: the file does not exist, so Git applies the machine's line-ending setting to every file alike (FR-018; spec item 17).
+- **Checks**: C-02, C-43.
 
 ## `Gemfile.lock` (changed here; built by `001-domain`)
 
@@ -46,13 +46,13 @@ Phase 1 of the [plan](plan.md). This spec adds no class and no runtime data (FR-
 
 ## `bin/run` (built by `002-file-runner`; mode and first line added and checked here)
 
-- **Holds**: Git mode `100755`; first line `#!/usr/bin/env ruby`; LF line endings in the index and in every checkout (FR-018). `002` requires none of the three; this spec sets the mode and the first line if missing (spec item 16) and, if `bundle exec rubocop bin/run` then reports an offence, adds only the `# frozen_string_literal: true` comment on line 2; any other offence is a cross-spec finding against `002-file-runner`.
-- **Checks**: C-01, C-26.
+- **Holds**: Git mode `100755`; first line `#!/usr/bin/env ruby`; LF line endings in the index; in a checkout the line endings follow the machine's Git setting, like every other file (FR-018; spec item 17). `002` requires none of the three; this spec sets the mode and the first line if missing (spec item 16) and, if `bundle exec rubocop bin/run` then reports an offence, adds only the `# frozen_string_literal: true` comment on line 2; any other offence is a cross-spec finding against `002-file-runner`.
+- **Checks**: C-01, C-26, C-43.
 
 ## Clean checkout
 
 - **Holds**: a fresh `git clone` of `main` into a new, empty folder outside the repository, with no `output/`, `coverage/` or installed gems carried over (spec Conventions, item 2); on Windows, cloned with `core.autocrlf=true` (plan item 15).
-- **Used by**: C-08 to C-26, C-36.
+- **Used by**: C-08 to C-26, C-36, C-43.
 
 ## Run report entry
 
