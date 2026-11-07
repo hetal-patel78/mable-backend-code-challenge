@@ -193,7 +193,7 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
 
 ### `BalancesCsvReader` and `TransfersCsvReader`
 
-- **Responsibility:** read a file with Ruby's CSV library, opened as `bom|utf-8` so a byte-order mark (an invisible marker some editors put at the start of a file) is ignored, and give each row with its physical line number ([DEC-04](../design-analysis/design-decisions.md#dec-04), [DEC-07](../design-analysis/design-decisions.md#dec-07)).
+- **Responsibility:** read a file with Ruby's CSV library, opened as `bom|utf-8` so a byte-order mark (an invisible marker some editors put at the start of a file) is ignored, and give each row with its physical line number ([DEC-04](../design-analysis/design-decisions.md#dec-04), [DEC-07](../design-analysis/design-decisions.md#dec-07)). Both read through the shared helper [`CsvRows`](#infrastructure-helpers-csvrows-row-and-displaypath), which gives each row as a `Row`.
 - **In:** a file path.
 - **Out:** each row's values, trimmed, with its line number. A row with the wrong number of fields is marked as such, and a header-looking first row is marked with the header hint ([DEC-06](../design-analysis/design-decisions.md#dec-06)). A file that cannot be opened raises `UnreadableFile` with the reason from the system. A file the CSV library cannot read past a line raises `UnreadableFile` naming that line, after giving every row before it. `BalancesCsvReader` reads the whole file; `TransfersCsvReader` gives one row at a time ([DEC-32](../design-analysis/design-decisions.md#dec-32)).
 - **Does not:** check account numbers or amounts; build domain models; skip a header ([DEC-06](../design-analysis/design-decisions.md#dec-06)); check whether the file exists (the `Runner` does).
@@ -209,7 +209,7 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
 
 - **Responsibility:** the reporter: prints the report to standard output ([DEC-26](../design-analysis/design-decisions.md#dec-26)).
 - **In:** a `DayResult`, from `ProcessDailyTransfer`.
-- **Out:** the report, in the layout on the [functional requirements](02-functional-requirements.md) page. It shows the output path relative to the current folder, or in full when the file is outside it ([DEC-26](../design-analysis/design-decisions.md#dec-26)). Working out that path is `ReportPrinter`'s job. **(assistant's pick)**
+- **Out:** the report, in the layout on the [functional requirements](02-functional-requirements.md) page. It shows the output path relative to the current folder, or in full when the file is outside it ([DEC-26](../design-analysis/design-decisions.md#dec-26)). Working out that path is `ReportPrinter`'s job, through [`DisplayPath`](#infrastructure-helpers-csvrows-row-and-displaypath). **(assistant's pick)**
 - **Does not:** mask account numbers; write to standard error; decide when to print. It is never called when the run stopped.
 
 ### `Runner`
@@ -222,9 +222,9 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
   3. reads `LOG_LEVEL` and builds the logger;
   4. reads the clock once for the run time;
   5. works out the output path: the third argument (already resolved against the current folder), or `FinalBalancesCsvWriter.default_path` for the run time, resolved against the project root ([DEC-22](../design-analysis/design-decisions.md#dec-22), [DEC-27](../design-analysis/design-decisions.md#dec-27));
-  6. runs the start checks together: both input files exist and the output file does not. It reports every problem found, one `Error:` line each, then one error log line naming only the reasons that occurred ([DEC-23](../design-analysis/design-decisions.md#dec-23), [DEC-25](../design-analysis/design-decisions.md#dec-25)); if any problem was found, it returns 1 and nothing is read;
+  6. runs the start checks together: both input files exist and the output file does not. It reports every problem found, one `Error:` line each with the path shown through [`DisplayPath`](#infrastructure-helpers-csvrows-row-and-displaypath), then one error log line naming only the reasons that occurred ([DEC-23](../design-analysis/design-decisions.md#dec-23), [DEC-25](../design-analysis/design-decisions.md#dec-25)); if any problem was found, it returns 1 and nothing is read;
   7. builds the real readers, writer, repository and reporter;
-  8. runs `ProcessDailyTransfer` with the run time, the output path and the parts it built;
+  8. runs `ProcessDailyTransfer` with the run time, the parts it built and the three paths: the balances and transfers paths in the form they are shown in, worked out through [`DisplayPath`](#infrastructure-helpers-csvrows-row-and-displaypath), and the output path as a full path, which `DayResult` keeps for `ReportPrinter`. A path in its shown form opens the same file from the current folder, so the application classes show the paths they are given in their messages and log lines, and never work out a shown path themselves ([DEC-26](../design-analysis/design-decisions.md#dec-26), [DEC-30](../design-analysis/design-decisions.md#dec-30)). **(assistant's pick)**
   9. returns 0, or for a run-stopping error prints its message and one error log line and returns 1.
 - **Does not:** contain business rules; read CSV; print the report; show a Ruby error trace for a run-stopping error.
 
@@ -234,6 +234,15 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
 - **In:** the arguments.
 - **Out:** calls `Runner` and exits with the status it returns. It passes no run time.
 - **Does not:** do anything else, so all its behaviour is testable through `Runner`.
+
+### Infrastructure helpers: `CsvRows`, `Row` and `DisplayPath`
+
+Three small helpers used only inside `infrastructure/`. Without them, both readers would repeat the CSV, line-number, byte-order-mark and malformed-row handling, and the `Runner`, `ReportPrinter` and the infrastructure errors would each hold a copy of the path rule. **(assistant's pick)**
+
+- **`CsvRows`:** reads one file with Ruby's CSV library, opened as `bom|utf-8`, one row at a time (`CSV.open`, one row per `shift`, [DEC-32](../design-analysis/design-decisions.md#dec-32)), and gives each non-blank row as a `Row` with its physical line number ([DEC-04](../design-analysis/design-decisions.md#dec-04), [DEC-05](../design-analysis/design-decisions.md#dec-05), [DEC-07](../design-analysis/design-decisions.md#dec-07)). It trims the values, marks a row whose number of fields is not the one the reader expects, and marks a header-looking first row with the header hint ([DEC-06](../design-analysis/design-decisions.md#dec-06)). A file that cannot be opened, or that the library cannot read past a line, raises `UnreadableFile`. Each reader builds one with the number of fields it expects: 2 for balances, 3 for transfers.
+- **`Row`:** one row as a reader gives it: its line number, its values as written and trimmed, the expected number of fields, and the header hint if the row was marked. A value: it never changes once built.
+- **`DisplayPath`:** works out how a path is shown: relative to the folder the command was run from when the file is in or below it, otherwise in full ([DEC-26](../design-analysis/design-decisions.md#dec-26)). The `Runner` uses it for its start-check lines and for the balances and transfers paths it passes on, `ReportPrinter` for the output line, and the infrastructure errors for the paths in their messages. No `domain/` or `application/` class uses it ([DEC-30](../design-analysis/design-decisions.md#dec-30)).
+- **Do not:** check account numbers or amounts; build domain models; print anything.
 
 ### Infrastructure errors
 
