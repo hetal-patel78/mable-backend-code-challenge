@@ -87,7 +87,9 @@ Plan specs/001-domain. The technical context is already fixed by design-decision
 
 ### `/speckit-tasks` (001-domain)
 
-Pending.
+```text
+Write the tasks for specs/001-domain. Tests first in every phase (write the spec, see it fail, then the code), each phase ends with its specs passing; every edge case in design-decisions.md within this spec's scope has a planned test, citing its DEC ID; every task cites its FR/NFR and DEC IDs where it helps; follow the brief's test split (rule 4).
+```
 
 ## 002-file-runner
 
