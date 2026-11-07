@@ -226,7 +226,10 @@ A reviewer opens the repository and reads `README.md` first. It tells them how t
 3. **Every exact text matches the program** (DEC-22, DEC-25, DEC-26).
    - **Given** the README, **When** its example output, usage message and messages are compared with page 2, **Then** each is character for character the same (the sample report as in AC-08.1, the usage message as in AC-09.2).
 4. **The coverage figure is current** (DEC-36).
-   - **Given** the submitted commit, **When** `bundle exec rspec` runs on it, **Then** SimpleCov's printed line coverage equals the figure in the README.
+   - **Given** the submitted commit, **When** `bundle exec rspec` runs on it, **Then**:
+     - Standard output: RSpec's summary with `0 failures`, and SimpleCov's `Line Coverage: <percent>% (<covered> / <total>)` line, equal character for character to the README's line.
+     - Standard error: not compared.
+     - Exit status: 0
 5. **Every link resolves** (DEC-37, DEC-38).
    - **Given** the README on GitHub, **When** each relative link is followed, **Then** it opens a file or folder that exists in the repository.
 
