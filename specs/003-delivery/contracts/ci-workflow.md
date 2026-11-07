@@ -20,7 +20,7 @@ Each step has a short `name` (`Check out the code`, `Set up Ruby`, `Install the 
 
 ## Must not hold
 
-- A `strategy` or `matrix` key (no OS or Ruby-version matrix; page 4).
+- A `strategy` or `matrix` key (no OS or Ruby-version matrix; page 10 pick 50).
 - A `ruby-version` input or any Ruby version number (one source, `.ruby-version`).
 - `bundler-cache` (deployment mode into `vendor/bundle`; plan item 3).
 - `continue-on-error`, `|| true`, or any other way to ignore a failing step (US4 scenario 2).

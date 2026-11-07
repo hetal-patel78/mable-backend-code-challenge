@@ -222,7 +222,7 @@ Every push to the GitHub repository starts a GitHub Actions run that installs th
      - Standard error: not compared.
      - Exit status: non-zero.
    - And later steps are skipped and the run's conclusion is failure (checked by reading the workflow: each command is its own step, and no step ignores errors; no failing commit is pushed to prove it; decided in the run, item 9).
-3. **No threshold and no matrix** (NFR-04; DEC-36; page 4).
+3. **No threshold and no matrix** (NFR-04; DEC-36; page 4 for the coverage minimum; page 10 pick 50 for the matrix and the Ruby version).
    - **Given** the workflow, **When** it is read, **Then** it has no coverage minimum, no operating-system or Ruby-version matrix, and no Ruby version written in it.
 
 ---
@@ -325,7 +325,7 @@ Each requirement cites the NFR or decision it serves. The README requirements (F
 **CI ([DEC-36](../../docs/design-analysis/design-decisions.md#dec-36))**
 
 - **FR-020** (NFR-04; DEC-36; page 10 pick 50; decided in the run, item 9): a GitHub Actions workflow, `.github/workflows/ci.yml`, MUST run on every push to any branch, with one job on the latest Ubuntu runner, set up Ruby from `.ruby-version`, install the gems from `Gemfile.lock`, and run `bundle exec rspec` and `bundle exec rubocop` as separate steps; the run MUST fail if either exits non-zero.
-- **FR-021** (NFR-04; DEC-36; page 4): the workflow MUST NOT set a coverage minimum, an operating-system or Ruby-version matrix, or a Ruby version of its own, and MUST add no step beyond checking out the code, setting up Ruby, installing the gems and the two checks.
+- **FR-021** (NFR-04; DEC-36; page 4 for the coverage minimum; page 10 pick 50 for the matrix and the Ruby version): the workflow MUST NOT set a coverage minimum, an operating-system or Ruby-version matrix, or a Ruby version of its own, and MUST add no step beyond checking out the code, setting up Ruby, installing the gems and the two checks.
 
 **Docker ([DEC-36](../../docs/design-analysis/design-decisions.md#dec-36))**
 
@@ -376,7 +376,7 @@ Names and meanings as in the [page 10 glossary](../../docs/solution-design/10-tr
 - `001-domain` and `002-file-runner` are finished before this spec is built: the skeleton, `bin/run`, `data/` and the tests are as their specs state. The README can only be finished once both are ([brief rule 3](../../docs/spec-kit/spec-kit-brief.md#3-specs)).
 - The GitHub repository is `origin` (`hetal-patel78/mable-backend-code-challenge`) and GitHub Actions is enabled on it.
 - The Windows check is run on the developer's Windows machine, and the Docker check wherever Docker is available; if either cannot be run, it is left for the developer (brief Part 2, step 3).
-- Out of scope, as on [page 4](../../docs/solution-design/04-scope.md#out-of-scope): a coverage threshold; a CI matrix over operating systems or Ruby versions; Docker as the main way to run; a help option; logging to a file or service; any gem beyond those DEC-01 and DEC-36 name. Nothing in this spec changes what the program does.
+- Out of scope: a coverage threshold, a help option, logging to a file or service ([page 4](../../docs/solution-design/04-scope.md#out-of-scope)); a CI matrix over operating systems or Ruby versions (page 9 "Portability and CI", page 10 pick 50); Docker as the main way to run (DEC-36); any gem beyond those DEC-01 and DEC-36 name (DEC-01, DEC-36). Nothing in this spec changes what the program does.
 
 ## Decided in the run
 
