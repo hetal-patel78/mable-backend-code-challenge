@@ -12,7 +12,7 @@ Phase 0 of the [plan](plan.md). The spec has no `NEEDS CLARIFICATION` item: its 
 
 - **Decision**: the platforms `ruby`, `x64-mingw-ucrt`, `x86_64-linux`, `aarch64-linux`, `x86_64-darwin` and `arm64-darwin` are added to `Gemfile.lock` with `bundle lock --add-platform` (plan item 2). Every check install is frozen with `BUNDLE_FROZEN=true` (plan item 6), then `git status --porcelain Gemfile.lock` must print nothing.
 - **Rationale**: a lock file made on Windows lists only the Windows platform, and Bundler with the frozen setting refuses to add the Linux platform on CI or in Docker (spec edge case; FR-017). The gems in the bundle are platform-independent (`ruby` platform), so adding platforms changes no version. Docker Desktop on Apple Silicon builds an `aarch64-linux` image, so that platform is needed too.
-- **Alternatives considered**: not freezing (versions could drift; rejected by spec item 4); deployment mode (installs into `vendor/bundle`, which RuboCop and SimpleCov would then need to exclude).
+- **Alternatives considered**: not freezing (versions could drift; rejected by spec item 4); deployment mode (installs into `vendor/bundle`; a plain frozen install already gives what spec item 4 asks, so the extra mode is not needed).
 
 ## R-3 `bin/run` starts on every system
 
@@ -30,7 +30,7 @@ Phase 0 of the [plan](plan.md). The spec has no `NEEDS CLARIFICATION` item: its 
 
 - **Decision**: `.github/workflows/ci.yml`, named `CI`, `on: push` with no branch filter, one job `checks` on `ubuntu-latest`, steps: `actions/checkout@v5`; `ruby/setup-ruby@v1` with no inputs; `bundle install` with `BUNDLE_FROZEN: "true"`; `bundle exec rspec`; `bundle exec rubocop` (plan items 3 and 4). See [contracts/ci-workflow.md](contracts/ci-workflow.md).
 - **Rationale**: [DEC-36](../../docs/design-analysis/design-decisions.md#dec-36) says RSpec and RuboCop run on every push; page 10 pick 50 sets one job on the latest Ubuntu runner with Ruby from `.ruby-version`. Each command is its own step, and a step fails the job when its command exits non-zero, so a failing check fails the run without any extra setting (US4 scenario 2). With no `ruby-version` input, `ruby/setup-ruby` reads `.ruby-version`.
-- **Alternatives considered**: `bundler-cache: true` (deployment mode, `vendor/bundle`); a pull-request trigger (not asked); an OS or Ruby matrix, a coverage minimum (page 4, out of scope).
+- **Alternatives considered**: `bundler-cache: true` (installs in deployment mode into `vendor/bundle` and adds caching nobody asked for; plan item 6 already gives a plain frozen install); a pull-request trigger (not asked); an OS or Ruby matrix, a coverage minimum (page 4, out of scope).
 
 ## R-6 The Dockerfile
 
