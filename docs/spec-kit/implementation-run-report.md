@@ -317,6 +317,7 @@ After Part 1 was ready for review, an independent Claude Opus 5.5 agent that did
 | Round | Reviewer | Defects found | Result |
 |---|---|---|---|
 | 1 | Claude Opus 5.5, independent | 5 (1 medium, 4 low) | All 5 fixed in the commits above |
+| 2 | Claude Opus 5.5, independent | 2 (2 low) | Both fixed: the page 10 pick 53 Run change `eceb4ee` is listed in "Changed in the run" and the finding 5 row names it; tasks T023 gives each AC-09.1 argument case its own `describe` directly under its FR group (`7cfe187`) |
 
 A scripted check over `specs/`, the solution design and `design-decisions.md` then passed: no rule that shows a file below the parent folder with a leading `../`, no `CSV.foreach`, and no `application/` file, class or task that uses `infrastructure/display_path`. The same check fails on every point against the specification as it was before these commits. Two `application/` to `infrastructure/` uses remain, both set by the solution design and outside these findings: `LoadBalances` rescues `UnreadableFile` (page 6 pick 33) and `ProcessDailyTransfer` asks `FinalBalancesCsvWriter.default_path` when no output path is given (page 6 pick 35).
 
