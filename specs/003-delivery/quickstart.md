@@ -80,7 +80,7 @@ These checks run in a fresh clean checkout made only for them, with no earlier r
 
 | ID | Check | Expected | Refs |
 |---|---|---|---|
-| C-28 | Every hand check (C-13 to C-16 and C-41 on Windows, C-17 to C-27 with Docker) that could not run on the machine at hand | listed in the run report as left for the developer, with the reason (no Ruby 3.4 for Windows, no Docker, no Linux host); none marked passed | FR-025, SC-001; edge case |
+| C-28 | Every hand check (C-08 to C-12 on Linux or macOS or in the Phase 4 fallback container, C-13 to C-16 and C-41 on Windows, C-17 to C-27 with Docker) that could not run on the machine at hand | listed in the run report as left for the developer, with the reason (no Ruby 3.4 for Windows, no Docker, no Linux host, no Linux or macOS Ruby and no Docker); none marked passed | FR-025, SC-001; edge case |
 
 ## README (User Story 5)
 
