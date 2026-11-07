@@ -77,7 +77,7 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 
 **Independent Test**: C-08 to C-12. This story adds no file: its checks prove Phase 2 together with `001` and `002`. A failure is a defect in the spec that owns the behaviour, fixed there test-first, then this phase is run again.
 
-**Where it runs**: on Linux or macOS with Ruby at the version in `.ruby-version`. If neither is available, all of C-09 to C-12 run in one Linux container from the official image, with the clean checkout mounted: `docker run --rm -v "$CLEAN:/src" -w /src ruby:<version> bash -c "<the commands of C-09 to C-12, in order>"`, where `<version>` is the text of `.ruby-version` (one container, so the installed gems are kept between the commands). The run report says which way was used.
+**Where it runs**: on Linux or macOS with Ruby at the version in `.ruby-version`. If neither is available, all of C-09 to C-12 run in one Linux container from the official `ruby:<version>` image, with the clean checkout mounted (in Git Bash on Windows, first `export MSYS_NO_PATHCONV=1`, otherwise Git Bash rewrites `-w /src`; from a Linux or WSL shell it is not needed): `docker run --rm -v "$CLEAN:/src" -w /src ruby:<version> bash -c "<the commands of C-09 to C-12, in order>"`, where `<version>` is the text of `.ruby-version` (one container, so the installed gems are kept between the commands). The run report says which way was used.
 
 - [ ] T012 [US1] Make the clean checkout for this phase: `git clone -c core.autocrlf=false --branch <this implementation branch> $REPO $CHECKS/clean` (C-08 during development; the final run on `origin` `main` is T050) (spec item 2; DEC-36).
 - [ ] T013 [US1] Run C-09 in `$CHECKS/clean`: `BUNDLE_FROZEN=true bundle install` succeeds and `git status --porcelain` prints nothing (US1 scenario 1; FR-017; DEC-01).
@@ -110,7 +110,7 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 
 **Goal**: the image `mable-transfers` builds from a clean checkout, runs the sample files with `output` mounted and `TZ` set, runs the tests, and passes the streams and the exit status through (NFR-04; DEC-01, DEC-36, DEC-37).
 
-**Independent Test**: C-04 and C-17 to C-27 with Docker. If Docker is not available, they are left for the developer (C-28).
+**Independent Test**: C-04 and C-17 to C-27 with Docker. In Git Bash on Windows, run `export MSYS_NO_PATHCONV=1` before C-17 (plan item 17); C-19 creates `output/` with `mkdir -p` first (plan item 18). If Docker is not available, they are left for the developer (C-28).
 
 ### Checks first
 
