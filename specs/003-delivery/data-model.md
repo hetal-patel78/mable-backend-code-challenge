@@ -46,7 +46,7 @@ Phase 1 of the [plan](plan.md). This spec adds no class and no runtime data (FR-
 
 ## `bin/run` (built by `002-file-runner`; mode and first line added and checked here)
 
-- **Holds**: Git mode `100755`; first line `#!/usr/bin/env ruby`; LF line endings in the index; in a checkout the line endings follow the machine's Git setting, like every other file (FR-018; spec item 17). `002` requires none of the three; this spec sets the mode and the first line if missing (spec item 16) and, if `bundle exec rubocop bin/run` then reports an offence, adds only the `# frozen_string_literal: true` comment on line 2; any other offence is a cross-spec finding against `002-file-runner`.
+- **Holds**: Git mode `100755`; first line `#!/usr/bin/env ruby`; LF line endings in the index; in a checkout the line endings follow the machine's Git setting, like every other file (FR-018; spec item 17). `002-file-runner` builds `bin/run` with the line `#!/usr/bin/env ruby`, the `# frozen_string_literal: true` comment and mode `100755` (002 plan P26; 002 tasks T036); this spec checks them as NFR-04 targets (C-01, C-43) and, as a safeguard only, sets the mode or the first line, or adds the line-2 comment, if C-01 or RuboCop finds one missing (spec item 16); any other offence is a cross-spec finding against `002-file-runner`.
 - **Checks**: C-01, C-26, C-43.
 
 ## Clean checkout
