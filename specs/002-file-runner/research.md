@@ -8,7 +8,8 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
   - the row is **blank** when `csv.line`, the raw text of the row, has only spaces, tabs, CR and LF (`/\A[ \t\r\n]*\z/`): it is skipped and not counted, but its line still counts (DEC-05);
   - otherwise each field is trimmed of spaces and tabs at both ends (`/\A[ \t]+|[ \t]+\z/`), a missing field (`nil`, as in `,,`) becomes `""`, and a `Row` is yielded with `expected_size` (2 or 3) and, for the first non-blank row only, `header_hint: CsvRows::HEADER_HINT` when its first field is not empty and has no digit (`!~ /[0-9]/`) (DEC-06).
 - **Rationale**: DEC-04 asks for the standard library: `CSV` handles quoted values, CR LF and a missing final newline by itself, and `bom|utf-8` drops a byte-order mark (page 6). `csv.lineno` counts physical lines, including empty ones, because the default `skip_blanks: false` returns an empty row for an empty line. Testing the raw line rather than the parsed fields keeps `,,` (three empty fields) a row and a line of spaces blank, as DEC-05 says. Trimming only spaces and tabs follows spec clarification 1; spaces inside a value stay, so `1 0` stays invalid.
-- **Alternatives considered**: `CSV.foreach` (yields rows but does not give the CSV object, so neither the line number nor the raw line is available); the `strip:` option (strips all whitespace and also inside quotes, depending on the version); `skip_blanks: true` (a line of spaces would not be skipped, and line numbers would need counting by hand).
+- **Relation to DEC-32** (plan P29): DEC-32 says "The transfers file is read one row at a time (`CSV.foreach`)". `CSV.open` with `shift` keeps that rule: one row at a time, never the whole file. `CSV.foreach` is not used because it exposes neither `lineno` nor the raw line that DEC-05 and DEC-07 need. This is listed for the developer's review as consistent with DEC-32's rule; if the reviewer judges the named mechanism binding, it is raised under brief rule 5.
+- **Alternatives considered**: `CSV.foreach` (named by DEC-32; yields rows but does not give the CSV object, so neither the line number nor the raw line is available); the `strip:` option (strips all whitespace and also inside quotes, depending on the version); `skip_blanks: true` (a line of spaces would not be skipped, and line numbers would need counting by hand).
 
 ## R2. Files that cannot be opened or read
 
@@ -22,7 +23,7 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
 ## R3. Showing a path
 
 - **Decision**: `DisplayPath.of(path, folder = Dir.pwd)` expands `path` against `folder`, takes `Pathname#relative_path_from(folder)`, and returns that relative path when it has no `..` part, or exactly one leading `..` part; otherwise, and when the two paths have no common root (another Windows drive raises `ArgumentError`), it returns the expanded full path (plan P10).
-- **Rationale**: page 2 shows `../output/final_balances_2026-11-07_143005.csv` from `docs` and `/tmp/day1.csv` in full; one `../` step is the narrowest rule that gives both, and it lets a test show a file in a second temporary folder in full (spec item 3) when the scenario runs from a subfolder of the first temporary folder, whatever folder the system keeps temporary folders in. Applied to a path already shown by the rule, it gives the same text back, so the `Runner` and `ReportPrinter` can both apply it (plan P11).
+- **Rationale**: page 2 shows `../output/final_balances_2026-11-07_143005.csv` from `docs` and `/tmp/day1.csv` in full; one `../` step is the narrowest rule that gives both, and it lets a test show a file in a second temporary folder in full (spec item 3) when the scenario runs from a subfolder of the first temporary folder, whatever folder the system keeps temporary folders in. Every component that builds a message or log text applies it to the real path it holds (plan P11), so `DisplayPath` stays the one owner of the rule.
 - **Alternatives considered**: any number of `../` steps (two temporary folders share a parent, so the "full path" case could never be tested); comparing lengths (gives different answers for the same layout depending on folder names).
 
 ## R4. `LoadBalances` problem by problem
@@ -39,7 +40,7 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
 
 ## R5. `ProcessDailyTransfer` step by step
 
-- **Decision**: `call` runs, in this order: output path defaulted to `FinalBalancesCsvWriter.default_path(run_time)` when nil; `logger.info("Run started: balances <b>, transfers <t>")`; `LoadBalances.new(balances_reader, repository).call(b)`; total before; `transfers_reader.each_row(t)` turning each `Row` into a `TransferResult` and logging it; `NoTransfers.new(t)` when no row was read; `logger.warn(DayResult::ALL_REJECTED_WARNING)` when every result is rejected; total after, and `TotalChanged.new(before, after)` when they differ; `writer.write(repository.all, output_path)`; the `DayResult`; `reporter.print(day_result)`; `logger.info("Run ended: ...")`; the `DayResult` is returned.
+- **Decision**: `call` runs, in this order: output path defaulted to `FinalBalancesCsvWriter.default_path(run_time)` when nil; `logger.info("Run started: balances <DisplayPath.of(b)>, transfers <DisplayPath.of(t)>")` (the paths are the real ones, plan P11); `LoadBalances.new(balances_reader, repository).call(b)`; total before; `transfers_reader.each_row(t)` turning each `Row` into a `TransferResult` and logging it; `NoTransfers.new(t)` when no row was read; `logger.warn(DayResult::ALL_REJECTED_WARNING)` when every result is rejected; total after, and `TotalChanged.new(before, after)` when they differ; `writer.write(repository.all, output_path)`; the `DayResult`; `reporter.print(day_result)`; `logger.info("Run ended: ...")`; the `DayResult` is returned.
   - A row with `wrong_field_count?` becomes `TransferResult.rejected(..., reason: :malformed_row, header_hint: row.header_hint)` with no domain object built.
   - Otherwise `AccountNumber.new(from)`, `AccountNumber.new(to)`, `Money.amount(amount)`, `Transfer.new(from:, to:, amount:)`, `TransferService#apply`, then `TransferResult.applied`. A rescue of the five domain errors, listed once in a frozen `Hash` from error class to reason code, gives `TransferResult.rejected` with that code and `row.header_hint`.
   - `TransferService` is built once per `call`, with the repository passed in.
@@ -62,11 +63,11 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
 
 - **Decision**: `Runner#run(arguments)`:
   1. unless the count is 0, 2 or 3: print the two usage lines on `stderr`, return 1;
-  2. paths: typed paths `File.expand_path(arg)`, defaults `File.expand_path('data/<name>', PROJECT_ROOT)`; each through `DisplayPath.of` (plan P11);
+  2. paths: typed paths `File.expand_path(arg)`, defaults `File.expand_path('data/<name>', PROJECT_ROOT)`; these real (absolute) paths are passed on as they are (plan P11);
   3. logger (plan P16);
   4. `run_time = Time.now`, once;
-  5. output path: the third argument, or `DisplayPath.of(File.expand_path(FinalBalancesCsvWriter.default_path(run_time), PROJECT_ROOT))`;
-  6. start checks: `File.exist?` for each input file, `File.file?` for the output (plan P28); every problem printed as an `Error:` line in the order balances, transfers, output, then one `logger.error("Run stopped: start checks failed (<reasons>)")`, return 1;
+  5. output path: the third argument expanded as in step 2, or `File.expand_path(FinalBalancesCsvWriter.default_path(run_time), PROJECT_ROOT)`;
+  6. start checks: `File.exist?` for each input file, `File.file?` for the output (plan P28); every problem printed, with the path shown by `DisplayPath.of`, as an `Error:` line in the order balances, transfers, output, then one `logger.error("Run stopped: start checks failed (<reasons>)")`, return 1;
   7. build `BalancesCsvReader.new`, `TransfersCsvReader.new`, `FinalBalancesCsvWriter.new`, `AccountRepository.new`, `ReportPrinter.new(output: stdout)`;
   8. `ProcessDailyTransfer.new(run_time:, balances_reader:, transfers_reader:, writer:, repository:, reporter:, logger:).call(balances, transfers, output)`;
   9. return 0; `rescue *STOPPING_ERRORS => error`: `stderr.puts("Error: #{error.message}")`, `logger.error("Run stopped: #{error.stop_reason}")`, return 1.
@@ -77,14 +78,14 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
 ## R8. RuboCop limits that shape the code
 
 - **Decision**: methods stay within 10 lines and `Metrics/AbcSize`; classes within 100 lines; `ProcessDailyTransfer` takes its six parts as named keywords collected in `**parts` and checks that exactly the six names are present (plan P6). Spec files follow `001`'s conventions (one expectation per example, examples of at most 5 lines, at most 3 levels of nesting).
-- **Open conflict (same as `001` R2-01)**: neither core RuboCop nor `rubocop-rspec` excludes spec files from `Metrics/BlockLength` by default (Max 25; `rubocop-rspec`'s `config/default.yml` does not configure that cop; no `Gemfile.lock` exists yet to pin a version, and the gem is not installed here to check). `spec/infrastructure/runner_spec.rb` (one `RSpec.describe Runner` holding every page 2 scenario, P18) and the other spec files are longer than 25 lines, so zero RuboCop offences cannot be reached under DEC-36's default settings. The one setting needed is `Metrics/BlockLength: Exclude: [spec/**/*]`; this spec may not change DEC-36, so it is not added. It needs a "Run change:" amendment of DEC-36 (brief rule 5) and is reported as a blocker, the same as in `001`. Until then the `bundle exec rubocop` phase gates in tasks.md are met apart from `Metrics/BlockLength` in spec files.
+- **Research note (RuboCop and spec files)**: `rubocop-rspec`'s own `config/default.yml` sets `Metrics/BlockLength` with `inherit_mode: merge: [Exclude]` and `Exclude: ["**/*_spec.rb", "**/spec/**/*"]`. Once `.rubocop.yml` declares `plugins: [rubocop-rspec]` (`001` plan D15), spec files, including the long `spec/infrastructure/runner_spec.rb` (one `RSpec.describe Runner` holding every page 2 scenario, P18), are not checked by that cop. Zero offences is reachable under DEC-36's default settings: no setting is added, and no DEC-36 amendment or blocker is needed.
 - **Rationale**: DEC-36 keeps RuboCop's defaults. `Metrics/ParameterLists` allows 5 parameters and counts keyword arguments, so seven separate keywords would be an offence; `**parts` counts once and keeps the names at the call site. Splitting `ProcessDailyTransfer` into more classes would add names page 6 does not have.
 - **Alternatives considered**: a `.rubocop.yml` exception (changes the defaults); a parts value class (a DTO, ruled out by DEC-30).
 
 ## R9. Test helpers and fakes
 
 - **Decision** (plan P17):
-  - `FakeReader.new(rows, unreadable_at: nil)`: `each_row(path)` records the path, yields the given `Row`s, and when `unreadable_at` is set then raises `UnreadableFile.at_line(path, unreadable_at)`.
+  - `FakeReader.new(rows, unreadable_at: nil, error: nil)`: `each_row(path)` records the path; when `error` is given it raises that error object before yielding any row (for example `UnreadableFile.cannot_open(path, Errno::EACCES.new)`); otherwise it yields the given `Row`s, and when `unreadable_at` is set then raises `UnreadableFile.at_line(path, unreadable_at)` after them.
   - `FakeReporter`: `print(day_result)` records each call; `printed` returns them.
   - `ChangingTotalRepository` (plan P23).
   - `memory_logger(level = Logger::INFO)` returns a `Logger` on a `StringIO`; `log_lines(logger)` returns each line without the `Logger` prefix, as `"<LEVEL> <text>"`.
