@@ -257,8 +257,8 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 ### Implementation for User Story 1
 
-- [ ] T043 [P] [US1] Create `lib/domain/transfer_result.rb`: `REASON_CODES` (frozen, symbols, DEC-19 order); `TransferResult.applied(line_number:, fields:)`; `TransferResult.rejected(line_number:, fields:, reason:, header_hint: nil)` raising `ArgumentError` for a reason not in `REASON_CODES`; readers `line_number`, `fields` (a frozen copy), `reason`, `header_hint`; `applied?` and `rejected?`; frozen; no formatting method [FR-022 to FR-025; DEC-19; D9 to D11, D19]
-- [ ] T044 [P] [US1] Create `lib/domain/transfer_service.rb`: `TransferService.new(repository)`; `apply(transfer)` finds the from account, then the to account, then calls `withdraw(transfer.amount)` on the from account and `deposit(transfer.amount)` on the to account, and returns nil; no rescue, no logging, no undo [FR-019 to FR-021, FR-034; DEC-13, DEC-17, DEC-18; D12; research R9]
+- [X] T043 [P] [US1] Create `lib/domain/transfer_result.rb`: `REASON_CODES` (frozen, symbols, DEC-19 order); `TransferResult.applied(line_number:, fields:)`; `TransferResult.rejected(line_number:, fields:, reason:, header_hint: nil)` raising `ArgumentError` for a reason not in `REASON_CODES`; readers `line_number`, `fields` (a frozen copy), `reason`, `header_hint`; `applied?` and `rejected?`; frozen; no formatting method [FR-022 to FR-025; DEC-19; D9 to D11, D19]
+- [X] T044 [P] [US1] Create `lib/domain/transfer_service.rb`: `TransferService.new(repository)`; `apply(transfer)` finds the from account, then the to account, then calls `withdraw(transfer.amount)` on the from account and `deposit(transfer.amount)` on the to account, and returns nil; no rescue, no logging, no undo [FR-019 to FR-021, FR-034; DEC-13, DEC-17, DEC-18; D12; research R9]
 
 **Checkpoint**: `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences. Every domain outcome in the spec's acceptance scenarios now has a passing test (SC-001).
 
