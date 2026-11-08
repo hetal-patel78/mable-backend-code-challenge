@@ -1,0 +1,24 @@
+name: CI
+
+on: push
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v5
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+
+      - name: Install the gems
+        run: bundle install
+        env:
+          BUNDLE_FROZEN: "true"
+
+      - name: Run RSpec
+        run: bundle exec rspec
+
+      - name: Run RuboCop
+        run: bundle exec rubocop
