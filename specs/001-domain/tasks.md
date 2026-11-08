@@ -58,14 +58,14 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 ### Tests for User Story 4 (write first)
 
-- [ ] T010 [P] [US4] Write `spec/domain/account_number_spec.rb` [FR-001, FR-002; AC-06.1; DEC-08; research R4]:
+- [X] T010 [P] [US4] Write `spec/domain/account_number_spec.rb` [FR-001, FR-002; AC-06.1; DEC-08; research R4]:
   - valid: `1111234522226789` gives `to_s` `1111234522226789`;
   - leading zeros kept: `0000123412341234` gives `to_s` `0000123412341234` (DEC-08);
   - equal to another `AccountNumber` built from the same text, and not equal to one built from other text;
   - usable as the same `Hash` key: a `Hash` keyed by `AccountNumber.new('0000123412341234')` finds the value with a second `AccountNumber.new('0000123412341234')` (`eql?` and `hash`);
   - no check digit: each of the five sample numbers `1111234522226789`, `1111234522221234`, `2222123433331212`, `1212343433335665`, `3212343433335755` is valid (DEC-08);
   - invalid, each raising `InvalidAccountNumber` with `account number "<text>" must be exactly 16 digits`: `111123452222678` (15 digits), `11112345222267890` (17 digits), `1111O34522226789` (letter O), `1111-2345-2222-6789` (dashes), `12345`, and the empty text, giving `account number "" must be exactly 16 digits` (DEC-08).
-- [ ] T011 [P] [US4] Write `spec/domain/money_spec.rb`, parsing, writing, equality and comparison [FR-003 to FR-007; AC-06.2, AC-06.3; DEC-09, DEC-10; D4, D5; research R5 to R7]:
+- [X] T011 [P] [US4] Write `spec/domain/money_spec.rb`, parsing, writing, equality and comparison [FR-003 to FR-007; AC-06.2, AC-06.3; DEC-09, DEC-10; D4, D5; research R5 to R7]:
   - valid and written with 2 decimals by `to_s`: `Money.amount('10')` `10.00`, `'10.5'` `10.50`, `'10.50'` `10.50`, `'007.50'` `7.50` (DEC-09), `'550'` `550.00`, `'5000.00'` `5000.00`, `'0'` `0.00`, `'0.00'` `0.00`;
   - `text` returns the text as written: `Money.amount('007.50').text` is `007.50`; for a computed value it is the same as `to_s` (see T021);
   - not negative: `0`, `0.00`, `10.00`; negative: `-5.00`, `-0`, `-0.00` (`negative?`; DEC-09);
@@ -77,20 +77,20 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
   - not a valid amount, each raising `amount "<text>" is not a valid amount`: `abc`, `10.`, `.50`, `+10`, `1e3`, `$10`, `1 0`, `1,000.00` (DEC-09);
   - DEC-09's own examples: `100`, `100.5` and `100.50` are valid and written `100.00`, `100.50`, `100.50`; `100.`, `+100` and `$100` are not a valid amount;
   - the `balance` word: `Money.balance('1.234')` raises `balance "1.234" has more than 2 decimal places`; `Money.balance('abc')` raises `balance "abc" is not a valid amount`; `Money.balance('')` raises `balance is empty` (spec item 2; AC-06.3).
-- [ ] T012 [P] [US4] Write `spec/domain/transfer_spec.rb` [FR-008, FR-009; AC-03.3, AC-06.2; DEC-10, DEC-13, DEC-19; D8]:
+- [X] T012 [P] [US4] Write `spec/domain/transfer_spec.rb` [FR-008, FR-009; AC-03.3, AC-06.2; DEC-10, DEC-13, DEC-19; D8]:
   - a valid transfer from `1111234522226789` to `1212343433335665` of `30.00` returns those values from `from`, `to` and `amount`;
   - `0.01` is accepted (DEC-10);
   - an amount of $0 or less, each raising `InvalidAmount` with `amount "<text>" must be greater than 0.00`: `0`, `0.00`, `-5.00`, `-0`, `-0.00` (DEC-10; `-0` and `-0.00` per DEC-09);
   - the same account: from and to `9999888877776666`, amount `5.00`, raises `SameAccount`, `account 9999888877776666 cannot transfer to itself`, with no repository involved, so an account that is not loaded still gets `SameAccount` (DEC-19 edge case);
   - check order: from and to `1111234522226789`, amount `0`, raises `InvalidAmount` with `amount "0" must be greater than 0.00`, not `SameAccount` (DEC-19 edge case).
-- [ ] T013 [P] [US4] Write `spec/domain/account_spec.rb`, the opening balance only [FR-013; AC-06.3; DEC-10, DEC-11; D6, D7]:
+- [X] T013 [P] [US4] Write `spec/domain/account_spec.rb`, the opening balance only [FR-013; AC-06.3; DEC-10, DEC-11; D6, D7]:
   - `Account.check_opening_balance` accepts `Money.balance('0')`, `'0.00'`, `'5000.00'` and `'550'` without raising (DEC-10);
   - it raises `NegativeBalance` for `-5.00`, `-0` and `-0.00`, with `balance "-5.00" must not be negative`, `balance "-0" must not be negative` and `balance "-0.00" must not be negative` (DEC-09, DEC-11);
   - it needs only the `Money`: it is called with no `AccountNumber` at all (page 6 `Account`);
   - `Account.new(account_number('1111234522226789'), Money.balance('-5.00'))` raises the same `NegativeBalance`;
   - `Account.new` with `100.00` gives `number.to_s` `1111234522226789` and `balance.to_s` `100.00`.
-- [ ] T014 [P] [US4] Add to `spec/support/builders.rb` the builders `account_number(text = '1111234522226789')`, `amount(text = '10.00')` (`Money.amount`) and `balance(text = '100.00')` (`Money.balance`), each requiring the class it builds [DEC-34; research R10]
-- [ ] T015 [US4] Run `bundle exec rspec` and confirm every example from T010 to T013 fails because the classes do not exist yet (depends on T010 to T014)
+- [X] T014 [P] [US4] Add to `spec/support/builders.rb` the builders `account_number(text = '1111234522226789')`, `amount(text = '10.00')` (`Money.amount`) and `balance(text = '100.00')` (`Money.balance`), each requiring the class it builds [DEC-34; research R10]
+- [X] T015 [US4] Run `bundle exec rspec` and confirm every example from T010 to T013 fails because the classes do not exist yet (depends on T010 to T014)
 
 ### Implementation for User Story 4
 
