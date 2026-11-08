@@ -568,6 +568,29 @@ Checkpoint: C-04, C-42 and C-17 to C-26 pass, C-27 is recorded and C-41 passes; 
 
 Finding for Phase 7 (T038, T043, C-33): SimpleCov 1.3.2 prints `Line coverage: 501 / 501 (100.00%)`, while plan item 10, research, data-model, the README contract and C-33 quote the line as `Line Coverage: <percent>% (<covered> / <total>)`, and C-33's `grep "Line Coverage"` is case-sensitive, so it would find nothing. C-12 is recorded as passing with the line SimpleCov prints. The wording in the specs is not changed in this phase.
 
+Resolution in Phase 7 (T038, C-33; 2026-11-08): the specs now quote the line as SimpleCov prints it, `Line coverage: <covered> / <total> (<percent>%)`, and C-33 greps for `Line coverage` (commit `b82af35`: `spec.md` User Stories 1 and 5, `plan.md` item 10, `research.md`, `data-model.md`, `contracts/readme.md`, `quickstart.md` C-12 and C-33, `tasks.md` T016 and T038). FR-012 already asks for the line as SimpleCov prints it, so no requirement, decision or solution-design text changes.
+
+Phase 7 (User Story 5: the README), 2026-11-08. C-31 before the change ran at commit `b82af35` on the old README. The README is commit `805adf7`. C-30, C-31, C-32 and the local part of C-33 read that commit's `README.md` in Git Bash at `$REPO`. C-29 ran on a fresh clean checkout `$CHECKS/readme` of `805adf7`, cloned from WSL Ubuntu with `core.autocrlf=false` from the repository's main checkout (as T012), in one `ruby:3.4.12` container (`ruby 3.4.12 (2026-10-23 revision 366f5fdc00) +PRISM [x86_64-linux]`) with the checkout mounted at `/src`, as in Phase 4. Docker 29.6.1.
+
+| Task | Check | Result |
+|---|---|---|
+| T037 | C-31 before the change, on the design-analysis README | Fail, as expected: 0 of 14. R-01: the headings are `Status`, `Build`, `Test`, `Run`, `Assumptions` and `Repository layout`, not the ten of the contract. R-02 to R-08: no command forms, path rules, output name, usage message, sample report, `ruby bin/run`, Docker commands, file formats, `LOG_LEVEL` or exit statuses (each under "To be added"). R-09: the assumptions are "To be listed". R-10 to R-13: no design, storage, coverage or "How this was built" section. R-14: `## Status`, the Google Sheet link and three "To be added" lines are present, and the layout table lacks `bin/run`, `lib/`, `spec/`, `data/`, `specs/` and the tooling files |
+| T038 | Coverage figure | `Line coverage: 501 / 501 (100.00%)`, the same line in T016 (C-12, Phase 4 container) and T029 (C-20, Docker image). No file under `lib/` or `spec/` changed since, and the C-33 run below prints it again |
+| T039 to T046 | `README.md` written | Commit `805adf7`: the title, two sentences, then the ten sections of [readme.md](../../specs/003-delivery/contracts/readme.md) in order |
+| T047 | C-41 | Already run in T035 on `3bbd12a`: pass. The README's PowerShell command is character for character the one C-41 ran, `docker run --rm -e TZ=Australia/Sydney -v "${PWD}/output:/app/output" mable-transfers` |
+| T047 | C-29: each README command equals one already run | Pass: `bundle install` (C-09; run plain below), `bin/run` (C-10), `bundle exec rspec` and `bundle exec rubocop` (C-12), `ruby bin/run` (C-13), `bin/run -h` (C-14 and C-21 with `ruby bin/run -h`), `docker build -t mable-transfers .` (C-17), the POSIX run command (C-19), the PowerShell run command (C-41), `docker run --rm mable-transfers bundle exec rspec` (C-20). The README gives no other command |
+| T047 | C-29: plain `bundle install` on the fresh clean checkout | Pass: exit 0, `Bundle complete! 7 Gemfile dependencies, 27 gems now installed.`; `git status --porcelain` prints nothing (0 bytes) |
+| T047 | C-29: `bin/run b.csv t.csv` from the project root, with copies of the sample files | Pass: exit 0; standard output equals `report.txt` with `<run time>` `2026-11-08_070557` (`diff` prints nothing), last line `Output file: output/final_balances_2026-11-08_070557.csv`; standard error 0 bytes; `cmp` of that file with `final.csv` prints nothing |
+| T047 | C-29: `bin/run b.csv t.csv out/day1.csv` | Pass: exit 0; standard output equals the sample report with last line `Output file: out/day1.csv` (`diff` prints nothing); standard error 0 bytes; `cmp out/day1.csv $CHECKS/final.csv` prints nothing |
+| T047 | C-30 | Pass: the README's report block against AC-08.1 (21 lines) and its usage block against AC-09.2 (2 lines), CR removed from both sides: `diff` prints nothing for either |
+| T047 | C-31 | Pass: 14 of 14, in order. R-01: the headings are the ten of the contract, in order, with `With Ruby 3.4`, `On Windows` and `With Docker` under the first. R-02: the AC-09.1 table, both path rules, the default name, no overwrite and the usage block (C-30). R-03: C-30. R-04: `ruby bin/run`. R-05: the four commands equal [dockerfile.md](../../specs/003-delivery/contracts/dockerfile.md#commands-the-readme-gives), the four lines are present, no `--user`. R-06 to R-08: both formats, no header, a header row is a bad row; `LOG_LEVEL` values, letter case and fallback, standard error with `************6789`, the report alone on standard output; exit 0 and the eight AC-09.8 reasons. R-09: the ten rows equal `design-decisions.md`'s Assumptions with links rewritten to `docs/design-analysis/design-decisions.md#dec-nn` (`diff` prints nothing). R-10: every point, both links. R-11: (a), (b) and nine limitations. R-12: the line, `coverage/index.html`, no minimum. R-13: the AI assistant, four steps with links, `docs/prompts/`. R-14: the layout table, the challenge link, and `grep -n -e 'To be added' -e '## Status' README.md` prints nothing; no company in the files is named |
+| T047 | C-32 | Pass: the link loop prints nothing |
+| T047 | C-33, local part | Pass: `bundle exec rspec` in the container on the clean checkout of `805adf7`: 726 examples, 0 failures, randomized with seed 42344, exit 0, `Line coverage: 501 / 501 (100.00%)`, equal to the README's line. The CI part waits for the push (T050) |
+| Phase end | `bundle exec rspec` at `$REPO` (Windows, Ruby 3.4.12) | Pass: 726 examples, 0 failures. Randomized with seed 4443. Line coverage: 501 / 501 (100.00%). Exit 0 |
+| Phase end | `bundle exec rubocop` at `$REPO` | Pass: 52 files inspected, no offenses detected. Exit 0 |
+
+Checkpoint: C-29 to C-32 and the local part of C-33 pass; Phase 7 is complete.
+
 ### Decided in the run
 
 - **001-domain**
@@ -647,6 +670,12 @@ Finding for Phase 7 (T038, T043, C-33): SimpleCov 1.3.2 prints `Line coverage: 5
   - T036: C-27 ran on Docker Desktop through WSL, not a native Linux host; the owner seen was recorded (root), as T036 allows.
   - Spec item 18 (T024, T035): the Dockerfile's fifth instruction strips the carriage returns from `bin/run` in the image (`RUN sed -i 's/\r$//' bin/run && bundle install`), so an image built from a `core.autocrlf=true` Windows checkout writes no `shebang line ending with \r` warning and passes `bundle exec rspec`. C-26 now also checks that standard error is empty and that the tests pass in that image. Rejected: `-W0` on the default command, `ENV RUBYOPT=-W0`, a seventh instruction, `.gitattributes`, accepting the warning.
   - Phase 6 re-run: after the Dockerfile change, C-17 to C-27 and C-42 ran again on fresh clean checkouts of `3bbd12a`, so every image check is on the committed Dockerfile.
+  - T038 and C-33: the specs quote SimpleCov's coverage line as SimpleCov 1.3.2 prints it, `Line coverage: <covered> / <total> (<percent>%)`, and C-33 greps for `Line coverage` (commit `b82af35`). FR-012 already says "as SimpleCov prints it". Rejected: keeping the old wording (C-33 would find nothing), configuring SimpleCov to print another format (a change to `001`'s spec helper and a new setting).
+  - T039: the README gives only commands already proved by C-09 to C-26 and C-41, so `ruby bin/run` is shown without an argument example and the "own files" Docker line has no command of its own.
+  - T042: the README says in one line what each of `lib/domain`, `lib/application` and `lib/infrastructure` holds, naming only classes that exist there.
+  - T044: each of the nine known limitations is one line taken from page 9's risks table, with its effect; the duplicate-account line follows page 10.
+  - T046: the layout table names paths in code, not as links, so `output/`, which a clean checkout does not have, gives C-32 nothing to resolve.
+  - T047: C-29's two- and three-argument runs ran from the project root of the clean checkout with the copies `b.csv` and `t.csv` there, so the last lines are the ones the README shows (`output/...` and `out/day1.csv`). C-29 cloned from the repository's main checkout, as T012.
 
 ### Changed in the run
 
@@ -655,6 +684,7 @@ Finding for Phase 7 (T038, T043, C-33): SimpleCov 1.3.2 prints `Line coverage: 5
   - `109db43` changed `specs/002-file-runner/plan.md` P30 and `research.md` R2: invalid UTF-8 bytes are found by `CsvRows` per row, not by the csv gem's `InvalidEncodingError`. DEC-32's `CSV.open` with one row per shift still holds. No design-decisions or solution-design change.
 - **003-delivery**
   - `578ebeb` changed `specs/003-delivery/spec.md` (Clarifications, edge case, FR-022, items 17 and 18), `plan.md` item 5, `research.md` R-3 and R-6, `contracts/dockerfile.md`, `contracts/repository-files.md`, `quickstart.md` C-26 and C-42, and `tasks.md` T024 and T035: Ruby does not silently ignore a CRLF `#!` line (it warns on standard error), so the image strips the carriage returns from `bin/run`. No design-decisions or solution-design change.
+  - `b82af35` changed `specs/003-delivery/spec.md` (User Stories 1 and 5), `plan.md` item 10, `research.md`, `data-model.md`, `contracts/readme.md`, `quickstart.md` C-12 and C-33, and `tasks.md` T016 and T038: they quote SimpleCov's coverage line as it prints it, `Line coverage: <covered> / <total> (<percent>%)`. No design-decisions or solution-design change.
 
 ### Fixed in review
 
