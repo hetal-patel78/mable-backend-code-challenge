@@ -30,3 +30,14 @@ class UnreadableFile < StandardError
     'cannot read file'
   end
 end
+
+# An output file that cannot be created or written; it stops the run.
+class OutputNotWritable < StandardError
+  def initialize(path, error)
+    super("cannot write output file #{DisplayPath.of(path)}: #{error.message.split(' @ ').first}")
+  end
+
+  def stop_reason
+    'cannot write output file'
+  end
+end

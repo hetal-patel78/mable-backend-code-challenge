@@ -35,3 +35,18 @@ class NoTransfers < StandardError
     'transfers file has no transfers'
   end
 end
+
+# A total of all balances that changed during the day; it stops the run before the output file is written.
+class TotalChanged < StandardError
+  attr_reader :before, :after
+
+  def initialize(before, after)
+    @before = before
+    @after = after
+    super("the total of all balances changed from #{before} to #{after}. No output file was written.")
+  end
+
+  def stop_reason
+    'total of all balances changed'
+  end
+end

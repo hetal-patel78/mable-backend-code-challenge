@@ -15,7 +15,7 @@ require_relative 'transfers_csv_reader'
 class Runner
   PROJECT_ROOT = File.expand_path('../..', __dir__)
   DEFAULT_INPUTS = %w[data/mable_account_balances.csv data/mable_transactions.csv].freeze
-  STOPPING_ERRORS = [InvalidBalancesFile, NoTransfers, UnreadableFile].freeze
+  STOPPING_ERRORS = [InvalidBalancesFile, NoTransfers, TotalChanged, UnreadableFile, OutputNotWritable].freeze
 
   def initialize(stdout: $stdout, stderr: $stderr, env: ENV)
     @stdout = stdout

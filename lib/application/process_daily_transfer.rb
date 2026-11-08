@@ -85,6 +85,8 @@ class ProcessDailyTransfer
 
   def close_day(results, total_before, output_path)
     total_after = total
+    raise TotalChanged.new(total_before, total_after) unless total_after == total_before
+
     @writer.write(@repository.all, output_path)
     DayResult.new(results: results, total_before: total_before, total_after: total_after,
                   accounts: @repository.all, output_path: output_path)

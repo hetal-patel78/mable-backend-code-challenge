@@ -339,12 +339,12 @@
 
 ### Implementation for User Story 4
 
-- [ ] T064 [P] [US4] Add `TotalChanged < StandardError` to `lib/application/errors.rb`: `new(before, after)`, readers `before` and `after`, message `the total of all balances changed from <before> to <after>. No output file was written.` with `Money#to_s`, `stop_reason` `total of all balances changed` [FR-018; DEC-24; P8]
-- [ ] T065 [P] [US4] Add `OutputNotWritable < StandardError` to `lib/infrastructure/errors.rb`: `new(path, error)`, message `cannot write output file <path>: <reason>` (`<path>` as `DisplayPath.of(path)` (P11); reason up to ` @ `), `stop_reason` `cannot write output file` [FR-026; DEC-25; P8, P9]
-- [ ] T066 [US4] Add the total check to `lib/application/process_daily_transfer.rb`: total after from `repository.all`, `TotalChanged.new(before, after)` when they differ, before the writer is called (depends on T064) [FR-013, FR-018, FR-019; DEC-24]
-- [ ] T067 [US4] Add the failure handling to `lib/infrastructure/final_balances_csv_writer.rb` (research R6 step 4): `SystemCallError` or `IOError` while creating folders or opening becomes `OutputNotWritable` with nothing deleted; while writing lines, the file is closed and deleted, then `OutputNotWritable` (depends on T065) [FR-026; DEC-25, DEC-27; P13]
-- [ ] T068 [US4] Add `TotalChanged` and `OutputNotWritable` to `Runner::STOPPING_ERRORS`, which now lists all five (depends on T064, T065) [FR-034; DEC-25; P27]
-- [ ] T069 [US4] Run `bundle exec rspec` until every example passes in random order and `bundle exec rubocop` reports zero offences (depends on T066 to T068)
+- [X] T064 [P] [US4] Add `TotalChanged < StandardError` to `lib/application/errors.rb`: `new(before, after)`, readers `before` and `after`, message `the total of all balances changed from <before> to <after>. No output file was written.` with `Money#to_s`, `stop_reason` `total of all balances changed` [FR-018; DEC-24; P8]
+- [X] T065 [P] [US4] Add `OutputNotWritable < StandardError` to `lib/infrastructure/errors.rb`: `new(path, error)`, message `cannot write output file <path>: <reason>` (`<path>` as `DisplayPath.of(path)` (P11); reason up to ` @ `), `stop_reason` `cannot write output file` [FR-026; DEC-25; P8, P9]
+- [X] T066 [US4] Add the total check to `lib/application/process_daily_transfer.rb`: total after from `repository.all`, `TotalChanged.new(before, after)` when they differ, before the writer is called (depends on T064) [FR-013, FR-018, FR-019; DEC-24]
+- [X] T067 [US4] Add the failure handling to `lib/infrastructure/final_balances_csv_writer.rb` (research R6 step 4): `SystemCallError` or `IOError` while creating folders or opening becomes `OutputNotWritable` with nothing deleted; while writing lines, the file is closed and deleted, then `OutputNotWritable` (depends on T065) [FR-026; DEC-25, DEC-27; P13]
+- [X] T068 [US4] Add `TotalChanged` and `OutputNotWritable` to `Runner::STOPPING_ERRORS`, which now lists all five (depends on T064, T065) [FR-034; DEC-25; P27]
+- [X] T069 [US4] Run `bundle exec rspec` until every example passes in random order and `bundle exec rubocop` reports zero offences (depends on T066 to T068)
 
 **Checkpoint**: every FR-08 scenario gives its exact streams; AC-08.2 through `bin/run`; the total check is tested in both specs; `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences.
 

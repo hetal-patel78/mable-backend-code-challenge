@@ -114,7 +114,8 @@ RSpec.describe FinalBalancesCsvWriter do
     end
 
     it 'stops with OutputNotWritable' do
-      expect { write_partway }.to raise_error(OutputNotWritable, reason_after('cannot write output file out/day1.csv: '))
+      expect { write_partway }
+        .to raise_error(OutputNotWritable, reason_after('cannot write output file out/day1.csv: '))
     end
 
     it 'deletes the partial file it created (DEC-27)' do

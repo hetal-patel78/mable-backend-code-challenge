@@ -372,16 +372,19 @@ RSpec.describe ProcessDailyTransfer do
 
   describe '#call when the output file cannot be written' do
     let(:error) { OutputNotWritable.new('output/day.csv', Errno::EACCES.new) }
-    let(:writer) { instance_double(FinalBalancesCsvWriter) }
 
-    before { allow(writer).to receive(:write).and_raise(error) }
+    def call_failing_writer
+      writer = instance_double(FinalBalancesCsvWriter)
+      allow(writer).to receive(:write).and_raise(error)
+      day(writer: writer).call('b.csv', 't.csv', 'output/day.csv')
+    end
 
     it 'lets the error through unchanged (DEC-25)' do
-      expect { day(writer: writer).call('b.csv', 't.csv', 'output/day.csv') }.to raise_error(be(error))
+      expect { call_failing_writer }.to raise_error(be(error))
     end
 
     it 'never calls the reporter (DEC-25)' do
-      attempt(OutputNotWritable) { day(writer: writer).call('b.csv', 't.csv', 'output/day.csv') }
+      attempt(OutputNotWritable) { call_failing_writer }
       expect(reporter.printed).to eq([])
     end
   end
