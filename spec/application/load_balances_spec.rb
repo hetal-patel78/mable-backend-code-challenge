@@ -30,7 +30,7 @@ RSpec.describe LoadBalances do
         expect(repository.include?(account_number('0000123412341234'))).to be(true)
       end
 
-      it 'accepts a starting balance of 0.00 (DEC-10)' do
+      it 'accepts a starting balance of 0.00 (AC-06.3, DEC-10)' do
         expect(repository.find(account_number('0000123412341234')).balance).to eq(balance('0.00'))
       end
 
@@ -68,7 +68,7 @@ RSpec.describe LoadBalances do
         'than 2 decimal places'
     end
 
-    it 'lists every problem with its line, in file order (DEC-07, DEC-11, DEC-12)' do
+    it 'lists every problem with its line, in file order, with the amount rules (AC-06.3, DEC-07, DEC-11, DEC-12)' do
       expect(error_for(invalid_file_rows).message).to eq(invalid_file_message)
     end
 

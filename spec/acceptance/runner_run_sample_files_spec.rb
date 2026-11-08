@@ -23,7 +23,7 @@ RSpec.describe Runner, '#run' do
       expect(run.stderr).to eq('')
     end
 
-    it 'exits with status 0 (DEC-25)' do
+    it 'exits with status 0 (AC-09.8, DEC-25)' do
       expect(run.status).to eq(0)
     end
 

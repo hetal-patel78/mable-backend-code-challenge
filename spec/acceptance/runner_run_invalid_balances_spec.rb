@@ -30,7 +30,7 @@ RSpec.describe Runner, '#run' do
       expect(run.stderr).to match(stream_pattern(ac_01_4_stderr))
     end
 
-    it 'exits with status 1 (DEC-25)' do
+    it 'exits with status 1 (AC-09.8, DEC-25)' do
       expect(run.status).to eq(1)
     end
 

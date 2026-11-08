@@ -602,7 +602,7 @@ RSpec.describe Runner do
         expect(run.stderr).to eq('')
       end
 
-      it 'exits with status 0' do
+      it 'exits with status 0 (AC-09.8)' do
         expect(run.status).to eq(0)
       end
 
@@ -630,7 +630,7 @@ RSpec.describe Runner do
         expect(run.stderr).to eq('')
       end
 
-      it 'exits with status 0' do
+      it 'exits with status 0 (AC-09.8)' do
         expect(run.status).to eq(0)
       end
     end
@@ -817,7 +817,7 @@ RSpec.describe Runner do
                                    "With no arguments, runs the sample files in data/.\n")
         end
 
-        it 'exits with status 1' do
+        it 'exits with status 1 (AC-09.8)' do
           expect(run.status).to eq(1)
         end
 

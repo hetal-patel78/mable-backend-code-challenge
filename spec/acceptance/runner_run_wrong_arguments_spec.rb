@@ -15,7 +15,7 @@ RSpec.describe Runner, '#run' do
                                "With no arguments, runs the sample files in data/.\n")
     end
 
-    it 'exits with status 1 (DEC-25)' do
+    it 'exits with status 1 (AC-09.8, DEC-25)' do
       expect(run.status).to eq(1)
     end
   end
