@@ -43,6 +43,13 @@ RSpec.describe DisplayPath do
       expect(described_class.of(shown, docs)).to eq(shown)
     end
 
+    it 'shows a file on another drive in full when it cannot be made relative (DEC-34)' do
+      other_drive = instance_double(Pathname)
+      allow(other_drive).to receive(:relative_path_from).and_raise(ArgumentError)
+      allow(Pathname).to receive(:new).and_return(other_drive)
+      expect(described_class.of('D:/day1.csv', 'C:/project')).to eq(File.expand_path('D:/day1.csv', 'C:/project'))
+    end
+
     it 'uses the current folder when no folder is given' do
       in_temp_folder do
         expect(described_class.of(File.join(Dir.pwd, 'b.csv'))).to eq('b.csv')

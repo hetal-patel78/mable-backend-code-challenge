@@ -28,11 +28,20 @@ class FinalBalancesCsvWriter
 
   def write_lines(file, accounts, path)
     accounts.each { |account| file.write("#{account.number},#{account.balance}\n") }
+    file.close # buffered lines reach the disk here, so a failure must be rescued too
   rescue SystemCallError, IOError => e
-    file.close
-    File.delete(path)
+    discard(file, path)
     raise OutputNotWritable.new(path, e)
   ensure
-    file.close
+    file.close unless file.closed?
+  end
+
+  def discard(file, path)
+    begin
+      file.close unless file.closed?
+    rescue SystemCallError, IOError
+      nil # the write already failed; the first error is the one reported
+    end
+    File.delete(path)
   end
 end

@@ -123,4 +123,57 @@ RSpec.describe FinalBalancesCsvWriter do
       expect(File.exist?('out/day1.csv')).to be(false)
     end
   end
+
+  describe '#write when the buffered lines fail to reach the disk on close (P22, FR-026)' do
+    # Ruby buffers a small file until close, so a real disk-full error surfaces at close, not at the first write.
+    before do
+      allow(File).to receive(:open).and_wrap_original do |original, *args|
+        original.call(*args).tap do |file|
+          real_close = file.method(:close)
+          calls = 0
+          allow(file).to receive(:close) do
+            calls += 1
+            real_close.call
+            raise Errno::ENOSPC if calls == 1
+          end
+        end
+      end
+    end
+
+    it 'stops with OutputNotWritable' do
+      expect { described_class.new.write(accounts, 'out/day1.csv') }
+        .to raise_error(OutputNotWritable, reason_after('cannot write output file out/day1.csv: '))
+    end
+
+    it 'deletes the partial file it created (DEC-27)' do
+      attempt(OutputNotWritable) { described_class.new.write(accounts, 'out/day1.csv') }
+      expect(File.exist?('out/day1.csv')).to be(false)
+    end
+  end
+
+  describe '#write when closing the failed file fails again (P22, FR-026)' do
+    before do
+      allow(File).to receive(:open).and_wrap_original do |original, *args|
+        original.call(*args).tap do |file|
+          real_close = file.method(:close)
+          calls = 0
+          allow(file).to receive(:close) do
+            calls += 1
+            real_close.call if calls > 1
+            raise Errno::EIO
+          end
+        end
+      end
+    end
+
+    it 'reports the first failure' do
+      expect { described_class.new.write(accounts, 'out/day1.csv') }
+        .to raise_error(OutputNotWritable, reason_after('cannot write output file out/day1.csv: '))
+    end
+
+    it 'deletes the partial file it created (DEC-27)' do
+      attempt(OutputNotWritable) { described_class.new.write(accounts, 'out/day1.csv') }
+      expect(File.exist?('out/day1.csv')).to be(false)
+    end
+  end
 end
