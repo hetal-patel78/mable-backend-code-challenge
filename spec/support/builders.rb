@@ -22,6 +22,13 @@ module Builders
     Account.new(account_number(number), balance(opening))
   end
 
+  def repository_with(*accounts)
+    require 'domain/account_repository'
+    AccountRepository.new.tap do |repository|
+      accounts.each { |held| repository.add(held) }
+    end
+  end
+
   def attempt(error_class)
     yield
   rescue error_class

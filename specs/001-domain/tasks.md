@@ -167,7 +167,7 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 ### Tests for User Story 5 (write first)
 
-- [ ] T030 [US5] Write `spec/domain/account_repository_spec.rb` [FR-014, FR-015, FR-017, FR-018; US5 scenarios 1 to 4; DEC-11, DEC-12, DEC-31]:
+- [X] T030 [US5] Write `spec/domain/account_repository_spec.rb` [FR-014, FR-015, FR-017, FR-018; US5 scenarios 1 to 4; DEC-11, DEC-12, DEC-31]:
   - a new repository's `all` is empty;
   - accounts `1111234522226789`, `1212343433335665` and `0000123412341234` added in that order come back from `all` in that order (DEC-31);
   - `include?(account_number('1111234522226789'))` is true when that account is held; `include?(account_number('9999888877776666'))` is false (DEC-12);
@@ -177,8 +177,8 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
   - after the refused duplicate (`attempt(DuplicateAccount)`), `all` holds one account with the first balance, `100.00` (DEC-31);
   - `find(account_number('1111234522226789'))` returns the same `Account` object that was added (`equal?`);
   - a withdrawal made on the account returned by `find` is seen in `all` (`find(...).withdraw(amount('30.00'))`, then the balance in `all` is `70.00`).
-- [ ] T031 [US5] Add the builder `repository_with(*accounts)` to `spec/support/builders.rb`, returning an `AccountRepository` with each account added in order [DEC-34; research R10]
-- [ ] T032 [US5] Run `bundle exec rspec spec/domain/account_repository_spec.rb` and confirm the examples fail (depends on T030, T031)
+- [X] T031 [US5] Add the builder `repository_with(*accounts)` to `spec/support/builders.rb`, returning an `AccountRepository` with each account added in order [DEC-34; research R10]
+- [X] T032 [US5] Run `bundle exec rspec spec/domain/account_repository_spec.rb` and confirm the examples fail (depends on T030, T031)
 
 ### Implementation for User Story 5
 
