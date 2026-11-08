@@ -50,6 +50,14 @@ class Money
     value.positive?
   end
 
+  def +(other)
+    Money.new(value + other.value)
+  end
+
+  def -(other)
+    Money.new(value - other.value)
+  end
+
   def <=>(other)
     value <=> other.value
   end

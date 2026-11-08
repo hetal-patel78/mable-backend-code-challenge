@@ -124,7 +124,7 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 ### Implementation for User Story 6
 
-- [ ] T023 [US6] Add `+` and `-` to `lib/domain/money.rb`, each returning `Money.new(value ± other.value)` with no written text (its `text` is then `to_s`), so the result is negative only below 0 (depends on T022) [FR-006; NFR-01; DEC-09; D5]
+- [X] T023 [US6] Add `+` and `-` to `lib/domain/money.rb`, each returning `Money.new(value ± other.value)` with no written text (its `text` is then `to_s`), so the result is negative only below 0 (depends on T022) [FR-006; NFR-01; DEC-09; D5]
 
 **Checkpoint**: `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences.
 
