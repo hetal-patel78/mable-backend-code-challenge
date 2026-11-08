@@ -10,8 +10,8 @@ What the Dockerfile must hold, and the commands the README gives (FR-022 to FR-0
 | 2 | `WORKDIR /app` | The project root in the container (FR-023) |
 | 3 | `COPY . .` | Copies the project in (DEC-36) |
 | 4 | `ENV BUNDLE_FROZEN=true` | The install fails instead of changing `Gemfile.lock` (plan item 6) |
-| 5 | `RUN bundle install` | Installs the locked gems, development gems included, so the tests run in the image |
-| 6 | `CMD ["ruby", "bin/run"]` | Exec form: `ruby bin/run` with no arguments, directly, not through `bundle exec`; Ruby ignores a CRLF line ending on the `#!` line, so an image built from a Windows checkout still starts it; a command after the image name replaces it (spec Clarifications; spec item 17) |
+| 5 | `RUN sed -i 's/\r$//' bin/run && bundle install` | Strips the carriage returns from `bin/run` in the image (an image built from a Windows checkout would otherwise make Ruby write `bin/run:1: warning: shebang line ending with \r may cause problems` on standard error; on a LF checkout it changes nothing; spec item 18), then installs the locked gems, development gems included, so the tests run in the image |
+| 6 | `CMD ["ruby", "bin/run"]` | Exec form: `ruby bin/run` with no arguments, directly, not through `bundle exec`, so an image built from a Windows checkout still starts it; a command after the image name replaces it (spec Clarifications; spec item 17) |
 
 Nothing else: no `apt-get`, no `USER`, no `ENTRYPOINT`, no `EXPOSE`, no other gem, no comment that explains the design, and no `.dockerignore` file in the repository (FR-024).
 

@@ -22,7 +22,7 @@ The repository holds no `.gitattributes` file (`test ! -e .gitattributes`, C-02)
 - Git mode `100755` (`git ls-files -s bin/run`); fixed, if needed, with `git update-index --chmod=+x bin/run` (plan item 14).
 - First line exactly `#!/usr/bin/env ruby`.
 - `bundle exec rubocop bin/run` reports no offence. If it reports one, the only change this spec makes is `# frozen_string_literal: true` on line 2; any other offence is a cross-spec finding against `002-file-runner`, fixed there test-first.
-- Stored with LF (`git ls-files --eol bin/run` shows `i/lf`). The working copy follows the machine's Git setting: LF on Linux and macOS, CRLF in a Windows checkout with `core.autocrlf=true` (`w/crlf`), where it is started as `ruby bin/run` (also in Docker: the image's command is `ruby bin/run`), which ignores the line ending of the `#!` line.
+- Stored with LF (`git ls-files --eol bin/run` shows `i/lf`). The working copy follows the machine's Git setting: LF on Linux and macOS, CRLF in a Windows checkout with `core.autocrlf=true` (`w/crlf`), where it is started as `ruby bin/run` (also in Docker: the image's command is `ruby bin/run`, and the image strips the carriage returns from its copy of `bin/run`, so Ruby writes no shebang warning; spec item 18).
 
 ## Every text file
 
