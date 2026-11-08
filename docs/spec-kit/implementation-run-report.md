@@ -365,7 +365,7 @@ Started by [P26](../prompts/prompts-implementation-phase.md#p26), from the pushe
 
 The specs are implemented one after another, each in its own worktree in `C:\Dev\`, branched from the previous spec's implementation: `001-domain-impl` from `spec-kit-specs`, `002-file-runner-impl` from `001-domain-impl`, and `003-delivery-impl` from `002-file-runner-impl`.
 
-**Status: In progress.**
+**Status: Implementation ready for review.**
 
 ### Status
 
@@ -375,9 +375,9 @@ The specs are implemented one after another, each in its own worktree in `C:\Dev
 | 2. Implement 001-domain | Done: 2 review rounds. Round 1 found 1 low defect (fixed); the last round, round 2, found 0 defects. Branch `001-domain-impl` pushed with its small commits kept |
 | 2. Implement 002-file-runner | Done: 3 review rounds. Round 1 found 2 defects (1 high, 1 low; both fixed) and round 2 found 2 low defects (both fixed). The last round, round 3, found 0 defects. Branch `002-file-runner-impl` pushed with its small commits kept |
 | 2. Implement 003-delivery | Done: 1 review round. Round 1 found 0 defects, so the last round, round 1, found 0 defects. Branch `003-delivery-impl` pushed with its small commits kept |
-| 3. Whole-system checks | Done: 2026-11-08 at commit `3b291f3`. 6 of 7 checks pass on Windows and in Docker; the seventh, the GitHub Actions run on `main`, passed at `0616404` (run 42465278983; see Check results) |
-| 4. Merge and push | In progress: the three implementation branches (`001-domain-impl`, `002-file-runner-impl`, `003-delivery-impl`) are merged into `spec-kit-implementation` with their small commits kept, and that branch is pushed. `main` is pushed at `0616404` (`git rev-parse origin/main`), the same commit as `origin/spec-kit-implementation` |
-| 5. Stop | Not started |
+| 3. Whole-system checks | Done: 2026-11-08 at commit `3b291f3`. All 7 checks pass: six on Windows and in Docker, and the GitHub Actions run on `main` at `0616404` (run 42465278983; see Check results) |
+| 4. Merge and push | Done: the three implementation branches (`001-domain-impl`, `002-file-runner-impl`, `003-delivery-impl`) were merged into `spec-kit-implementation` with their small commits kept (no squash), and `spec-kit-implementation` was pushed at `0616404`. A separate independent Claude Opus 5.5 review approved in round 2 (see Review before main). `main` was pushed as a fast-forward from `13c72c2` to `0616404`, the same commit as `origin/spec-kit-implementation` |
+| 5. Stop | Done: Part 2 ends here. The implementation is ready for the developer's review. The record commit for this section is committed locally and is not pushed |
 
 ### Environment
 
@@ -686,6 +686,15 @@ Phase 9 (Polish) on `main`, 2026-11-08, at commit `0616404`, from the results ab
 | Docker run from a clean checkout | Pass | Fresh clone of origin spec-kit-implementation at 3b291f3 (core.autocrlf=false), `docker build` in WSL Ubuntu exit 0; `docker run --rm` with no command: exit 0, standard error 0 bytes, the sample report on standard output with the DEC-35 final balances |
 | GitHub Actions run passes after the push | Pass | Run [42465278983](https://github.com/hetal-patel78/mable-backend-code-challenge/actions/runs/42465278983) on `main` at `0616404`: conclusion `success`, 726 examples, 0 failures, 52 files inspected, no offenses detected (C-38, T054) |
 
+#### Review before main
+
+Review of the work before `main` was pushed. Every round is by an independent Claude Opus 5.5 agent that did not write or fix what it reviews.
+
+| Round | Reviewer | Defects found | Result |
+|---|---|---|---|
+| 1 | Claude Opus 5.5 (independent, fresh) | 3 (2 medium, 1 low): M1-F1, M1-F2 and M1-F3 | Not approved. All three fixed in `0616404` (see Fixed in review) |
+| 2 | Claude Opus 5.5 (independent, fresh) | 0 | Approved |
+
 ### Decided in the run
 
 - **001-domain**
@@ -803,6 +812,11 @@ Phase 9 (Polish) on `main`, 2026-11-08, at commit `0616404`, from the results ab
   - Not a defect: none.
 - **003-delivery**
   - Round 1 found 0 defects, so nothing was fixed. Not a defect: none.
+- **Main review, round 1** (before `main` was pushed; all three fixed in `0616404`)
+  - M1-F1 (medium): local user names and home-folder paths were in Part 2 (in the 003-delivery check results, the Windows temporary-folder output and the WSL user's home folder). They were replaced with placeholders such as `%TEMP%`, "the WSL user" and `~/checks-003`. A search finds none.
+  - M1-F2 (medium): the GitHub Actions check was marked Pass before `main` was pushed. It was marked Pending in `0616404`. After the push, the run on `main` was checked and recorded as Pass (C-38, T054).
+  - M1-F3 (low): step 4 was marked Not started although the three branches were already merged into `spec-kit-implementation`. Step 4 is now Done, with the merge and the push recorded.
+  - Not a defect: none.
 
 ### Left for the developer
 
@@ -816,3 +830,5 @@ Phase 9 (Polish) on `main`, 2026-11-08, at commit `0616404`, from the results ab
    - C-27 on a native Linux host: only Docker Desktop through WSL was available, so the file the container writes was not seen to belong to root on a Linux host (Docker Desktop showed root on the WSL filesystem and the WSL user on the Windows drive).
    - Every other hand check ran and passed on `main`. C-08 to C-12 ran in the `ruby:3.4.12` container (the Phase 4 fallback the quickstart allows), as no native Linux or macOS host with Ruby 3.4.12 was available; a native run there is optional.
 5. C-34 run on `main` as the quickstart writes it lists 7 spec files changed by `3b291f3` (AC IDs added to 10 example descriptions during the whole-system checks, no expectation changed); `003-delivery`'s own commits change no file under `lib/`, `spec/` or `data/` (T048, T058). Confirm this is acceptable.
+6. The brief `docs/spec-kit/spec-kit-brief.md`, line 12, contains a home-folder path with a local user name, which the shared rules forbid in repository files. The line came from the brief commit `9063b4e` on `main`, not from the push recorded here. Removing it would edit the developer's brief, so it was not changed; the developer decides.
+7. The record commit that adds this section (`Record the main review, the push and the end of Part 2 in the run report`) is committed locally on `spec-kit-implementation`. It is not pushed and has not been reviewed.
