@@ -52,7 +52,7 @@ Phase 0 of the [plan](plan.md). The spec has no `NEEDS CLARIFICATION` item: its 
 
 ## R-9 The coverage figure
 
-- **Decision**: SimpleCov's printed line, `Line Coverage: <percent>% (<covered> / <total>)`, from a full `bundle exec rspec` on a clean checkout of the final code, with a sentence that the full report is in `coverage/index.html` and that there is no minimum (FR-012; plan item 10).
+- **Decision**: SimpleCov's printed line, `Line coverage: <covered> / <total> (<percent>%)`, from a full `bundle exec rspec` on a clean checkout of the final code, with a sentence that the full report is in `coverage/index.html` and that there is no minimum (FR-012; plan item 10).
 - **Rationale**: [DEC-36](../../docs/design-analysis/design-decisions.md#dec-36): the README shows the figure; no threshold. The README is not code, so writing it does not change the figure; C-33 compares it with the CI log of the latest `main` commit.
 - **Alternatives considered**: a badge from a coverage service (a new service); rounding.
 

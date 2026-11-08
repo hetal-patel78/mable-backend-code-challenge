@@ -15,7 +15,7 @@ Phase 1 of the [plan](plan.md). This spec adds no class and no runtime data (FR-
 
 ## Coverage figure
 
-- **Holds**: SimpleCov's line `Line Coverage: <percent>% (<covered> / <total>)` (FR-012).
+- **Holds**: SimpleCov's line `Line coverage: <covered> / <total> (<percent>%)` (FR-012).
 - **Rules**: taken from a full `bundle exec rspec` run on the final code; equals what a fresh run prints on the submitted commit (SC-004); no minimum is stated or enforced ([DEC-36](../../docs/design-analysis/design-decisions.md#dec-36)).
 - **Changes when**: any file under `lib/` or `spec/` changes. A README-only commit does not change it.
 - **Checks**: C-33.

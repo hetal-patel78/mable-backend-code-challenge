@@ -56,7 +56,7 @@ The ten rows of [`design-decisions.md` Assumptions](../../../docs/design-analysi
 
 ### 6. `## Test coverage` (FR-012; [DEC-36](../../../docs/design-analysis/design-decisions.md#dec-36))
 
-- The line SimpleCov prints, `Line Coverage: <percent>% (<covered> / <total>)`, from a full `bundle exec rspec` run on the final code (plan item 10).
+- The line SimpleCov prints, `Line coverage: <covered> / <total> (<percent>%)`, from a full `bundle exec rspec` run on the final code (plan item 10).
 - The full report is in `coverage/index.html` after a test run.
 - No minimum figure is set.
 

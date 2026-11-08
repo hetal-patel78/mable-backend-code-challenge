@@ -83,7 +83,7 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 - [X] T013 [US1] Run C-09 in `$CHECKS/clean`: `BUNDLE_FROZEN=true bundle install` succeeds and `git status --porcelain` prints nothing (US1 scenario 1; FR-017; DEC-01).
 - [X] T014 [US1] Run C-10: `bin/run` with no arguments from the project root; standard output equals `report.txt` with `<run time>` from the file name, standard error is empty, exit status 0, and `cmp` with `final.csv` prints nothing (US1 scenario 2; AC-08.1, AC-08.3; DEC-22, DEC-27, DEC-35).
 - [X] T015 [US1] Run C-11: `../bin/run` from `docs`; the last line is `Output file: <project root>/output/final_balances_<run time>.csv`, the checkout's full path as `ruby -e 'puts Dir.pwd'` prints it, standard error empty, exit status 0, the file in the project's `output/` (US1 scenario 3; AC-08.4; DEC-22, DEC-26).
-- [X] T016 [US1] Run C-12: `bundle exec rspec` (0 failures, random order, exit 0, `coverage/` written, SimpleCov's `Line Coverage:` line recorded for T038) and `bundle exec rubocop` (no offences, exit 0) (US1 scenario 4; DEC-34, DEC-36).
+- [X] T016 [US1] Run C-12: `bundle exec rspec` (0 failures, random order, exit 0, `coverage/` written, SimpleCov's `Line coverage:` line recorded for T038) and `bundle exec rubocop` (no offences, exit 0) (US1 scenario 4; DEC-34, DEC-36).
 - [X] T017 [US1] Record C-08 to C-12 in the run report, with which way they ran.
 
 **Checkpoint**: C-08 to C-12 pass (or are left for the developer, C-28).
@@ -149,7 +149,7 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 ### Checks first
 
 - [ ] T037 [US5] Run C-31, the README check R-01 to R-14 of [contracts/readme.md](contracts/readme.md#the-readme-check-c-31), against the current `README.md` and record each failing item (all of R-01 to R-14 fail: the README is still the design-analysis placeholder, with its "Status" and "To be added" sections) (FR-001 to FR-014; DEC-37).
-- [ ] T038 [US5] Take the coverage figure: SimpleCov's `Line Coverage: <percent>% (<covered> / <total>)` line from the full `bundle exec rspec` run on the clean checkout of the final code (T016 or T029; both must print the same line) (FR-012; DEC-36; plan item 10).
+- [ ] T038 [US5] Take the coverage figure: SimpleCov's `Line coverage: <covered> / <total> (<percent>%)` line from the full `bundle exec rspec` run on the clean checkout of the final code (T016 or T029; both must print the same line) (FR-012; DEC-36; plan item 10).
 
 ### Implementation (one file, so in order)
 

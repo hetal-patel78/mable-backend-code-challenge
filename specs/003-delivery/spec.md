@@ -102,7 +102,7 @@ A reviewer who has Ruby 3.4 clones the repository, installs the gems with `bundl
    - **Given** the same checkout, **When** `../bin/run` runs with no arguments from the project's `docs` folder, **Then** standard output is the sample report with its last line `Output file: <project root>/output/final_balances_<run time>.csv`, where `<project root>` is the checkout's full path as Ruby gives it (the file is outside `docs`, so it is shown in full), standard error is (nothing), the exit status is 0, and the file is written in the project's `output/` folder.
 4. **The tests and the style checker on the reviewer's machine** (NFR-04; DEC-34, DEC-36).
    - **Given** the same checkout, **When** `bundle exec rspec` and then `bundle exec rubocop` run, **Then**, for `bundle exec rspec`:
-     - Standard output: RSpec's summary with `0 failures`, a `Randomized with seed` line (random order) and SimpleCov's `Line Coverage:` line.
+     - Standard output: RSpec's summary with `0 failures`, a `Randomized with seed` line (random order) and SimpleCov's `Line coverage:` line.
      - Standard error: not compared.
      - Exit status: 0
      - And SimpleCov writes `coverage/`.
@@ -247,7 +247,7 @@ A reviewer opens the repository and reads `README.md` first. It tells them how t
    - **Given** the README, **When** its example output, usage message and messages are compared with page 2, **Then** each is character for character the same (the sample report as in AC-08.1, the usage message as in AC-09.2).
 4. **The coverage figure is current** (DEC-36).
    - **Given** the submitted commit, **When** `bundle exec rspec` runs on it, **Then**:
-     - Standard output: RSpec's summary with `0 failures`, and SimpleCov's `Line Coverage: <percent>% (<covered> / <total>)` line, equal character for character to the README's line.
+     - Standard output: RSpec's summary with `0 failures`, and SimpleCov's `Line coverage: <covered> / <total> (<percent>%)` line, equal character for character to the README's line.
      - Standard error: not compared.
      - Exit status: 0
 5. **Every link resolves** (DEC-37, DEC-38).

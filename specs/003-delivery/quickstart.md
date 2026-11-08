@@ -45,7 +45,7 @@ To compare a run with the report: take `<run time>` from the name of the file th
 | C-09 | The gems install at the locked versions | `BUNDLE_FROZEN=true bundle install; git status --porcelain; echo $?` (in a container, `git config --global --add safe.directory /src` first, so git does not refuse the mounted checkout) | exit status 0; `git status` prints nothing and exits 0 (a refusal with exit 128 is a failure) | US1-1; FR-017; DEC-01 |
 | C-10 | The sample files with no arguments | `bin/run >$CHECKS/out.txt 2>$CHECKS/err.txt; echo $?`; compare as above; `cmp output/final_balances_*.csv $CHECKS/final.csv` | `0`; the report matches; `err.txt` is empty; `cmp` prints nothing | US1-2; AC-08.1; DEC-22, DEC-35, DEC-27 |
 | C-11 | From another folder | `rm -r output; cd docs; ../bin/run >$CHECKS/out2.txt 2>$CHECKS/err2.txt; echo $?; cd ..` | `0`; the report with last line `Output file: <project root>/output/final_balances_<run time>.csv`, where `<project root>` is what `ruby -e 'puts Dir.pwd'` prints in `$CLEAN`; `err2.txt` empty; the file is in `$CLEAN/output/` | US1-3; AC-08.4; DEC-22, DEC-26 |
-| C-12 | Tests and style checker | `bundle exec rspec; echo $?; bundle exec rubocop; echo $?` | `0 failures`, `Randomized with seed`, `0`; SimpleCov's `Line Coverage:` line and a `coverage/` folder; `no offenses detected`, `0` | US1-4; DEC-34, DEC-36 |
+| C-12 | Tests and style checker | `bundle exec rspec; echo $?; bundle exec rubocop; echo $?` | `0 failures`, `Randomized with seed`, `0`; SimpleCov's `Line coverage:` line and a `coverage/` folder; `no offenses detected`, `0` | US1-4; DEC-34, DEC-36 |
 
 ## Windows (User Story 2), PowerShell
 
@@ -91,7 +91,7 @@ These checks run in a fresh clean checkout made only for them, with no earlier r
 | C-30 | Exact texts match page 2 | `diff` the README's sample report block with AC-08.1, and its usage block with AC-09.2 | `diff` prints nothing | US5-3; FR-002, FR-003; DEC-22, DEC-25, DEC-26 |
 | C-31 | The README check | read the README against R-01 to R-14 in [readme.md](contracts/readme.md#the-readme-check-c-31) | 14 of 14 present, in order | US5-1; SC-003; DEC-37 |
 | C-32 | Every relative link resolves | `grep -oE '\]\([^)#]+' README.md \| sed 's/](//' \| grep -v '^http' \| while read p; do test -e "$p" \|\| echo "missing $p"; done` | prints nothing; links to sections open on GitHub | US5-5; DEC-37, DEC-38 |
-| C-33 | The coverage figure is current | `bundle exec rspec \| grep "Line Coverage"` on the clean checkout of the submitted commit, and the same line in the CI log of that commit | both equal the README's line | US5-4; FR-012, SC-004; DEC-36 |
+| C-33 | The coverage figure is current | `bundle exec rspec \| grep "Line coverage"` on the clean checkout of the submitted commit, and the same line in the CI log of that commit | both equal the README's line | US5-4; FR-012, SC-004; DEC-36 |
 
 ## The submission (User Story 6), on `main` after the push
 
