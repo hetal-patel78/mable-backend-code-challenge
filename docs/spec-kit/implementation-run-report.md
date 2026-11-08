@@ -487,6 +487,22 @@ Phase 3 (User Story 4: CI), Windows 11 with Ruby 3.4.12 (`x64-mingw-ucrt`) in Gi
 | T011 | `bundle exec rspec` at `$REPO` | Pass: 726 examples, 0 failures. Randomized with seed 1167. Exit 0 |
 | T011 | `bundle exec rubocop` at `$REPO` | Pass: 52 files inspected, no offenses detected. Exit 0 |
 
+Phase 4 (User Story 1: Ruby on Linux, from a clean checkout), 2026-11-08, at commit `44a5a8d` (the tip of `003-delivery-impl` when the checkout was made). WSL Ubuntu has no Ruby, so C-09 to C-12 ran the Phase 4 fallback way: one Linux container from the official `ruby:3.4.12` image (`ruby 3.4.12 (2026-10-23 revision 366f5fdc00) +PRISM [x86_64-linux]`), started from a WSL Ubuntu shell with the clean checkout mounted at `/src` and `$CHECKS` mounted at its own path, Docker 29.6.1.
+
+| Task | Check | Result |
+|---|---|---|
+| T012 | C-08: the clean checkout | Pass: `git clone -c core.autocrlf=false --branch 003-delivery-impl <repository> $CHECKS/clean` from the WSL shell, exit 0; head `44a5a8d`; no `output/`, `coverage/` or `vendor/`. The source is the repository's main checkout at `/mnt/c/Dev/` (the worktree shares its branches), because the worktree's `.git` file names a Windows path that git in WSL cannot open |
+| T013 | C-09: `BUNDLE_FROZEN=true bundle install`, then `git status --porcelain` | Pass: `Bundle complete! 7 Gemfile dependencies, 27 gems now installed.`, exit 0; `git status --porcelain` prints nothing (0 bytes) and exits 0 |
+| T014 | C-10: `bin/run` from the project root | Pass: exit 0; standard output equals `report.txt` with `<run time>` `2026-11-08_060409` (the file name's time), `diff` prints nothing; standard error 0 bytes; `cmp output/final_balances_2026-11-08_060409.csv $CHECKS/final.csv` prints nothing |
+| T015 | C-11: `../bin/run` from `docs` (after `rm -r output`) | Pass: exit 0; `ruby -e 'puts Dir.pwd'` prints `/src`; the last line is `Output file: /src/output/final_balances_2026-11-08_060409.csv` and the rest equals the sample report (`diff` prints nothing); standard error 0 bytes; the file is in `/src/output/` and `cmp` with `final.csv` prints nothing |
+| T016 | C-12: `bundle exec rspec` | Pass: 726 examples, 0 failures. Randomized with seed 65309. Exit 0; `coverage/` written. SimpleCov's coverage line, recorded for T038: `Line coverage: 501 / 501 (100.00%)` |
+| T016 | C-12: `bundle exec rubocop` | Pass: 52 files inspected, no offenses detected. Exit 0. RuboCop also prints its notice that new cops are not configured in `.rubocop.yml`; it is a notice, not an offence, and `.rubocop.yml` is not changed (DEC-36) |
+| T017 | Which way C-08 to C-12 ran | The Phase 4 fallback container (above). No Linux or macOS host with Ruby 3.4.12 was available, so a native run there is not recorded |
+| Phase end | `bundle exec rspec` at `$REPO` (Windows, Ruby 3.4.12 `x64-mingw-ucrt`) | Pass: 726 examples, 0 failures. Randomized with seed 28974. Line coverage: 501 / 501 (100.00%). Exit 0 |
+| Phase end | `bundle exec rubocop` at `$REPO` | Pass: 52 files inspected, no offenses detected. Exit 0 |
+
+Finding for Phase 7 (T038, T043, C-33): SimpleCov 1.3.2 prints `Line coverage: 501 / 501 (100.00%)`, while plan item 10, research, data-model, the README contract and C-33 quote the line as `Line Coverage: <percent>% (<covered> / <total>)`, and C-33's `grep "Line Coverage"` is case-sensitive, so it would find nothing. C-12 is recorded as passing with the line SimpleCov prints. The wording in the specs is not changed in this phase.
+
 ### Decided in the run
 
 - **001-domain**
@@ -552,6 +568,9 @@ Phase 3 (User Story 4: CI), Windows 11 with Ruby 3.4.12 (`x64-mingw-ucrt`) in Gi
 - **003-delivery**
   - T003: `$CHECKS` is a fixed folder, `/home/fortunatetechie/checks-003` on the WSL Ubuntu filesystem, not a `mktemp -d` folder, so each later phase finds the expected texts there. The Docker checks then run from WSL with `$CHECKS` on WSL's own filesystem, as the quickstart Prerequisites require. The PowerShell `$env:CHECKS` is `%TEMP%\checks-003`, as the quickstart gives it.
   - T003: `info.txt` was also copied to `$env:CHECKS` with the three files the quickstart names, so every expected text is in both folders.
+  - T012: the WSL clone is made from the repository's main checkout, which shares its branches with the worktree, because git in WSL cannot open the worktree's `.git` file (it names a Windows path). The branch and commit are the same.
+  - T016: C-12's "SimpleCov's `Line Coverage:` line" is taken as the line SimpleCov 1.3.2 actually prints, `Line coverage: 501 / 501 (100.00%)`. The different wording in plan item 10, research, data-model, the README contract and C-33 is reported as a finding for Phase 7, not changed here.
+  - T016: RuboCop's notice about new cops that are not configured is recorded as a notice. It is not an offence, and `.rubocop.yml` stays unchanged (DEC-36).
 
 ### Changed in the run
 
