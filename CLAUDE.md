@@ -69,4 +69,8 @@ The design and code are generated with an AI assistant, so the prompts that shap
 - A `README.md` at the repository root gives build, test and run instructions and lists the assumptions.
 
 ## Build and test
-To be added once the implementation exists.
+- Install: `bundle install`
+- Test: `bundle exec rspec`
+- Style: `bundle exec rubocop`
+- Run: `bin/run` (`ruby bin/run` on Windows)
+- Docker and the arguments: see `README.md`.
