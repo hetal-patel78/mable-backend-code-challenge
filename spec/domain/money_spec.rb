@@ -84,7 +84,7 @@ RSpec.describe Money do
 
   describe '#==' do
     %w[-0 -0.00].each do |text|
-      it "treats #{text} as equal to 0" do
+      it "treats #{text} as equal to 0 (DEC-09)" do
         expect(described_class.amount(text)).to eq(described_class.amount('0'))
       end
     end
@@ -99,7 +99,7 @@ RSpec.describe Money do
       expect(described_class.amount('10.5').hash).to eq(described_class.amount('10.50').hash)
     end
 
-    it 'is the same for -0 and 0' do
+    it 'is the same for -0 and 0 (DEC-09)' do
       expect(described_class.amount('-0').hash).to eq(described_class.amount('0').hash)
     end
   end
@@ -141,7 +141,7 @@ RSpec.describe Money do
       expect((described_class.amount('5.00') - described_class.amount('5.00')).to_s).to eq('0.00')
     end
 
-    it 'takes 5.01 from 5.00 to a negative value' do
+    it 'takes 5.01 from 5.00 to a negative value (DEC-09)' do
       expect((described_class.amount('5.00') - described_class.amount('5.01')).negative?).to be(true)
     end
 
