@@ -112,7 +112,7 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 ### Tests for User Story 6 (write first)
 
-- [ ] T021 [US6] Add to `spec/domain/money_spec.rb` a `describe` for arithmetic [FR-006; US6 scenarios 1 to 3; NFR-01; DEC-09; research R7]:
+- [X] T021 [US6] Add to `spec/domain/money_spec.rb` a `describe` for arithmetic [FR-006; US6 scenarios 1 to 3; NFR-01; DEC-09; research R7]:
   - `0.10` plus `0.20` is exactly `0.30` (`to_s`);
   - from `0.00`, adding `25.60` 1,000 times gives exactly `25600.00` (page 10 pick 21);
   - from `0.00`, adding `25.60` 1,000 times and then taking it away 1,000 times gives exactly `0.00`;
@@ -120,7 +120,7 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
   - `5.00` minus `5.00` is `0.00` and not `negative?` (spec clarification 2);
   - `5.00` minus `5.01` is `negative?` and written `-0.01`;
   - a computed value has `text` equal to `to_s`: `(Money.amount('5.00') + Money.amount('2.50')).text` is `7.50`.
-- [ ] T022 [US6] Run `bundle exec rspec spec/domain/money_spec.rb` and confirm the new examples fail (no `+` or `-` yet) (depends on T021)
+- [X] T022 [US6] Run `bundle exec rspec spec/domain/money_spec.rb` and confirm the new examples fail (no `+` or `-` yet) (depends on T021)
 
 ### Implementation for User Story 6
 

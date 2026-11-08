@@ -104,6 +104,56 @@ RSpec.describe Money do
     end
   end
 
+  describe 'arithmetic' do
+    let(:zero) { described_class.amount('0.00') }
+    let(:step) { described_class.amount('25.60') }
+
+    def add_times(start, money, times)
+      Array.new(times, money).reduce(start, :+)
+    end
+
+    def subtract_times(start, money, times)
+      Array.new(times, money).reduce(start, :-)
+    end
+
+    it 'adds 0.10 and 0.20 to exactly 0.30' do
+      expect((described_class.amount('0.10') + described_class.amount('0.20')).to_s).to eq('0.30')
+    end
+
+    it 'adds 25.60 one thousand times to exactly 25600.00' do
+      expect(add_times(zero, step, 1000).to_s).to eq('25600.00')
+    end
+
+    it 'adds 25.60 one thousand times and takes it away one thousand times to exactly 0.00' do
+      expect(subtract_times(add_times(zero, step, 1000), step, 1000).to_s).to eq('0.00')
+    end
+
+    it 'has no upper limit (DEC-09)' do
+      large = described_class.amount('123456789012345678901234567890.12')
+      expect((large + described_class.amount('0.01')).to_s).to eq('123456789012345678901234567890.13')
+    end
+
+    it 'takes 5.00 from 5.00 to a value that is not negative (DEC-09)' do
+      expect((described_class.amount('5.00') - described_class.amount('5.00')).negative?).to be(false)
+    end
+
+    it 'writes 5.00 minus 5.00 as 0.00' do
+      expect((described_class.amount('5.00') - described_class.amount('5.00')).to_s).to eq('0.00')
+    end
+
+    it 'takes 5.01 from 5.00 to a negative value' do
+      expect((described_class.amount('5.00') - described_class.amount('5.01')).negative?).to be(true)
+    end
+
+    it 'writes 5.00 minus 5.01 as -0.01' do
+      expect((described_class.amount('5.00') - described_class.amount('5.01')).to_s).to eq('-0.01')
+    end
+
+    it 'gives a computed value a text equal to its written form' do
+      expect((described_class.amount('5.00') + described_class.amount('2.50')).text).to eq('7.50')
+    end
+  end
+
   describe '#<=>' do
     it 'orders 10.00 below 10.01' do
       expect(described_class.amount('10.00')).to be < described_class.amount('10.01')
