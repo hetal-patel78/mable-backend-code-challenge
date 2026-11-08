@@ -191,9 +191,9 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 
 ## Phase 9: Polish and cross-cutting checks
 
-- [ ] T056 Record the success criteria in the run report from the results above: SC-001 (3 of 3 platforms, or which are left for the developer), SC-002, SC-003 (14 of 14), SC-004, SC-005, SC-006 and SC-007 (spec Success Criteria).
-- [ ] T057 Run C-40, the design review of how the input files are read: `grep -rn -e 'File.read' -e 'IO.read' -e 'readlines' -e 'each_line' lib/` finds no reading of an input file, and the readers in `lib/infrastructure` open the files as `bom|utf-8` through Ruby's CSV library (`002` FR-001); record the result in the run report (FR-019; NFR-04; DEC-04, DEC-22).
-- [ ] T058 On the final `main` commit, confirm `bundle exec rspec` passes in random order and `bundle exec rubocop` reports no offences, and that no file under `lib/`, `bin/` (other than `bin/run`'s mode, its first line and, only if RuboCop needs it, the `# frozen_string_literal: true` comment on line 2, spec item 16), `spec/` or `data/` was changed by this spec (FR-030; constitution III and IV).
+- [X] T056 Record the success criteria in the run report from the results above: SC-001 (3 of 3 platforms, or which are left for the developer), SC-002, SC-003 (14 of 14), SC-004, SC-005, SC-006 and SC-007 (spec Success Criteria).
+- [X] T057 Run C-40, the design review of how the input files are read: `grep -rn -e 'File.read' -e 'IO.read' -e 'readlines' -e 'each_line' lib/` finds no reading of an input file, and the readers in `lib/infrastructure` open the files as `bom|utf-8` through Ruby's CSV library (`002` FR-001); record the result in the run report (FR-019; NFR-04; DEC-04, DEC-22).
+- [X] T058 On the final `main` commit, confirm `bundle exec rspec` passes in random order and `bundle exec rubocop` reports no offences, and that no file under `lib/`, `bin/` (other than `bin/run`'s mode, its first line and, only if RuboCop needs it, the `# frozen_string_literal: true` comment on line 2, spec item 16), `spec/` or `data/` was changed by this spec (FR-030; constitution III and IV).
 
 ---
 

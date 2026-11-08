@@ -656,6 +656,22 @@ Tools: Ruby 3.4.12 (`x64-mingw-ucrt`, RubyInstaller) and Bundler 2.6.9 on Window
 | T053 | C-37 on `main` | Pass: `docs/challenge/MABLE_BACK_END_CODE_TEST.md` was added in `c2873b2`, and `git diff --exit-code c2873b2 HEAD -- docs/challenge/` exits 0. Blob IDs: `mable_account_balances.csv` `57d2567` and `mable_transactions.csv` `dc410e0` in `docs/challenge/`, `data/` and `spec/fixtures/sample/` alike |
 | T054 | C-38 | Pass: `gh run list --branch main --limit 1` shows run 42465278983, event `push`, status `completed`, conclusion `success`, head `06164046c2fa188d302ad54f4ccf62415d5d1e15` (`git rev-parse origin/main`). `gh run watch 42465278983 --exit-status` reported the run already completed with `success` (exit 0). Log: `BUNDLE_FROZEN: true`, `Bundle complete! 7 Gemfile dependencies, 27 gems now installed.`, `726 examples, 0 failures`, `Randomized with seed 42032`, `52 files inspected, no offenses detected`; job `checks` passed in 56s |
 
+Phase 9 (Polish) on `main`, 2026-11-08, at commit `0616404`, from the results above and the clones of `origin` `main` described there.
+
+| Task | Check | Result |
+|---|---|---|
+| T057 | C-40, the design review of how the input files are read (`readme` clone, Git Bash) | Pass: `grep -rn -e 'File.read' -e 'IO.read' -e 'readlines' -e 'each_line' lib/` prints nothing (exit 1). The only reader of an input file is `lib/infrastructure/csv_rows.rb`, which opens it with `CSV.open(@path, 'r:bom|utf-8')` and takes one row per shift; `BalancesCsvReader` and `TransfersCsvReader` read through `CsvRows` (`002` FR-001). So CRLF, a missing final newline and a byte-order mark give the same rows; C-13 and C-16 showed it for CRLF on this commit |
+| T058 | `bundle exec rspec` in random order on `0616404` | Pass on every platform: the `ruby:3.4.12` container (C-12, seed 65293), the image (C-20, seed 19464), the Windows image (C-26, seed 20320), native Windows in the `win` clone (seed 25156) and GitHub Actions (C-38, seed 42032): 726 examples, 0 failures each, exit 0; `Line coverage: 501 / 501 (100.00%)` wherever SimpleCov's line was read |
+| T058 | `bundle exec rubocop` on `0616404` | Pass: 52 files inspected, no offenses detected, exit 0, in the container (C-12), native Windows with CRLF files (C-43) and GitHub Actions (C-38) |
+| T058 | No file under `lib/`, `bin/`, `spec/` or `data/` changed by this spec | Pass: `git diff --stat ba203ba origin/003-delivery-impl -- lib bin spec data` prints nothing, so `003-delivery`'s commits change none of them (`bin/run` was already `100755` with `#!/usr/bin/env ruby` and needed no change, T006). On `main`, `git diff --stat ba203ba 0616404 -- bin data lib` prints nothing; `spec/` differs only by `3b291f3` from the whole-system checks (brief Part 2 step 3), which adds AC IDs to 10 example descriptions in 7 spec files and changes no expectation. So C-34 run on `main` as written lists those 7 files; it passed on the branch (T048) |
+| T056 | SC-001 | 3 of 3 platforms pass from a clean checkout of `main`: Linux (the `ruby:3.4.12` container, C-10), Windows (C-13) and Docker (C-19, C-41): the sample report, nothing on standard error, exit 0 and the sample output file byte for byte |
+| T056 | SC-002 | Pass: the run on `main`'s latest commit `0616404` (42465278983) and the run on the pushed `spec-kit-implementation` at the same commit (42465275572) both concluded `success`, with 0 failures and 0 offences |
+| T056 | SC-003 | Pass: C-31 14 of 14 (T047; `README.md` unchanged since), every README command works on a clean checkout of `main` (C-29 with C-09 to C-26 and C-41), and every relative link resolves (C-32, T047) |
+| T056 | SC-004 | Pass: the README's `Line coverage: 501 / 501 (100.00%)` equals the line of the fresh runs on `0616404` (C-12, C-20, native Windows and CI) |
+| T056 | SC-005 | Pass: `.ruby-version` and the Dockerfile both name `3.4.12` (C-04), and `Gemfile.lock` installed frozen with `git status --porcelain` empty in the container (C-09), on Windows (C-13) and in the image (C-17), and plain `bundle install` left it unchanged (C-29) |
+| T056 | SC-006 | Pass: 0 tracked files under `output/` or `coverage/` (C-36), and `docs/challenge/` shows no difference from `c2873b2` (C-37) |
+| T056 | SC-007 | Pass: `003-delivery` adds 0 RSpec specs, 0 classes and 0 test-data files (`git diff --stat ba203ba origin/003-delivery-impl -- lib spec data` prints nothing) |
+
 #### Whole-system checks
 
 | Check | Result | Evidence |
@@ -756,6 +772,12 @@ Tools: Ruby 3.4.12 (`x64-mingw-ucrt`, RubyInstaller) and Bundler 2.6.9 on Window
   - T004/C-03: the "001 lock commit" for the `Gemfile.lock` diff is `d4764f6`, the only earlier commit that touches `Gemfile.lock` (recorded in the Phase 2 table).
   - T005/T006: no change made. C-01 already showed mode `100755`, the first line `#!/usr/bin/env ruby` and no `i/crlf` file; C-02 already passed (no `.gitattributes`).
   - T048: `ba203ba` (the tip of `002-file-runner-impl`, the same locally and on `origin`, and an ancestor of `HEAD`) is used as `<002 tip>` for C-34. Recorded in the Phase 8 table.
+  - T050: the Linux and Docker clones of `origin` `main` (`clean`, `docker`, `readme`) were made with Windows git and `core.autocrlf=false` into a scratch folder on the Windows drive and used from WSL through `/mnt/c/...`, because git in WSL has no GitHub credentials. The quickstart asks for `$CLEAN` on the shell's own filesystem; Docker Desktop mounted these folders correctly (every mount check passed), and the scratch files of the checks stayed on the WSL filesystem. The one effect is C-27's owner, recorded as seen.
+  - T050: new scratch folders (`~/checks-003/main4`, `main6`, `main7` and `%TEMP%\checks-003-main`) were used, so no file of the earlier runs was overwritten or removed; `output/` folders that C-11, C-15, C-22 and C-23 need gone were moved to scratch folders, not deleted (as T021 and T032).
+  - T050: C-33's coverage line did not differ from the README's, so the README update, its review and a second push of `main` that T050 describes did not apply.
+  - T054: the CI run of `0616404` had already finished when C-38 ran; `gh run watch --exit-status` confirmed `success` at once.
+  - T058: "changed by this spec" is read as the commits of `003-delivery-impl` (none touch `lib/`, `bin/`, `spec/` or `data/`). `main` also holds `3b291f3` from the whole-system checks, which changes 10 example descriptions in 7 spec files and no expectation; so C-34, run on `main` as the quickstart writes it, lists those files. For developer review.
+  - T050: C-08 to C-12 ran in the Phase 4 fallback container again, as no native Linux or macOS host with Ruby 3.4.12 was available; the quickstart allows this way.
 
 ### Changed in the run
 
