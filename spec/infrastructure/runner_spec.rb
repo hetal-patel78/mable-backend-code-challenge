@@ -430,6 +430,159 @@ RSpec.describe Runner do
 
       it_behaves_like 'a completed run', stdout: sample_report, output_file: sample_output_file
     end
+
+    describe 'AC-08.2 a day with mixed rejections' do
+      subject(:run) do
+        run_scenario(files: { 'transfers.csv' => "1111234522226789,1212343433335665,30.00\n" \
+                                                 "1111234522226789,1212343433335665,90.00\n" \
+                                                 "1212343433335665,9999888877776666,10.00\n" \
+                                                 "1111234522226789,0000123412341234,70.00\n" \
+                                                 "1212343433335665,1212343433335665,5.00\n" })
+      end
+
+      it_behaves_like 'a completed run', stdout: <<~STDOUT, stderr: <<~STDERR, output_file: <<~OUTPUT
+        Transfers
+          Line 1  applied  1111234522226789 -> 1212343433335665  30.00
+          Line 2  rejected  1111234522226789 -> 1212343433335665  90.00  insufficient_funds
+          Line 3  rejected  1212343433335665 -> 9999888877776666  10.00  unknown_account
+          Line 4  applied  1111234522226789 -> 0000123412341234  70.00
+          Line 5  rejected  1212343433335665 -> 1212343433335665  5.00  same_account
+
+        Summary
+          Processed: 5
+          Applied: 2
+          Rejected: 3
+            same_account: 1
+            unknown_account: 1
+            insufficient_funds: 1
+          Total before: 150.00
+          Total after: 150.00
+
+        Final balances
+          1111234522226789  0.00
+          1212343433335665  80.00
+          0000123412341234  70.00
+
+        Output file: output/final_balances_2026-11-07_143005.csv
+      STDOUT
+        W, [<timestamp> #<pid>]  WARN -- : Line 2 rejected: ************6789 -> ************5665 90.00 insufficient_funds
+        W, [<timestamp> #<pid>]  WARN -- : Line 3 rejected: ************5665 -> ************6666 10.00 unknown_account
+        W, [<timestamp> #<pid>]  WARN -- : Line 5 rejected: ************5665 -> ************5665 5.00 same_account
+      STDERR
+        1111234522226789,0.00
+        1212343433335665,80.00
+        0000123412341234,70.00
+      OUTPUT
+    end
+
+    describe 'AC-08.3 the output file fed back in as the balances file (DEC-27)' do
+      subject(:run) do
+        run_scenario(files: { 'balances.csv' => "1111234522226789,0.00\n1212343433335665,80.00\n" \
+                                                "0000123412341234,70.00\n",
+                              'transfers.csv' => "1212343433335665,1111234522226789,10.00\n" })
+      end
+
+      it_behaves_like 'a completed run',
+                      stdout: template_a(transfer: '1212343433335665 -> 1111234522226789  10.00',
+                                         balances: %w[10.00 70.00 70.00])
+    end
+
+    describe 'AC-08.3 a third argument with missing folders (DEC-27)' do
+      subject(:run) do
+        run_scenario(arguments: %w[balances.csv transfers.csv out/new/day1.csv], read: ['out/new/day1.csv'])
+      end
+
+      it_behaves_like 'a completed run',
+                      stdout: template_a(transfer: '1111234522226789 -> 1212343433335665  10.00',
+                                         balances: %w[90.00 60.00 0.00], output_file: 'out/new/day1.csv')
+
+      it 'creates the missing folders and the output file' do
+        expect(run.files['out/new/day1.csv']).not_to be_nil
+      end
+    end
+
+    describe 'AC-08.4 run from a subfolder, the output file outside it (DEC-26)' do
+      subject(:run) do
+        run_scenario(folder: 'docs',
+                     arguments: %w[../balances.csv ../transfers.csv ../output/final_balances_2026-11-07_143005.csv])
+      end
+
+      it 'shows the output path in full on standard output' do
+        expect(run.stdout).to eq(template_a(transfer: '1111234522226789 -> 1212343433335665  10.00',
+                                            balances: %w[90.00 60.00 0.00],
+                                            output_file: File.join(run.temp_folder, Runs::OUTPUT_FILE)))
+      end
+
+      it 'writes nothing on standard error' do
+        expect(run.stderr).to eq('')
+      end
+
+      it 'exits with status 0' do
+        expect(run.status).to eq(0)
+      end
+
+      it 'writes the output file' do
+        expect(run.output_file).to eq("1111234522226789,90.00\n1212343433335665,60.00\n0000123412341234,0.00\n")
+      end
+    end
+
+    describe 'AC-08.4 an output file in another folder (DEC-26, P10)' do
+      subject(:run) do
+        run_scenario(folder: 'docs', arguments: ['../balances.csv', '../transfers.csv', other_output])
+      end
+
+      let(:other_folder) { Dir.mktmpdir }
+      let(:other_output) { File.join(File.expand_path(other_folder), 'day1.csv') }
+
+      after { FileUtils.remove_entry(other_folder) }
+
+      it 'shows the output path in full on standard output' do
+        expect(run.stdout).to eq(template_a(transfer: '1111234522226789 -> 1212343433335665  10.00',
+                                            balances: %w[90.00 60.00 0.00], output_file: other_output))
+      end
+
+      it 'writes nothing on standard error' do
+        expect(run.stderr).to eq('')
+      end
+
+      it 'exits with status 0' do
+        expect(run.status).to eq(0)
+      end
+    end
+
+    describe 'AC-08.5 a changed total stops the run (DEC-24)' do
+      subject(:run) { run_scenario }
+
+      before do
+        day = instance_double(ProcessDailyTransfer)
+        allow(day).to receive(:call).and_raise(TotalChanged.new(Money.amount('66750.00'), Money.amount('66749.00')))
+        allow(ProcessDailyTransfer).to receive(:new).and_return(day)
+      end
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: the total of all balances changed from 66750.00 to 66749.00. No output file was written.
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: total of all balances changed
+      STDERR
+    end
+
+    describe 'AC-09.4 an output path that is an existing folder (DEC-25)' do
+      subject(:run) do
+        run_scenario(files: { 'out' => :folder }, arguments: %w[balances.csv transfers.csv out], read: ['out', 'out/'])
+      end
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: cannot write output file out: <reason from the system>
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: cannot write output file
+      STDERR
+
+      it 'leaves the folder in place' do
+        expect(run.files['out']).to eq(:folder)
+      end
+
+      it 'leaves the folder empty' do
+        expect(run.files['out/']).to eq([])
+      end
+    end
   end
 
   describe 'FR-09 The runner' do

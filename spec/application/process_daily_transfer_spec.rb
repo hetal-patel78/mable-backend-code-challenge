@@ -5,6 +5,7 @@ require 'domain/account_repository'
 require 'infrastructure/csv_rows'
 require 'infrastructure/errors'
 require 'infrastructure/final_balances_csv_writer'
+require 'infrastructure/row'
 
 RSpec.describe ProcessDailyTransfer do
   subject(:result) { day.call('balances.csv', 'transfers.csv', 'output/day.csv') }
@@ -330,6 +331,58 @@ RSpec.describe ProcessDailyTransfer do
     it 'logs no Run ended (item 20)' do
       attempt(UnreadableFile) { result }
       expect(log_lines(logger).grep(/Run ended/)).to eq([])
+    end
+  end
+
+  describe '#call when the total of all balances changes (AC-08.5)' do
+    subject(:call_day) do
+      day(balances_reader: sample_reader('mable_account_balances.csv', 2),
+          transfers_reader: sample_reader('mable_transactions.csv', 3),
+          repository: ChangingTotalRepository.new(AccountRepository.new)).call('b.csv', 't.csv', 'output/day.csv')
+    end
+
+    def sample_reader(name, field_count)
+      rows = File.readlines(fixture_path('sample', name), chomp: true).each.with_index(1).map do |line, number|
+        Row.new(line_number: number, fields: line.split(','), expected_size: field_count)
+      end
+      FakeReader.new(rows)
+    end
+
+    it 'stops with TotalChanged naming both totals (DEC-24)' do
+      expect { call_day }.to raise_error(TotalChanged, 'the total of all balances changed from 66750.00 to 66749.00. ' \
+                                                       'No output file was written.')
+    end
+
+    it 'gives the stop reason total of all balances changed (P8)' do
+      expect { call_day }.to raise_error(having_attributes(stop_reason: 'total of all balances changed'))
+    end
+
+    describe 'after the stop' do
+      before { attempt(TotalChanged) { call_day } }
+
+      it 'writes no output file (DEC-24)' do
+        expect(File.exist?('output/day.csv')).to be(false)
+      end
+
+      it 'never calls the reporter (DEC-24)' do
+        expect(reporter.printed).to eq([])
+      end
+    end
+  end
+
+  describe '#call when the output file cannot be written' do
+    let(:error) { OutputNotWritable.new('output/day.csv', Errno::EACCES.new) }
+    let(:writer) { instance_double(FinalBalancesCsvWriter) }
+
+    before { allow(writer).to receive(:write).and_raise(error) }
+
+    it 'lets the error through unchanged (DEC-25)' do
+      expect { day(writer: writer).call('b.csv', 't.csv', 'output/day.csv') }.to raise_error(be(error))
+    end
+
+    it 'never calls the reporter (DEC-25)' do
+      attempt(OutputNotWritable) { day(writer: writer).call('b.csv', 't.csv', 'output/day.csv') }
+      expect(reporter.printed).to eq([])
     end
   end
 

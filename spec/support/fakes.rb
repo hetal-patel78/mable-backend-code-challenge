@@ -2,6 +2,8 @@
 
 require 'logger'
 require 'stringio'
+require 'domain/account'
+require 'domain/money'
 require 'infrastructure/errors'
 
 # A reader that yields the rows it is given and records each path; it can fail before or after the rows.
@@ -36,6 +38,29 @@ class FakeReporter
   def print(day_result)
     @printed << day_result
     @file_existed << File.exist?(day_result.output_path)
+  end
+end
+
+# A repository whose accounts lose 1.00 from the second call to all, so the total after the transfers changes.
+class ChangingTotalRepository
+  def initialize(repository)
+    @repository = repository
+    @all_calls = 0
+  end
+
+  def add(account) = @repository.add(account)
+
+  def include?(number) = @repository.include?(number)
+
+  def find(number) = @repository.find(number)
+
+  def all
+    @all_calls += 1
+    accounts = @repository.all
+    return accounts if @all_calls == 1
+
+    first = accounts.first
+    [Account.new(first.number, first.balance - Money.amount('1.00')), *accounts.drop(1)]
   end
 end
 
