@@ -460,6 +460,22 @@ Phase 1 (Setup), Windows 11 with Ruby 3.4.12 (`x64-mingw-ucrt`) and WSL Ubuntu, 
 | T002 | `.ruby-version` | Pass: `3.4.12`, a bare version number with no `ruby-` prefix (as `001` plan D1 pins it). It is the latest Ruby 3.4.x release: the newest `ruby-3.4.*` entry in `https://cache.ruby-lang.org/pub/ruby/index.txt` on 2026-11-08 is `ruby-3.4.12` |
 | T003 | Expected texts | Pass: `report.txt` (21 lines, with `<run time>`), `final.csv` (5 lines, LF, final LF), `usage.txt` (2 lines) and `info.txt` (6 lines) saved in `$CHECKS`, all LF with no CR. Each was compared with `diff` against its block in `spec.md` ("The sample report", "The sample output file") or page 2 (AC-09.2, AC-09.5), with CR removed from the source: no difference. `report.txt`, `usage.txt`, `final.csv` and `info.txt` were copied to `$env:CHECKS` (`final.csv` keeps LF: 0 CR bytes) |
 
+Phase 2 (Foundational: the repository files), Windows 11 with Ruby 3.4.12 (`x64-mingw-ucrt`) and Bundler 2.6.9 in Git Bash, 2026-11-08. The checks before the change ran at commit `dc4366f`; the change is commit `d6fbee4`, and the checks after it ran on that commit.
+
+| Task | Check | Result |
+|---|---|---|
+| T004 | C-01 before the change | Pass: `git ls-files -s bin/run` shows `100755`; `git show :bin/run \| head -1` is `#!/usr/bin/env ruby` (LF); `git ls-files --eol \| grep 'i/crlf'` prints nothing; `bin/run` is `i/lf w/crlf` |
+| T004 | C-02 before the change | Pass: `test ! -e .gitattributes` exits 0; `git ls-files .gitattributes` prints nothing |
+| T004 | C-03 before the change | Fail, as expected: `PLATFORMS` lists only `x64-mingw-ucrt` and `x86_64-linux`. The `001` lock commit is `d4764f6`, the only earlier commit that touches `Gemfile.lock` |
+| T004 | C-05 before the change | Pass: `bigdecimal`, `csv` and `logger` at top level; `rspec`, `rubocop`, `rubocop-rspec` and `simplecov` only inside `group :development, :test`; no other gem |
+| T005 | No `.gitattributes` | Pass: none created, none added by another spec (C-02 above) |
+| T006 | `bin/run` mode, first line and RuboCop | No change needed: C-01 showed mode `100755` and the first line `#!/usr/bin/env ruby`; `bundle exec rubocop bin/run` reports 1 file inspected, no offenses detected (line 2 already holds `# frozen_string_literal: true`); no file is `i/crlf` |
+| T007 | `bundle lock --add-platform ruby x64-mingw-ucrt x86_64-linux aarch64-linux x86_64-darwin arm64-darwin` | Pass: exit 0. `git diff Gemfile.lock` adds only `aarch64-linux`, `arm64-darwin`, `ruby` and `x86_64-darwin` under `PLATFORMS`; no gem version, no `BUNDLED WITH` and no `Gemfile` change. Commit `d6fbee4` |
+| T008 | C-01, C-02 and C-05 after the change | Pass: unchanged from T004 (`100755`, `#!/usr/bin/env ruby`, no `i/crlf`; no `.gitattributes`; the seven named gems only, `Gemfile` not changed) |
+| T008 | C-03 after the change | Pass: `PLATFORMS` lists `aarch64-linux`, `arm64-darwin`, `ruby`, `x64-mingw-ucrt`, `x86_64-darwin`, `x86_64-linux`; `git diff d4764f6 -- Gemfile.lock` shows 4 insertions, all platform lines |
+| T008 | `bundle exec rspec` | Pass: 726 examples, 0 failures. Randomized with seed 26473 (and 45198 on a second run). Line coverage: 501 / 501 (100.00%). Exit 0 |
+| T008 | `bundle exec rubocop` | Pass: 52 files inspected (`bin/run` among them, `rubocop -L`), no offenses detected. Exit 0 |
+
 ### Decided in the run
 
 - **001-domain**
