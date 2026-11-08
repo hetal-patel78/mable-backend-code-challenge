@@ -425,10 +425,10 @@
 
 **Goal**: the suite's own properties (NFR-06; DEC-24, DEC-28, DEC-30, DEC-34, DEC-36).
 
-- [ ] T082 [US8] Run `bundle exec rspec` three times in a row and confirm each passes with a different seed; confirm `coverage/index.html` is written each time and no minimum fails the run (SC-005) [FR-048; DEC-34, DEC-36; US8 scenario 1]
-- [ ] T083 [US8] Confirm `spec/acceptance/` holds exactly five spec files (`runner_run_sample_files_spec.rb`, `runner_run_mixed_rejections_spec.rb`, `runner_run_all_rejected_spec.rb`, `runner_run_invalid_balances_spec.rb`, `runner_run_wrong_arguments_spec.rb`), each running `bin/run` as a separate process [FR-044; DEC-34; US8 scenario 4; SC-005]
-- [ ] T084 [P] [US8] Search `spec/` for `Time.now`, `Date.today`, `allow(Time)`, `allow(Date)`, `$stdout`, `$stderr` and `STDOUT`: none is used to set up or stub a test (the only `Time` objects are built with `Time.new(...)`), and every `Runner` example passes its own `StringIO` streams (SC-006) [FR-047; DEC-28, DEC-30; US8 scenario 5]
-- [ ] T085 [P] [US8] Review the test list against DEC-34: each rule tested once, at the level where it lives; one spec file per class; fixture files only those listed in T006, T040, T051 and T071 plus `spec/fixtures/sample/`; every edge case in the table below has its example; example names read as behaviour in documentation format [FR-042, FR-043, FR-048; DEC-34; US8 scenarios 2, 3, 6, 7]
+- [X] T082 [US8] Run `bundle exec rspec` three times in a row and confirm each passes with a different seed; confirm `coverage/index.html` is written each time and no minimum fails the run (SC-005) [FR-048; DEC-34, DEC-36; US8 scenario 1]
+- [X] T083 [US8] Confirm `spec/acceptance/` holds exactly five spec files (`runner_run_sample_files_spec.rb`, `runner_run_mixed_rejections_spec.rb`, `runner_run_all_rejected_spec.rb`, `runner_run_invalid_balances_spec.rb`, `runner_run_wrong_arguments_spec.rb`), each running `bin/run` as a separate process [FR-044; DEC-34; US8 scenario 4; SC-005]
+- [X] T084 [P] [US8] Search `spec/` for `Time.now`, `Date.today`, `allow(Time)`, `allow(Date)`, `$stdout`, `$stderr` and `STDOUT`: none is used to set up or stub a test (the only `Time` objects are built with `Time.new(...)`), and every `Runner` example passes its own `StringIO` streams (SC-006) [FR-047; DEC-28, DEC-30; US8 scenario 5]
+- [X] T085 [P] [US8] Review the test list against DEC-34: each rule tested once, at the level where it lives; one spec file per class; fixture files only those listed in T006, T040, T051 and T071 plus `spec/fixtures/sample/`; every edge case in the table below has its example; example names read as behaviour in documentation format [FR-042, FR-043, FR-048; DEC-34; US8 scenarios 2, 3, 6, 7]
 
 **Checkpoint**: SC-005 and SC-006 hold.
 
