@@ -591,6 +591,14 @@ Phase 7 (User Story 5: the README), 2026-11-08. C-31 before the change ran at co
 
 Checkpoint: C-29 to C-32 and the local part of C-33 pass; Phase 7 is complete.
 
+Phase 8 (before the push), Windows 11 in Git Bash with Ruby 3.4.12 (`x64-mingw-ucrt`), 2026-11-08, at commit `ae6b838` (the tip of `003-delivery-impl`). T049 to T055 wait for the review loop, the branch push and the `main` push.
+
+| Task | Check | Result |
+|---|---|---|
+| T048 | C-34: `git diff --stat ba203ba HEAD -- lib spec data` (`ba203ba` is the tip of `002-file-runner-impl`, local and `origin`, and an ancestor of `HEAD`) | Pass: prints nothing; `git diff --exit-code` on the same paths exits 0. This spec adds or changes no file under `lib/`, `spec/` or `data/` |
+| Phase end | `bundle exec rspec` at `$REPO` (Windows, Ruby 3.4.12) | Pass: 726 examples, 0 failures. Randomized with seed 23038. Line coverage: 501 / 501 (100.00%). Exit 0 |
+| Phase end | `bundle exec rubocop` at `$REPO` | Pass: 52 files inspected, no offenses detected. Exit 0 |
+
 ### Decided in the run
 
 - **001-domain**
