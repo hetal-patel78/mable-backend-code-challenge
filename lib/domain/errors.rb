@@ -25,6 +25,13 @@ class NegativeBalance < StandardError
   end
 end
 
+# A second account with a number that is already held.
+class DuplicateAccount < StandardError
+  def initialize(account_number)
+    super("account #{account_number} appears more than once")
+  end
+end
+
 # A withdrawal that would take a balance below $0.
 class InsufficientFunds < StandardError
   def initialize(account_number, amount, balance)

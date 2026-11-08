@@ -182,8 +182,8 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 ### Implementation for User Story 5
 
-- [ ] T033 [US5] Add `DuplicateAccount` to `lib/domain/errors.rb`, built with `new(account_number)` and the message `account <number> appears more than once` [FR-014, FR-027; DEC-31; D21]
-- [ ] T034 [US5] Create `lib/domain/account_repository.rb`: one `Hash` keyed by `account.number.to_s`; `add(account)` raises `DuplicateAccount.new(account.number)` when the key is held, else stores the account; `include?(account_number)` is `key?(account_number.to_s)`; `find(account_number)` returns the held account; `all` returns the `Hash`'s values (depends on T033) [FR-014 to FR-018, FR-033, FR-035; NFR-02; DEC-31; research R8]
+- [X] T033 [US5] Add `DuplicateAccount` to `lib/domain/errors.rb`, built with `new(account_number)` and the message `account <number> appears more than once` [FR-014, FR-027; DEC-31; D21]
+- [X] T034 [US5] Create `lib/domain/account_repository.rb`: one `Hash` keyed by `account.number.to_s`; `add(account)` raises `DuplicateAccount.new(account.number)` when the key is held, else stores the account; `include?(account_number)` is `key?(account_number.to_s)`; `find(account_number)` returns the held account; `all` returns the `Hash`'s values (depends on T033) [FR-014 to FR-018, FR-033, FR-035; NFR-02; DEC-31; research R8]
 
 **Checkpoint**: `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences.
 
