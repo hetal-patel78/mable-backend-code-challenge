@@ -436,10 +436,10 @@
 
 ## Phase 11: Polish and cross-cutting checks
 
-- [ ] T086 Run `bundle exec rubocop` and confirm `no offenses detected` across `lib/`, `bin/run` and `spec/` (SC-008) [NFR-05, owned by `001`; DEC-36]
+- [X] T086 Run `bundle exec rubocop` and confirm `no offenses detected` across `lib/`, `bin/run` and `spec/` (SC-008) [NFR-05, owned by `001`; DEC-36]
 - [ ] T087 Run the [quickstart](quickstart.md) steps 1 to 14 by hand, including `bin/run` (`ruby bin/run` on Windows) from the project root and from `docs/`, and delete the files they write in `output/` [SC-001; DEC-22, DEC-26]
-- [ ] T088 [P] Confirm `git ls-files -s bin/run` shows mode `100755`, `git status --short` lists nothing under `output/` or `coverage/`, and `git diff --no-index` shows no difference between `docs/challenge/` and `data/` or `spec/fixtures/sample/` [FR-037, FR-038; DEC-22, DEC-27]
-- [ ] T089 [P] Review that no file under `lib/` has a comment explaining the design (only a one-line "what it is" per class) and that nothing in the report, the logs or the output names a company [DEC-02, DEC-30, DEC-37]
+- [X] T088 [P] Confirm `git ls-files -s bin/run` shows mode `100755`, `git status --short` lists nothing under `output/` or `coverage/`, and `git diff --no-index` shows no difference between `docs/challenge/` and `data/` or `spec/fixtures/sample/` [FR-037, FR-038; DEC-22, DEC-27]
+- [X] T089 [P] Review that no file under `lib/` has a comment explaining the design (only a one-line "what it is" per class) and that nothing in the report, the logs or the output names a company [DEC-02, DEC-30, DEC-37]
 
 ---
 
