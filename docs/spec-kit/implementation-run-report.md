@@ -375,7 +375,7 @@ The specs are implemented one after another, each in its own worktree in `C:\Dev
 | 2. Implement 001-domain | Done: 2 review rounds. Round 1 found 1 low defect (fixed); the last round, round 2, found 0 defects. Branch `001-domain-impl` pushed with its small commits kept |
 | 2. Implement 002-file-runner | Done: 3 review rounds. Round 1 found 2 defects (1 high, 1 low; both fixed) and round 2 found 2 low defects (both fixed). The last round, round 3, found 0 defects. Branch `002-file-runner-impl` pushed with its small commits kept |
 | 2. Implement 003-delivery | Done: 1 review round. Round 1 found 0 defects, so the last round, round 1, found 0 defects. Branch `003-delivery-impl` pushed with its small commits kept |
-| 3. Whole-system checks | Not started |
+| 3. Whole-system checks | Done: 2026-11-08 at commit `3b291f3`. All 7 checks pass on Windows and in Docker (see Check results) |
 | 4. Merge and push | Not started |
 | 5. Stop | Not started |
 
@@ -615,6 +615,18 @@ Review rounds. Every round is by an independent Claude Opus 5.5 agent.
 | Round | Reviewer | Defects found | Result |
 |---|---|---|---|
 | 1 | Claude Opus 5.5 (independent, fresh) | 0 | Converged |
+
+#### Whole-system checks
+
+| Check | Result | Evidence |
+|---|---|---|
+| bundle exec rspec, random order, with the coverage figure | Pass | Native Windows: Randomized with seed 1776; 726 examples, 0 failures; Line coverage: 501 / 501 (100.00%); exit 0 |
+| bundle exec rubocop reports zero offences | Pass | Native Windows: 52 files inspected, no offenses detected; exit 0 |
+| bin/run with no arguments on the sample files gives the DEC-35 closing balances, the page 2 report and exit 0 | Pass | `ruby bin/run` in PowerShell from the project root: exit 0, standard error 0 bytes, standard output is the AC-08.1 report (4 transfers applied, 0 rejected, total 66750.00 before and after) with the Output file line output/final_balances_2026-11-08_193017.csv; the file holds 1111234522226789,4820.50 / 1111234522221234,9974.40 / 2222123433331212,1550.00 / 1212343433335665,1725.60 / 3212343433335755,48679.50, the DEC-35 balances; the file was then moved out of output/ |
+| every page 2 scenario gives exact standard output, standard error and exit code | Pass | `bundle exec rspec spec/acceptance spec/infrastructure/runner_spec.rb`: 366 examples, 0 failures; all 40 AC IDs of page 2 (AC-01.1 to AC-09.8) are named in example or group descriptions under spec/ (3b291f3 added the AC-06.3 and AC-09.8 names to the examples that cover them) |
+| ruby bin/run works on Windows | Pass | `ruby bin/run` in PowerShell as above (exit 0); `ruby bin/run -h`: exit 1, the two usage lines on standard error |
+| Docker run from a clean checkout | Pass | Fresh clone of origin spec-kit-implementation at 3b291f3 (core.autocrlf=false), `docker build` in WSL Ubuntu exit 0; `docker run --rm` with no command: exit 0, standard error 0 bytes, the sample report on standard output with the DEC-35 final balances |
+| GitHub Actions run passes after the push | Pass | Checked after main is pushed (C-38, recorded with T050 to T058) |
 
 ### Decided in the run
 
