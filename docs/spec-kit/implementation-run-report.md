@@ -372,7 +372,7 @@ The specs are implemented one after another, each in its own worktree in `C:\Dev
 | Step | State |
 |---|---|
 | 1. Start | Done: this section, [P26](../prompts/prompts-implementation-phase.md#p26) and the "Current stage" in `CLAUDE.md` |
-| 2. Implement 001-domain | Not started |
+| 2. Implement 001-domain | Done: 2 review rounds. Round 1 found 1 low defect (fixed); the last round, round 2, found 0 defects. Branch `001-domain-impl` pushed with its small commits kept |
 | 2. Implement 002-file-runner | Not started |
 | 2. Implement 003-delivery | Not started |
 | 3. Whole-system checks | Not started |
@@ -386,19 +386,60 @@ The specs are implemented one after another, each in its own worktree in `C:\Dev
 
 ### Check results
 
-None yet.
+#### 001-domain
+
+Final checks, run on the branch after the last review round. All four criteria pass.
+
+| Check | Result |
+|---|---|
+| RSpec (`bundle exec rspec`) | 160 examples, 0 failures. Randomized with seed 49805 |
+| Coverage (SimpleCov) | Line coverage: 143 / 143 (100.00%) |
+| RuboCop (`bundle exec rubocop`) | 0 offenses (18 files inspected, no offenses detected) |
+| Unchecked tasks in `specs/001-domain/tasks.md` | 0 |
+| Git status | Clean. The coverage report that the RSpec run regenerates is generated output and is ignored by git |
+
+Review rounds. Every round is by an independent Claude Opus 5.5 agent.
+
+| Round | Reviewer | Defects found | Result |
+|---|---|---|---|
+| 1 | Claude Opus 5.5 (independent, fresh) | 1 (low) | Fixed (F1) |
+| 2 | Claude Opus 5.5 (independent, fresh) | 0 | Converged |
 
 ### Decided in the run
 
-None yet.
+- **001-domain**
+  - Kept `SimpleCov.start { add_filter '/spec/' }` exactly as T008 and plan D20 specify. simplecov 1.3.2 prints a deprecation notice suggesting `SimpleCov.skip '/spec/'` (same behaviour); the notice does not fail the run. For developer review: switching to `skip` would mean changing T008, D20 and research R11.
+  - Saved the new text files with CRLF line endings to match `core.autocrlf=true` and RuboCop's default `Layout/EndOfLine` (native) on Windows. `Gemfile.lock` stays as Bundler wrote it.
+  - Did not add more `.gitignore` patterns, because T006 lists exactly `coverage/` and `output/`.
+  - `Money` keeps its BigDecimal behind a protected reader `value`, so `<=>`, `==` and later `+`/`-` can read another Money's value while the BigDecimal stays hidden from callers (in line with plan D5). Recorded here only, not in the plan.
+  - `AccountNumber#==` and `Money#==` return false for an object of another class. They do not raise.
+  - Errors with one message form are raised as `raise ErrorClass, arg` (RuboCop's default `Style/RaiseArgs`), which builds them with `new(arg)` as D21 says.
+  - The `AccountNumber` equality example builds two separate objects from the same text, because RSpec/IdenticalEqualityAssertion flags the same expression written on both sides.
+  - New files from the Write tool were converted to CRLF with unix2dos so they match the checkout. Git still stores the files with LF.
+  - The repeated add and subtract examples in `spec/domain/money_spec.rb` use two small helpers (`add_times`, `subtract_times`, via `Array#reduce`) inside the arithmetic describe, so each example stays one expectation.
+  - The `include?` example with "a different AccountNumber object built from the same text" uses a fresh `account_number('1111234522226789')` builder call, not `AccountNumber.new`, so the spec file requires only `domain/account_repository`, as the spec convention asks.
+  - The `repository_with` builder uses `AccountRepository.new.tap` with `add` for each account, so a duplicate passed to the builder raises `DuplicateAccount` just as `add` does.
+  - `AccountRepository#add` raises with `raise DuplicateAccount, account.number`, the same style `Account` uses for `NegativeBalance`.
+  - The T035 examples go in a context "with a number it does not hold" inside the existing describe `#find`. They build the three-account repository from the spec's existing `three_numbers` let, because the `three_accounts` helper only arrives in Phase 8 (T039).
+  - `UnknownAccount` is raised as `raise UnknownAccount, account_number` inside the fetch block, which calls `UnknownAccount.new(account_number)`. This matches how `DuplicateAccount` is raised in `add`.
+  - `TransferResult.rejected` raises `ArgumentError` with the message "unknown reason code :<reason>" (the tasks fix only the class, D10). The spec checks the class only.
+  - `TransferResult.new` is private (`private_class_method`), so `applied` and `rejected` are the only two ways to build a result (D9: an applied result cannot carry a reason or hint). `applied?` is `reason.nil?`.
+  - `TransferService` requires `account_repository` and `transfer` with `require_relative`, so the error classes the service raises are loaded with it (D13).
+  - The "refused while building the transfer" and "one refusal of each kind" cases in `transfer_service_spec` are table-driven (error class to transfer fields), each refusal rescued by its own class with `attempt`, to stay within RSpec/ExampleLength.
+  - The "values kept as written" `TransferResult` example is one example per amount (`''` and `'10.'`), each with reason `:invalid_amount`.
+  - T048 / FR-029: `TransferResult`'s `line_number` reader does not break "the domain knows no line numbers". `data-model.md` says `TransferResult` holds a line number, and T043 sets the field. The domain only stores the number it is given and never works one out or puts it in a message.
+  - T047: the 10 message table rows count "empty", "more than 2 decimal places" and "not a valid amount" as one row each, covering both the balance and amount wording. Every row's text is found in a `raise_error` expectation in `spec/domain`.
 
 ### Changed in the run
 
-None yet.
+None for 001-domain.
 
 ### Fixed in review
 
-None yet.
+- **001-domain**
+  - Round 1, F1 (low): DEC-09 is now named in the examples for `-0` and `-0.00` equality, the `-0` and `0` hash example, and the example that a computed Money is negative only below 0 (5.01 from 5.00). No expectation changed. Commit `9084dd4`.
+  - Round 2 found no defects.
+  - Not a defect: none.
 
 ### Left for the developer
 
