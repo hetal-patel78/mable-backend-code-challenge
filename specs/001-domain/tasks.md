@@ -220,8 +220,8 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 ### Tests for User Story 1 (write first)
 
-- [ ] T039 [P] [US1] Add the builder `transfer(from: '1111234522226789', to: '1212343433335665', amount: '30.00')` to `spec/support/builders.rb`, taking text and building `Transfer.new` with `account_number` and `amount`; and the helper `three_accounts`, returning `repository_with` the three accounts of the spec's `balances.csv` [DEC-34; research R10]
-- [ ] T040 [P] [US1] Write `spec/domain/transfer_service_spec.rb`, every example on `three_accounts` unless it says otherwise, comparing the balances of `all` as one array [FR-019 to FR-021, FR-034; AC-03.1 to AC-03.3, AC-04.1 to AC-04.3, AC-05.1, AC-05.2, US3 scenario 3, US1 scenario 4, US6 scenario 4; SC-002]:
+- [X] T039 [P] [US1] Add the builder `transfer(from: '1111234522226789', to: '1212343433335665', amount: '30.00')` to `spec/support/builders.rb`, taking text and building `Transfer.new` with `account_number` and `amount`; and the helper `three_accounts`, returning `repository_with` the three accounts of the spec's `balances.csv` [DEC-34; research R10]
+- [X] T040 [P] [US1] Write `spec/domain/transfer_service_spec.rb`, every example on `three_accounts` unless it says otherwise, comparing the balances of `all` as one array [FR-019 to FR-021, FR-034; AC-03.1 to AC-03.3, AC-04.1 to AC-04.3, AC-05.1, AC-05.2, US3 scenario 3, US1 scenario 4, US6 scenario 4; SC-002]:
   - applied: `1111234522226789` to `1212343433335665` `30.00` gives `70.00 80.00 0.00` (AC-03.1; DEC-13);
   - `apply` returns nil (D12);
   - exactly $0: `1111234522226789` to `1212343433335665` `100.00` gives `0.00 150.00 0.00` (AC-04.2; DEC-13 edge case);
@@ -240,7 +240,7 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
   - two equal transfers are both applied: `1111234522226789` to `0000123412341234` `20.00` twice gives `60.00 50.00 40.00` (US1 scenario 4; DEC-16 edge case);
   - the sample transfers on the five sample accounts (`1111234522226789` 5000.00, `1111234522221234` 10000.00, `2222123433331212` 550.00, `1212343433335665` 1200.00, `3212343433335755` 50000.00), applied in order (`1111234522226789` to `1212343433335665` `500.00`; `3212343433335755` to `2222123433331212` `1000.00`; `3212343433335755` to `1111234522226789` `320.50`; `1111234522221234` to `1212343433335665` `25.60`) give exactly `4820.50 9974.40 1550.00 1725.60 48679.50` (US6 scenario 4; DEC-35; NFR-01);
   - the same sample run keeps the total at `66750.00` (US6 scenario 4; DEC-35; SC-003).
-- [ ] T041 [P] [US1] Write `spec/domain/transfer_result_spec.rb` [FR-022 to FR-025; US1 scenario 5; DEC-06, DEC-19; D9 to D11]:
+- [X] T041 [P] [US1] Write `spec/domain/transfer_result_spec.rb` [FR-022 to FR-025; US1 scenario 5; DEC-06, DEC-19; D9 to D11]:
   - `REASON_CODES` is `%i[malformed_row invalid_account_number invalid_amount same_account unknown_account insufficient_funds]`, in that order (DEC-19; spec item 11);
   - `applied(line_number: 1, fields: %w[1111234522226789 1212343433335665 30.00])` is `applied?`, not `rejected?`, and has no `reason` and no `header_hint`;
   - it returns `line_number` `1` and the three `fields` unchanged, in order;
@@ -253,7 +253,7 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
   - `malformed_row` keeps more than 3 fields: a row of 4 fields returns all 4 (DEC-19 edge case);
   - the fields cannot be changed through the result: `fields` is frozen (D19);
   - values are kept as written: an empty amount `''` and `10.` are returned as `''` and `10.` (FR-022).
-- [ ] T042 [US1] Run `bundle exec rspec spec/domain/transfer_service_spec.rb spec/domain/transfer_result_spec.rb` and confirm the examples fail (depends on T039 to T041)
+- [X] T042 [US1] Run `bundle exec rspec spec/domain/transfer_service_spec.rb spec/domain/transfer_result_spec.rb` and confirm the examples fail (depends on T039 to T041)
 
 ### Implementation for User Story 1
 

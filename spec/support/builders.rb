@@ -29,6 +29,19 @@ module Builders
     end
   end
 
+  def transfer(from: '1111234522226789', to: '1212343433335665', amount: '30.00')
+    require 'domain/transfer'
+    Transfer.new(from: account_number(from), to: account_number(to), amount: amount(amount))
+  end
+
+  def three_accounts
+    repository_with(
+      account('1111234522226789', '100.00'),
+      account('1212343433335665', '50.00'),
+      account('0000123412341234', '0.00')
+    )
+  end
+
   def attempt(error_class)
     yield
   rescue error_class
