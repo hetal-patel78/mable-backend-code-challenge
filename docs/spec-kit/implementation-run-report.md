@@ -374,7 +374,7 @@ The specs are implemented one after another, each in its own worktree in `C:\Dev
 | 1. Start | Done: this section, [P26](../prompts/prompts-implementation-phase.md#p26) and the "Current stage" in `CLAUDE.md` |
 | 2. Implement 001-domain | Done: 2 review rounds. Round 1 found 1 low defect (fixed); the last round, round 2, found 0 defects. Branch `001-domain-impl` pushed with its small commits kept |
 | 2. Implement 002-file-runner | Done: 3 review rounds. Round 1 found 2 defects (1 high, 1 low; both fixed) and round 2 found 2 low defects (both fixed). The last round, round 3, found 0 defects. Branch `002-file-runner-impl` pushed with its small commits kept |
-| 2. Implement 003-delivery | Not started |
+| 2. Implement 003-delivery | In progress |
 | 3. Whole-system checks | Not started |
 | 4. Merge and push | Not started |
 | 5. Stop | Not started |
@@ -445,6 +445,21 @@ Review rounds. Every round is by an independent Claude Opus 5.5 agent.
 | 2 | Claude Opus 5.5 (independent, fresh) | 2 (2 low): R2-F1 and R2-F2 | Both fixed: R2-F1 in `e9f690f`; R2-F2 has no commit, because `output/` is git-ignored, and the file was moved out of `output/` |
 | 3 | Claude Opus 5.5 (independent, fresh) | 0 | Converged |
 
+#### 003-delivery
+
+Checks C-01 to C-43 of [quickstart.md](../../specs/003-delivery/quickstart.md), recorded phase by phase with the platform, date, commit and evidence. A check that cannot run on this machine is listed under "Left for the developer", never as passed.
+
+Scratch folders, outside the repository: `$CHECKS` is `/home/fortunatetechie/checks-003` on the WSL Ubuntu filesystem (used by the Bash and Docker checks), and the PowerShell `$env:CHECKS` is `C:\Users\hets7\AppData\Local\Temp\checks-003` (used by the Windows checks).
+
+Phase 1 (Setup), Windows 11 with Ruby 3.4.12 (`x64-mingw-ucrt`) and WSL Ubuntu, 2026-11-08, at commit `ba203ba` (the tip of `002-file-runner-impl`).
+
+| Task | Check | Result |
+|---|---|---|
+| T001 | Starting point at `$REPO`: `bundle exec rspec` | Pass: 726 examples, 0 failures. Randomized with seed 44966. Line coverage: 501 / 501 (100.00%). Exit 0 |
+| T001 | Starting point at `$REPO`: `bundle exec rubocop` | Pass: 52 files inspected, no offenses detected. Exit 0 |
+| T002 | `.ruby-version` | Pass: `3.4.12`, a bare version number with no `ruby-` prefix (as `001` plan D1 pins it). It is the latest Ruby 3.4.x release: the newest `ruby-3.4.*` entry in `https://cache.ruby-lang.org/pub/ruby/index.txt` on 2026-11-08 is `ruby-3.4.12` |
+| T003 | Expected texts | Pass: `report.txt` (21 lines, with `<run time>`), `final.csv` (5 lines, LF, final LF), `usage.txt` (2 lines) and `info.txt` (6 lines) saved in `$CHECKS`, all LF with no CR. Each was compared with `diff` against its block in `spec.md` ("The sample report", "The sample output file") or page 2 (AC-09.2, AC-09.5), with CR removed from the source: no difference. `report.txt`, `usage.txt`, `final.csv` and `info.txt` were copied to `$env:CHECKS` (`final.csv` keeps LF: 0 CR bytes) |
+
 ### Decided in the run
 
 - **001-domain**
@@ -507,6 +522,9 @@ Review rounds. Every round is by an independent Claude Opus 5.5 agent.
   - T084: STDOUT matches in `spec/` are heredoc delimiters only.
   - T085: the SimpleCov `add_filter` deprecation warning is left as it is (plan D20, research R11; T008 names `add_filter`).
   - T089: the only "mable" text under `lib/` is `Runner::DEFAULT_INPUTS`, the default paths DEC-22 requires.
+- **003-delivery**
+  - T003: `$CHECKS` is a fixed folder, `/home/fortunatetechie/checks-003` on the WSL Ubuntu filesystem, not a `mktemp -d` folder, so each later phase finds the expected texts there. The Docker checks then run from WSL with `$CHECKS` on WSL's own filesystem, as the quickstart Prerequisites require. The PowerShell `$env:CHECKS` is `%TEMP%\checks-003`, as the quickstart gives it.
+  - T003: `info.txt` was also copied to `$env:CHECKS` with the three files the quickstart names, so every expected text is in both folders.
 
 ### Changed in the run
 
