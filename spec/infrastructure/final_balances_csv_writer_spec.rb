@@ -160,7 +160,7 @@ RSpec.describe FinalBalancesCsvWriter do
           allow(file).to receive(:close) do
             calls += 1
             real_close.call if calls > 1
-            raise Errno::EIO
+            raise(calls == 1 ? Errno::ENOSPC : Errno::EIO)
           end
         end
       end
@@ -168,7 +168,7 @@ RSpec.describe FinalBalancesCsvWriter do
 
     it 'reports the first failure' do
       expect { described_class.new.write(accounts, 'out/day1.csv') }
-        .to raise_error(OutputNotWritable, reason_after('cannot write output file out/day1.csv: '))
+        .to raise_error(OutputNotWritable, "cannot write output file out/day1.csv: #{Errno::ENOSPC.new.message}")
     end
 
     it 'deletes the partial file it created (DEC-27)' do
