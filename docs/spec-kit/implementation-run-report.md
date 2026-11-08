@@ -476,6 +476,17 @@ Phase 2 (Foundational: the repository files), Windows 11 with Ruby 3.4.12 (`x64-
 | T008 | `bundle exec rspec` | Pass: 726 examples, 0 failures. Randomized with seed 26473 (and 45198 on a second run). Line coverage: 501 / 501 (100.00%). Exit 0 |
 | T008 | `bundle exec rubocop` | Pass: 52 files inspected (`bin/run` among them, `rubocop -L`), no offenses detected. Exit 0 |
 
+Phase 3 (User Story 4: CI), Windows 11 with Ruby 3.4.12 (`x64-mingw-ucrt`) in Git Bash, 2026-11-08. The check before the change ran at commit `f64b629`; the workflow is commit `aaf37ab`, and the checks after it ran on that commit. C-07 (the run on GitHub) waits for the push (T049).
+
+| Task | Check | Result |
+|---|---|---|
+| T009 | C-06 before the change | Fail, as expected: `test -e .github/workflows/ci.yml` exits 1 and the C-06 `grep` reports `No such file or directory`; there is no `.github/` folder |
+| T010 | Create `.github/workflows/ci.yml` | Done, as [ci-workflow.md](../../specs/003-delivery/contracts/ci-workflow.md): `name: CI`, `on: push`, one job `checks` on `ubuntu-latest`, five named steps. Commit `aaf37ab` |
+| T011 | C-06 after the change | Pass: every "must hold" row is present (`name` `CI`; `on` `push` with no `branches`; one job `checks`; `runs-on` `ubuntu-latest`; `actions/checkout@v5`; `ruby/setup-ruby@v1` with no `with:`; `bundle install` with `env: BUNDLE_FROZEN: "true"`; `bundle exec rspec`; `bundle exec rubocop`; the five step names). The C-06 `grep` prints nothing (exit 1); `grep` for `\|\| true`, `with:`, `strategy`, `schedule` and `workflow_dispatch` prints nothing |
+| T011 | `ruby -ryaml -e 'YAML.load_file(".github/workflows/ci.yml")'` | Pass: exit 0; the parsed keys are `name`, `on` (read by YAML 1.1 as `true`, as in every GitHub workflow) and `jobs`; `jobs` holds only `checks`, with the five steps in order |
+| T011 | `bundle exec rspec` at `$REPO` | Pass: 726 examples, 0 failures. Randomized with seed 1167. Exit 0 |
+| T011 | `bundle exec rubocop` at `$REPO` | Pass: 52 files inspected, no offenses detected. Exit 0 |
+
 ### Decided in the run
 
 - **001-domain**

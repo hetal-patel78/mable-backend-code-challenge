@@ -60,12 +60,12 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 
 ### Checks first
 
-- [ ] T009 [US4] Run C-06 ([quickstart.md](quickstart.md#ci-user-story-4)) at `$REPO` and record that it fails: `.github/workflows/ci.yml` does not exist (FR-020).
+- [X] T009 [US4] Run C-06 ([quickstart.md](quickstart.md#ci-user-story-4)) at `$REPO` and record that it fails: `.github/workflows/ci.yml` does not exist (FR-020).
 
 ### Implementation
 
-- [ ] T010 [US4] Create `.github/workflows/ci.yml` exactly as [contracts/ci-workflow.md](contracts/ci-workflow.md): `name: CI`; `on: push` with no branch filter; one job `checks` on `ubuntu-latest`; steps `Check out the code` (`actions/checkout@v5`), `Set up Ruby` (`ruby/setup-ruby@v1` with no inputs), `Install the gems` (`bundle install` with `env: BUNDLE_FROZEN: "true"`), `Run RSpec` (`bundle exec rspec`), `Run RuboCop` (`bundle exec rubocop`); no matrix, no `ruby-version`, no `bundler-cache`, no `continue-on-error`, no coverage step, no other trigger (FR-020, FR-021; DEC-36; plan items 3, 4 and 6).
-- [ ] T011 [US4] Re-run C-06 (passes), check the file parses with `ruby -ryaml -e 'YAML.load_file(".github/workflows/ci.yml")'`, record the result and commit `.github/workflows/ci.yml` (US4 scenarios 2 and 3; DEC-36). At `$REPO`, run `bundle exec rspec` (0 failures, random order) and `bundle exec rubocop` (no offences) and record both in the run report.
+- [X] T010 [US4] Create `.github/workflows/ci.yml` exactly as [contracts/ci-workflow.md](contracts/ci-workflow.md): `name: CI`; `on: push` with no branch filter; one job `checks` on `ubuntu-latest`; steps `Check out the code` (`actions/checkout@v5`), `Set up Ruby` (`ruby/setup-ruby@v1` with no inputs), `Install the gems` (`bundle install` with `env: BUNDLE_FROZEN: "true"`), `Run RSpec` (`bundle exec rspec`), `Run RuboCop` (`bundle exec rubocop`); no matrix, no `ruby-version`, no `bundler-cache`, no `continue-on-error`, no coverage step, no other trigger (FR-020, FR-021; DEC-36; plan items 3, 4 and 6).
+- [X] T011 [US4] Re-run C-06 (passes), check the file parses with `ruby -ryaml -e 'YAML.load_file(".github/workflows/ci.yml")'`, record the result and commit `.github/workflows/ci.yml` (US4 scenarios 2 and 3; DEC-36). At `$REPO`, run `bundle exec rspec` (0 failures, random order) and `bundle exec rubocop` (no offences) and record both in the run report.
 
 **Checkpoint**: C-06 passes. C-07 runs when the branch is pushed (T049).
 
