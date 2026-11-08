@@ -20,7 +20,7 @@ class AccountRepository
   end
 
   def find(account_number)
-    @accounts[account_number.to_s]
+    @accounts.fetch(account_number.to_s) { raise UnknownAccount, account_number }
   end
 
   def all

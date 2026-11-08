@@ -25,6 +25,13 @@ class NegativeBalance < StandardError
   end
 end
 
+# An account number that the repository does not hold.
+class UnknownAccount < StandardError
+  def initialize(account_number)
+    super("account #{account_number} is not loaded")
+  end
+end
+
 # A second account with a number that is already held.
 class DuplicateAccount < StandardError
   def initialize(account_number)

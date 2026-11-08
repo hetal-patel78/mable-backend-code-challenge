@@ -205,8 +205,8 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 ### Implementation for User Story 3
 
-- [ ] T037 [US3] Add `UnknownAccount` to `lib/domain/errors.rb`, built with `new(account_number)` and the message `account <number> is not loaded` [FR-016, FR-027; DEC-17; D21]
-- [ ] T038 [US3] Change `find` in `lib/domain/account_repository.rb` to `fetch` with a block that raises `UnknownAccount.new(account_number)` (depends on T037) [FR-016; DEC-17, DEC-31; research R8]
+- [X] T037 [US3] Add `UnknownAccount` to `lib/domain/errors.rb`, built with `new(account_number)` and the message `account <number> is not loaded` [FR-016, FR-027; DEC-17; D21]
+- [X] T038 [US3] Change `find` in `lib/domain/account_repository.rb` to `fetch` with a block that raises `UnknownAccount.new(account_number)` (depends on T037) [FR-016; DEC-17, DEC-31; research R8]
 
 **Checkpoint**: `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences.
 
