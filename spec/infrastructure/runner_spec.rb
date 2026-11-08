@@ -422,12 +422,6 @@ RSpec.describe Runner do
                                    output/final_balances_2026-11-07_143005.csv])
       end
 
-      let(:sample_files) do
-        %w[mable_account_balances.csv mable_transactions.csv].to_h do |name|
-          ["data/#{name}", File.binread(fixture_path('sample', name))]
-        end
-      end
-
       it_behaves_like 'a completed run', stdout: sample_report, output_file: sample_output_file
     end
 
@@ -591,10 +585,17 @@ RSpec.describe Runner do
     let(:files) { { 'b.csv' => "1111234522226789,100.00\n", 't.csv' => "1111234522226789,1212343433335665,10.00\n" } }
     let(:project_output) { Dir.glob(File.join(Runs::PROJECT_ROOT, 'output', '*')) }
 
-    before do
-      day = instance_double(ProcessDailyTransfer, call: nil)
-      allow(day).to receive(:call) { |*called_with| given[:paths] = called_with }
-      allow(ProcessDailyTransfer).to receive(:new) { |**parts| given.store(:parts, parts) && day }
+    shared_context 'with a stand-in ProcessDailyTransfer' do
+      before do
+        day = instance_double(ProcessDailyTransfer, call: nil)
+        allow(day).to receive(:call) { |*called_with| given[:paths] = called_with }
+        allow(ProcessDailyTransfer).to receive(:new) { |**parts| given.store(:parts, parts) && day }
+      end
+    end
+
+    def sample_run(env: {}, output: Runs::OUTPUT_FILE)
+      run_scenario(files: sample_files, env: env, read: [output],
+                   arguments: ['data/mable_account_balances.csv', 'data/mable_transactions.csv', output])
     end
 
     def in_project(path)
@@ -611,6 +612,8 @@ RSpec.describe Runner do
 
     describe 'AC-09.1 no arguments' do
       subject(:run) { run_scenario(files: files, arguments: []) }
+
+      include_context 'with a stand-in ProcessDailyTransfer'
 
       it 'reads the sample balances file in the project data folder (DEC-22)' do
         expect(in_temp(paths[0])).to eq(in_project('data/mable_account_balances.csv'))
@@ -641,6 +644,8 @@ RSpec.describe Runner do
     describe 'AC-09.1 b.csv t.csv' do
       subject(:run) { run_scenario(files: files, arguments: %w[b.csv t.csv]) }
 
+      include_context 'with a stand-in ProcessDailyTransfer'
+
       it 'reads b.csv in the current folder (DEC-22)' do
         expect(in_temp(paths[0])).to eq(File.join(run.temp_folder, 'b.csv'))
       end
@@ -669,6 +674,8 @@ RSpec.describe Runner do
     describe 'AC-09.1 b.csv t.csv out/day1.csv' do
       subject(:run) { run_scenario(files: files, arguments: %w[b.csv t.csv out/day1.csv]) }
 
+      include_context 'with a stand-in ProcessDailyTransfer'
+
       it 'writes to out/day1.csv in the current folder (DEC-22)' do
         expect(in_temp(paths[2])).to eq(File.join(run.temp_folder, 'out/day1.csv'))
       end
@@ -687,6 +694,8 @@ RSpec.describe Runner do
 
       let(:parts) { run.then { given[:parts] } }
 
+      include_context 'with a stand-in ProcessDailyTransfer'
+
       it 'gives a run time that is a Time' do
         expect(parts[:run_time]).to be_a(Time)
       end
@@ -701,6 +710,264 @@ RSpec.describe Runner do
           balances_reader: BalancesCsvReader, transfers_reader: TransfersCsvReader, writer: FinalBalancesCsvWriter,
           repository: AccountRepository, reporter: ReportPrinter, logger: Logger
         )
+      end
+    end
+
+    [%w[balances.csv], %w[a b c d], %w[-h], %w[--help]].each do |arguments|
+      describe "AC-09.2 #{arguments.join(' ')}" do
+        subject(:run) { run_scenario(arguments: arguments, read: ['output/']) }
+
+        it 'prints nothing on standard output' do
+          expect(run.stdout).to eq('')
+        end
+
+        it 'writes exactly the two usage lines on standard error, with no log line (DEC-22)' do
+          expect(run.stderr).to eq("Usage: bin/run [BALANCES_FILE TRANSFERS_FILE [OUTPUT_FILE]]\n" \
+                                   "With no arguments, runs the sample files in data/.\n")
+        end
+
+        it 'exits with status 1' do
+          expect(run.status).to eq(1)
+        end
+
+        it 'creates no output folder (DEC-22)' do
+          expect(run.files['output/']).to be_nil
+        end
+      end
+    end
+
+    describe 'AC-09.3 two missing files and an existing output file are reported together (DEC-23, DEC-25)' do
+      subject(:run) do
+        run_scenario(files: { 'out/day1.csv' => 'old' }, arguments: %w[missing1.csv missing2.csv out/day1.csv],
+                     read: ['out/day1.csv'])
+      end
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: file not found: missing1.csv
+        Error: file not found: missing2.csv
+        Error: output file already exists: out/day1.csv. Delete it or give another output path.
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: start checks failed (file not found, output file already exists)
+      STDERR
+
+      it 'leaves out/day1.csv unchanged (DEC-25)' do
+        expect(run.files['out/day1.csv']).to eq('old')
+      end
+    end
+
+    describe 'AC-09.3 only the two missing files (DEC-23)' do
+      subject(:run) { run_scenario(arguments: %w[missing1.csv missing2.csv]) }
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: file not found: missing1.csv
+        Error: file not found: missing2.csv
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: start checks failed (file not found)
+      STDERR
+    end
+
+    describe 'AC-09.3 only an existing output file (DEC-25)' do
+      subject(:run) do
+        run_scenario(files: { 'out/day1.csv' => 'old' }, arguments: %w[balances.csv transfers.csv out/day1.csv],
+                     read: ['out/day1.csv'])
+      end
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: output file already exists: out/day1.csv. Delete it or give another output path.
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: start checks failed (output file already exists)
+      STDERR
+
+      it 'leaves the bytes of out/day1.csv unchanged (DEC-25)' do
+        expect(run.files['out/day1.csv']).to eq('old')
+      end
+    end
+
+    describe 'AC-09.3a a folder named balances.csv cannot be opened (DEC-23)' do
+      subject(:run) { run_scenario(files: { 'balances.csv' => :folder }) }
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: cannot read file balances.csv: <reason from the system>
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: cannot read file
+      STDERR
+    end
+
+    describe 'AC-09.3a a folder named transfers.csv cannot be opened (DEC-23)' do
+      subject(:run) { run_scenario(files: { 'transfers.csv' => :folder }) }
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: cannot read file transfers.csv: <reason from the system>
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: cannot read file
+      STDERR
+    end
+
+    %w[info INFO Info].each do |level|
+      describe "AC-09.5 LOG_LEVEL=#{level}" do
+        subject(:run) { sample_run(env: { 'LOG_LEVEL' => level }) }
+
+        it_behaves_like 'a completed run', stdout: sample_report, stderr: <<~STDERR
+          I, [<timestamp> #<pid>]  INFO -- : Run started: balances data/mable_account_balances.csv, transfers data/mable_transactions.csv
+          I, [<timestamp> #<pid>]  INFO -- : Line 1 applied: ************6789 -> ************5665 500.00
+          I, [<timestamp> #<pid>]  INFO -- : Line 2 applied: ************5755 -> ************1212 1000.00
+          I, [<timestamp> #<pid>]  INFO -- : Line 3 applied: ************5755 -> ************6789 320.50
+          I, [<timestamp> #<pid>]  INFO -- : Line 4 applied: ************1234 -> ************5665 25.60
+          I, [<timestamp> #<pid>]  INFO -- : Run ended: processed 4, applied 4, rejected 0
+        STDERR
+      end
+    end
+
+    [nil, 'warn', 'debug', ' info '].each do |level|
+      describe "AC-09.5 #{level ? "LOG_LEVEL=#{level.inspect}" : 'LOG_LEVEL unset'} is the warn level (DEC-28)" do
+        subject(:run) { sample_run(env: { 'LOG_LEVEL' => level }.compact) }
+
+        it_behaves_like 'a completed run', stdout: sample_report
+      end
+    end
+
+    describe 'AC-09.5 LOG_LEVEL=info on a stopped run logs Run started but no Run ended (DEC-28)' do
+      subject(:run) do
+        run_scenario(files: { 'balances.csv' => "1111234522226789,5000.00\n\n12345,100.00\n1212343433335665,abc,9\n" \
+                                                "1111234522226789,10.00\n2222123433331212,-5.00\n" \
+                                                "3212343433335755,1.234\n" },
+                     env: { 'LOG_LEVEL' => 'info' })
+      end
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        I, [<timestamp> #<pid>]  INFO -- : Run started: balances balances.csv, transfers transfers.csv
+        Error: the balances file is invalid (5 problems):
+          Line 3: account number "12345" must be exactly 16 digits
+          Line 4: expected 2 fields, found 3
+          Line 5: account 1111234522226789 appears more than once (first on line 1)
+          Line 6: balance "-5.00" must not be negative
+          Line 7: balance "1.234" has more than 2 decimal places
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 5 problems
+      STDERR
+    end
+
+    describe 'AC-09.5 LOG_LEVEL=info with rejections (DEC-28)' do
+      subject(:run) do
+        run_scenario(files: { 'transfers.csv' => "1111234522226789,1212343433335665,30.00\n" \
+                                                 "1111234522226789,1212343433335665,90.00\n" \
+                                                 "1212343433335665,9999888877776666,10.00\n" \
+                                                 "1111234522226789,0000123412341234,70.00\n" \
+                                                 "1212343433335665,1212343433335665,5.00\n" },
+                     env: { 'LOG_LEVEL' => 'info' })
+      end
+
+      it_behaves_like 'a completed run', stdout: <<~STDOUT, stderr: <<~STDERR
+        Transfers
+          Line 1  applied  1111234522226789 -> 1212343433335665  30.00
+          Line 2  rejected  1111234522226789 -> 1212343433335665  90.00  insufficient_funds
+          Line 3  rejected  1212343433335665 -> 9999888877776666  10.00  unknown_account
+          Line 4  applied  1111234522226789 -> 0000123412341234  70.00
+          Line 5  rejected  1212343433335665 -> 1212343433335665  5.00  same_account
+
+        Summary
+          Processed: 5
+          Applied: 2
+          Rejected: 3
+            same_account: 1
+            unknown_account: 1
+            insufficient_funds: 1
+          Total before: 150.00
+          Total after: 150.00
+
+        Final balances
+          1111234522226789  0.00
+          1212343433335665  80.00
+          0000123412341234  70.00
+
+        Output file: output/final_balances_2026-11-07_143005.csv
+      STDOUT
+        I, [<timestamp> #<pid>]  INFO -- : Run started: balances balances.csv, transfers transfers.csv
+        I, [<timestamp> #<pid>]  INFO -- : Line 1 applied: ************6789 -> ************5665 30.00
+        W, [<timestamp> #<pid>]  WARN -- : Line 2 rejected: ************6789 -> ************5665 90.00 insufficient_funds
+        W, [<timestamp> #<pid>]  WARN -- : Line 3 rejected: ************5665 -> ************6666 10.00 unknown_account
+        I, [<timestamp> #<pid>]  INFO -- : Line 4 applied: ************6789 -> ************1234 70.00
+        W, [<timestamp> #<pid>]  WARN -- : Line 5 rejected: ************5665 -> ************5665 5.00 same_account
+        I, [<timestamp> #<pid>]  INFO -- : Run ended: processed 5, applied 2, rejected 3 (same_account 1, unknown_account 1, insufficient_funds 1)
+      STDERR
+    end
+
+    describe 'AC-09.6 LOG_LEVEL=info on the sample files masks account numbers only in log lines (DEC-29)' do
+      subject(:run) { sample_run(env: { 'LOG_LEVEL' => 'info' }) }
+
+      it 'shows 1111234522226789 in full in the report' do
+        expect(run.stdout).to include('1111234522226789')
+      end
+
+      it 'shows no run of 16 digits in any log line' do
+        expect(run.stderr).not_to match(/\d{16}/)
+      end
+    end
+
+    describe 'AC-09.7 the first of two runs on the sample files (DEC-03)' do
+      subject(:run) { sample_run(output: 'output/final_balances_2026-11-07_143005.csv') }
+
+      it_behaves_like 'a completed run', stdout: sample_report
+    end
+
+    describe 'AC-09.7 the second of two runs on the sample files (DEC-03)' do
+      subject(:run) { sample_run(output: 'output/final_balances_2026-11-07_143006.csv') }
+
+      it_behaves_like 'a completed run',
+                      stdout: sample_report(output_file: 'output/final_balances_2026-11-07_143006.csv')
+    end
+
+    describe 'AC-09.7 two runs on the sample files give the same result (DEC-02, DEC-03)' do
+      subject(:runs) do
+        %w[output/final_balances_2026-11-07_143005.csv output/final_balances_2026-11-07_143006.csv].map do |output|
+          sample_run(output: output)
+        end
+      end
+
+      it 'prints the same report apart from the Output file line' do
+        expect(runs.map { |each_run| each_run.stdout.lines[0...-1] }.uniq.size).to eq(1)
+      end
+
+      it 'writes output files with the same bytes' do
+        expect(runs.map { |each_run| each_run.files.values.first }.uniq.size).to eq(1)
+      end
+
+      it 'writes each output file' do
+        expect(runs.map { |each_run| each_run.files.values.first }).to all(be_a(String))
+      end
+    end
+
+    describe 'leading zeros are matched across both files (DEC-08)' do
+      subject(:run) do
+        run_scenario(files: %w[balances.csv transfers.csv].to_h { |name| [name, read_fixture(name)] })
+      end
+
+      def read_fixture(name)
+        File.binread(fixture_path('leading_zeros', name))
+      end
+
+      it_behaves_like 'a completed run', stdout: <<~STDOUT
+        Transfers
+          Line 1  applied  0000123412341234 -> 1111234522226789  10.00
+
+        Summary
+          Processed: 1
+          Applied: 1
+          Rejected: 0
+          Total before: 150.00
+          Total after: 150.00
+
+        Final balances
+          0000123412341234  40.00
+          1111234522226789  110.00
+
+        Output file: output/final_balances_2026-11-07_143005.csv
+      STDOUT
+    end
+
+    describe 'an unexpected error is not caught (page 10 pick 45)' do
+      before do
+        day = instance_double(ProcessDailyTransfer)
+        allow(day).to receive(:call).and_raise(RuntimeError, 'an unexpected bug')
+        allow(ProcessDailyTransfer).to receive(:new).and_return(day)
+      end
+
+      it 'lets the RuntimeError reach the caller' do
+        expect { run_scenario }.to raise_error(RuntimeError, 'an unexpected bug')
       end
     end
   end

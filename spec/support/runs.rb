@@ -42,6 +42,12 @@ module Runs
     end
   end
 
+  def sample_files
+    %w[mable_account_balances.csv mable_transactions.csv].to_h do |name|
+      ["data/#{name}", File.binread(fixture_path('sample', name))]
+    end
+  end
+
   def stream_pattern(text)
     parts = text.split(/(#{PLACEHOLDERS.keys.join('|')})/o)
     Regexp.new("\\A#{parts.map { |part| PLACEHOLDERS.fetch(part) { Regexp.escape(part) } }.join}\\z")
