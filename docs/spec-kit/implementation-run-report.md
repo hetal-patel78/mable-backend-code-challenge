@@ -373,7 +373,7 @@ The specs are implemented one after another, each in its own worktree in `C:\Dev
 |---|---|
 | 1. Start | Done: this section, [P26](../prompts/prompts-implementation-phase.md#p26) and the "Current stage" in `CLAUDE.md` |
 | 2. Implement 001-domain | Done: 2 review rounds. Round 1 found 1 low defect (fixed); the last round, round 2, found 0 defects. Branch `001-domain-impl` pushed with its small commits kept |
-| 2. Implement 002-file-runner | Not started |
+| 2. Implement 002-file-runner | Done: 3 review rounds. Round 1 found 2 defects (1 high, 1 low; both fixed) and round 2 found 2 low defects (both fixed). The last round, round 3, found 0 defects. Branch `002-file-runner-impl` pushed with its small commits kept |
 | 2. Implement 003-delivery | Not started |
 | 3. Whole-system checks | Not started |
 | 4. Merge and push | Not started |
@@ -425,6 +425,26 @@ Design review of the run's cost (Phase 9, T079 to T081), against the [time and s
 | RSpec (`bundle exec rspec`) | 721 examples, 0 failures. Randomized with seed 23498 |
 | RuboCop (`bundle exec rubocop`) | 52 files inspected, no offenses detected |
 
+The RSpec and RuboCop rows above are from the Phase 9 run, before the review rounds below. The final checks after the last review round follow.
+
+Final checks, run on the branch after the last review round. All four criteria pass.
+
+| Check | Result |
+|---|---|
+| RSpec (`bundle exec rspec`) | 726 examples, 0 failures. Randomized with seed 19581. Finished in 56.5 seconds |
+| Coverage (SimpleCov) | Line coverage: 501 / 501 (100.00%) |
+| RuboCop (`bundle exec rubocop`) | 0 offenses (52 files inspected, no offenses detected) |
+| Unchecked tasks in `specs/002-file-runner/tasks.md` | 0 |
+| Git status | Clean. The coverage report that the RSpec run regenerates is generated output and is ignored by git |
+
+Review rounds. Every round is by an independent Claude Opus 5.5 agent.
+
+| Round | Reviewer | Defects found | Result |
+|---|---|---|---|
+| 1 | Claude Opus 5.5 (independent, fresh) | 2 (1 high, 1 low): F1 (high) and F2 (low) | Both fixed in `01253cd` |
+| 2 | Claude Opus 5.5 (independent, fresh) | 2 (2 low): R2-F1 and R2-F2 | Both fixed: R2-F1 in `e9f690f`; R2-F2 has no commit, because `output/` is git-ignored, and the file was moved out of `output/` |
+| 3 | Claude Opus 5.5 (independent, fresh) | 0 | Converged |
+
 ### Decided in the run
 
 - **001-domain**
@@ -449,16 +469,61 @@ Design review of the run's cost (Phase 9, T079 to T081), against the [time and s
   - The "values kept as written" `TransferResult` example is one example per amount (`''` and `'10.'`), each with reason `:invalid_amount`.
   - T048 / FR-029: `TransferResult`'s `line_number` reader does not break "the domain knows no line numbers". `data-model.md` says `TransferResult` holds a line number, and T043 sets the field. The domain only stores the number it is given and never works one out or puts it in a message.
   - T047: the 10 message table rows count "empty", "more than 2 decimal places" and "not a valid amount" as one row each, covering both the balance and amount wording. Every row's text is found in a `raise_error` expectation in `spec/domain`.
+- **002-file-runner**
+  - `spec/support/files.rb` defines a `Files` module and includes it in every example, with `RSpec.configure` inside the support file. So `spec/spec_helper.rb`, which only includes `Builders`, is unchanged.
+  - P30 (plan.md Decided in the run; research R1 and R2 corrected): the csv gem 3.3.7 checks the encoding of everything it samples to detect the row separator before it gives the first row. So `CSV::InvalidEncodingError` comes before line 1 is given, and it carries a row count, not the physical line. `CsvRows` keeps `CSV.open('r:bom|utf-8')` with one row per shift, but sets the IO to BINARY after the BOM is dropped. It checks each row's raw `csv.line` as UTF-8 itself and raises `UnreadableFile.at_line` at the first invalid row. Rejected: relying on the gem's error, a fixed `row_sep` (it breaks CR LF), and reading lines by hand.
+  - `DisplayPath` is a module with `DisplayPath.of`. A path with no common root (another Windows drive) is shown in full, as research R3 says.
+  - `UnreadableFile` takes its reason as the system message up to ` @ `. Its constructor is `new(message, path:, line_number: nil)`, behind two factory methods.
+  - `spec/support/report_templates.rb` has `sample_report(output_file:)` and `sample_output_file`, included and extended, so the AC-08.1 text is not copied into each spec.
+  - `template_r(line:)` accepts the transfers line with or without the spec's two-space indent.
+  - `memory_logger` returns a `MemoryLogger`, a `Logger` subclass in `spec/support/fakes.rb` that exposes its `StringIO`. `log_lines` keeps `'<LEVEL> <text>'`.
+  - The shared example "a completed run" checks the output file only when `output_file:` is given.
+  - `runner_spec` FR-09 has a fourth group, "the parts given to ProcessDailyTransfer (DEC-30)".
+  - `DayResult::ALL_REJECTED_WARNING` is assigned after the `Data.define` block (Lint/ConstantDefinitionInBlock).
+  - `FinalBalancesCsvWriter` keeps the open flags as the constant `NEW_FILE` (`WRONLY|CREAT|EXCL|BINARY`).
+  - `InvalidBalancesFile.no_rows(path)` holds one problem, the no-rows message, so `stop_reason` reads "balances file invalid: 1 problem".
+  - The AC-01.8 and AC-01.9 runner scenarios pass an explicit output path as the third argument, so a broken run never writes into the project's `output/` folder.
+  - The private row method in `LoadBalances` is named `load_row` (not `load`), to avoid shadowing `Kernel#load`.
+  - The T050 AC-02.4 "only blank lines" test file contains an empty line, a line of spaces and a line with a tab.
+  - The T047 4-field `malformed_row` reason example uses the row `1111234522226789,1212343433335665,10.00,x`.
+  - T047 masking: "from" and an empty value are each checked as the from field of a 3-field row.
+  - The T049 counts per reason use placeholder account values and check DEC-19 order.
+  - The spec locals for AC-07.1 and AC-08.2 are named `retry_rows` and `mixed_rows` (RuboCop Naming/VariableNumber).
+  - The T061 AC-08.4 "a file outside" group uses its own examples with a second temporary folder.
+  - The T061 AC-08.3 "output file fed back in" uses `run_scenario`'s default three arguments.
+  - T059 FakeReader rows are built from `spec/fixtures/sample/*.csv` with `Row.new`.
+  - The T059 writer-failure examples use a helper method for the `instance_double` writer (RSpec/MultipleMemoizedHelpers).
+  - T067 `FinalBalancesCsvWriter#write` is split into `open_new` and `write_lines`. On a write error it closes and removes the partial file, then raises `OutputNotWritable`.
+  - The FR-09 stand-in `ProcessDailyTransfer` is a shared_context, included only by the AC-09.1 groups and the parts group, which keeps nesting within 3 levels.
+  - `sample_files` moved to the Runs support module, with a `sample_run(env:, output:)` helper.
+  - AC-09.7 is checked with three groups: first run, second run, and both runs together.
+  - The AC-09.2 groups also check that no `output/` folder was created.
+  - Runner start problems are kept as `[message, reason]` pairs. Log reasons are the unique reasons joined by ", ".
+  - The 35 FR-03 to FR-06 runner scenarios use `run_scenario`'s default three arguments.
+  - Those rows are one list of hashes in `spec/infrastructure/runner_spec.rb`. The thirteen AC-06.2 invalid amounts are generated from the spec's template row.
+  - AC-03.2 is shown by every R row. AC-06.3 is left to the Phase 4 FR-01 scenarios.
+  - T079: `AccountRepository#all` returns a new array on each call, briefly holding O(m) references. Recorded as an observation within O(m + n); code unchanged.
+  - The Phase 9 review result is recorded under Part 2 > Check results > 002-file-runner in this report.
+  - T084: STDOUT matches in `spec/` are heredoc delimiters only.
+  - T085: the SimpleCov `add_filter` deprecation warning is left as it is (plan D20, research R11; T008 names `add_filter`).
+  - T089: the only "mable" text under `lib/` is `Runner::DEFAULT_INPUTS`, the default paths DEC-22 requires.
 
 ### Changed in the run
 
-None for 001-domain.
+- **001-domain**: none.
+- **002-file-runner**
+  - `109db43` changed `specs/002-file-runner/plan.md` P30 and `research.md` R2: invalid UTF-8 bytes are found by `CsvRows` per row, not by the csv gem's `InvalidEncodingError`. DEC-32's `CSV.open` with one row per shift still holds. No design-decisions or solution-design change.
 
 ### Fixed in review
 
 - **001-domain**
   - Round 1, F1 (low): DEC-09 is now named in the examples for `-0` and `-0.00` equality, the `-0` and `0` hash example, and the example that a computed Money is negative only below 0 (5.01 from 5.00). No expectation changed. Commit `9084dd4`.
   - Round 2 found no defects.
+- **002-file-runner**
+  - Round 1, F1 (high): a real write failure was not caught. Ruby buffers the file, so a short file reaches the disk only at `close`, and that close sat outside the rescue. A disk-full error escaped as a raw `Errno::ENOSPC`, left an empty output file, and printed a stack trace. The writer now closes the file inside the rescued section, so a flush or close failure becomes `OutputNotWritable` and the partial file is deleted (a second close error is ignored). Specs were added where the failure happens at close, and they failed before the fix. Commit `01253cd`.
+  - Round 1, F2 (low): the `ArgumentError` branch of `DisplayPath.of` (different Windows drives, which shows the full path) had no test. A spec now reaches it (`relative_path_from` stubbed to raise, platform-independent), expecting the full path. Line coverage is now 501 / 501. The change went into the same commit as F1 by mistake. Commit `01253cd`.
+  - Round 2, R2-F1 (low): the example "reports the first failure" could not tell the first failure from the second. The spec now makes the first close raise `Errno::ENOSPC` and the second `Errno::EIO`, and asserts the exact message. The code already reported the first error, so no code change was needed. Commit `e9f690f`.
+  - Round 2, R2-F2 (low): T037 was marked done, but the output file from its hand run was not deleted. The file was moved out of `output/`, which is now empty. No commit, because `output/` is git-ignored.
   - Not a defect: none.
 
 ### Left for the developer
