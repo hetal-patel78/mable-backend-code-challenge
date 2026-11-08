@@ -268,13 +268,13 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 **Purpose**: prove the measurable outcomes and the design review targets (NFR-02, NFR-05; SC-001 to SC-008).
 
-- [ ] T045 Run `bundle exec rspec` three times and confirm it passes with three different seeds; rerun one with `--seed <n>` (SC-008; DEC-34)
-- [ ] T046 Run `bundle exec rubocop` and confirm `no offenses detected`; confirm no method in `lib/domain/` is longer than 10 lines (SC-005; NFR-05; DEC-36)
-- [ ] T047 Check every expected message in `spec/domain/` against the [spec's message table](spec.md#domain-error-messages), 10 of 10 rows, character for character (SC-004; FR-027)
-- [ ] T048 Design review of `lib/domain/` against [data-model.md](data-model.md#one-home-per-rule-fr-028-nfr-05): each of the 8 rules is in exactly one class; no file reads a file, prints, logs, reads the clock or mentions a line number; no comment explains the design; no base class, suffix, factory, DTO or mapper (SC-006; FR-028 to FR-030, FR-032; DEC-30)
-- [ ] T049 Design review of cost against the [time and space table](../../docs/solution-design/09-considerations.md#time-and-space): `add`, `include?` and `find` use only `Hash` key operations; `all` returns the values once; `apply` makes two lookups and two balance changes (SC-007; FR-033 to FR-035; NFR-02)
-- [ ] T050 Run every step of [quickstart.md](quickstart.md) and confirm each expected outcome, including `git status --short` showing no `coverage/` and `git ls-files lib spec` listing only the files in the plan (US7 scenarios 1 to 4; FR-036 to FR-042)
-- [ ] T051 Confirm no file was created under `lib/application/`, `lib/infrastructure/`, `bin/`, `data/`, `spec/application/`, `spec/infrastructure/`, `spec/acceptance/` or `spec/fixtures/`; those belong to `002` (FR-038; brief rule 3)
+- [X] T045 Run `bundle exec rspec` three times and confirm it passes with three different seeds; rerun one with `--seed <n>` (SC-008; DEC-34)
+- [X] T046 Run `bundle exec rubocop` and confirm `no offenses detected`; confirm no method in `lib/domain/` is longer than 10 lines (SC-005; NFR-05; DEC-36)
+- [X] T047 Check every expected message in `spec/domain/` against the [spec's message table](spec.md#domain-error-messages), 10 of 10 rows, character for character (SC-004; FR-027)
+- [X] T048 Design review of `lib/domain/` against [data-model.md](data-model.md#one-home-per-rule-fr-028-nfr-05): each of the 8 rules is in exactly one class; no file reads a file, prints, logs, reads the clock or mentions a line number; no comment explains the design; no base class, suffix, factory, DTO or mapper (SC-006; FR-028 to FR-030, FR-032; DEC-30)
+- [X] T049 Design review of cost against the [time and space table](../../docs/solution-design/09-considerations.md#time-and-space): `add`, `include?` and `find` use only `Hash` key operations; `all` returns the values once; `apply` makes two lookups and two balance changes (SC-007; FR-033 to FR-035; NFR-02)
+- [X] T050 Run every step of [quickstart.md](quickstart.md) and confirm each expected outcome, including `git status --short` showing no `coverage/` and `git ls-files lib spec` listing only the files in the plan (US7 scenarios 1 to 4; FR-036 to FR-042)
+- [X] T051 Confirm no file was created under `lib/application/`, `lib/infrastructure/`, `bin/`, `data/`, `spec/application/`, `spec/infrastructure/`, `spec/acceptance/` or `spec/fixtures/`; those belong to `002` (FR-038; brief rule 3)
 
 ---
 
