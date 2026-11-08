@@ -30,11 +30,11 @@
 
 **Purpose**: the sample data, the copies the tests use, and the helper for temporary folders (FR-038; DEC-22, DEC-34).
 
-- [ ] T001 Copy `docs/challenge/mable_account_balances.csv` and `docs/challenge/mable_transactions.csv` to `data/mable_account_balances.csv` and `data/mable_transactions.csv` with `cp`, unchanged; never edit `docs/challenge/` [FR-038; DEC-22; item 14; research R11]
-- [ ] T002 [P] Copy the same two files to `spec/fixtures/sample/mable_account_balances.csv` and `spec/fixtures/sample/mable_transactions.csv` with `cp`, unchanged [FR-038, FR-043; DEC-34; item 14]
-- [ ] T003 Run `git diff --no-index` between each original and each copy and confirm there is no difference (depends on T001, T002) [FR-038; SC-001]
-- [ ] T004 [P] Create `spec/support/files.rb` with a one-line comment and the helpers `in_temp_folder { |folder| ... }` (`Dir.mktmpdir`, `Dir.chdir(folder) { ... }`, folder removed afterwards), `write_file(name, text)` (creates folders, writes with `File.binwrite`) and `fixture_path(*parts)` (a path under `spec/fixtures/`) [DEC-34; P17, P20; research R9]
-- [ ] T005 Run `bundle exec rspec` (all of `001`'s examples pass, random order) and `bundle exec rubocop` (`no offenses detected`) as the starting point (depends on T004) [NFR-05, NFR-06; DEC-34, DEC-36]
+- [X] T001 Copy `docs/challenge/mable_account_balances.csv` and `docs/challenge/mable_transactions.csv` to `data/mable_account_balances.csv` and `data/mable_transactions.csv` with `cp`, unchanged; never edit `docs/challenge/` [FR-038; DEC-22; item 14; research R11]
+- [X] T002 [P] Copy the same two files to `spec/fixtures/sample/mable_account_balances.csv` and `spec/fixtures/sample/mable_transactions.csv` with `cp`, unchanged [FR-038, FR-043; DEC-34; item 14]
+- [X] T003 Run `git diff --no-index` between each original and each copy and confirm there is no difference (depends on T001, T002) [FR-038; SC-001]
+- [X] T004 [P] Create `spec/support/files.rb` with a one-line comment and the helpers `in_temp_folder { |folder| ... }` (`Dir.mktmpdir`, `Dir.chdir(folder) { ... }`, folder removed afterwards), `write_file(name, text)` (creates folders, writes with `File.binwrite`) and `fixture_path(*parts)` (a path under `spec/fixtures/`) [DEC-34; P17, P20; research R9]
+- [X] T005 Run `bundle exec rspec` (all of `001`'s examples pass, random order) and `bundle exec rubocop` (`no offenses detected`) as the starting point (depends on T004) [NFR-05, NFR-06; DEC-34, DEC-36]
 
 **Checkpoint**: the copies equal the originals; the suite and RuboCop are green.
 
