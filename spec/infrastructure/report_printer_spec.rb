@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'infrastructure/csv_rows'
 require 'infrastructure/report_printer'
 
 RSpec.describe ReportPrinter do
@@ -53,6 +54,96 @@ RSpec.describe ReportPrinter do
 
     it 'writes nothing to standard error' do
       expect { printed(sample_day(sample_output_path)) }.not_to output.to_stderr
+    end
+  end
+
+  describe '#print with rejected rows' do
+    def rejected(line, fields, reason, hint = nil)
+      TransferResult.rejected(line_number: line, fields: fields, reason: reason, header_hint: hint)
+    end
+
+    def applied(line, fields)
+      TransferResult.applied(line_number: line, fields: fields)
+    end
+
+    def day_of(results, balances = %w[100.00 50.00 0.00])
+      accounts = %w[1111234522226789 1212343433335665 0000123412341234].zip(balances).map { |pair| account(*pair) }
+      DayResult.new(results: results, total_before: balance('150.00'), total_after: balance('150.00'),
+                    accounts: accounts, output_path: sample_output_path)
+    end
+
+    def line_of(result)
+      printed(day_of([result])).lines[1]
+    end
+
+    let(:ac_02_1_report) do
+      <<~REPORT
+        Transfers
+          Line 1  applied  1111234522226789 -> 1212343433335665  10.00
+          Line 4  rejected  malformed_row: 2 fields, expected 3
+          Line 5  applied  1212343433335665 -> 1111234522226789  5.00
+
+        Summary
+          Processed: 3
+          Applied: 2
+          Rejected: 1
+            malformed_row: 1
+          Total before: 150.00
+          Total after: 150.00
+
+        Final balances
+          1111234522226789  95.00
+          1212343433335665  55.00
+          0000123412341234  0.00
+
+        Output file: output/final_balances_2026-11-07_143005.csv
+      REPORT
+    end
+
+    it "prints exactly AC-02.3's report, the warning after the summary (DEC-21)" do
+      day = day_of([rejected(1, %w[from to amount], :invalid_account_number, CsvRows::HEADER_HINT)])
+      expect(printed(day)).to eq(template_r(line: '  Line 1  rejected  from -> to  amount  invalid_account_number: ' \
+                                                  "#{CsvRows::HEADER_HINT}", reason: 'invalid_account_number'))
+    end
+
+    it "prints exactly AC-02.1's report, with no warning (DEC-26)" do
+      results = [applied(1, %w[1111234522226789 1212343433335665 10.00]),
+                 rejected(4, %w[1111234522226789 1212343433335665], :malformed_row),
+                 applied(5, %w[1212343433335665 1111234522226789 5.00])]
+      expect(printed(day_of(results, %w[95.00 55.00 0.00]))).to eq(ac_02_1_report)
+    end
+
+    it 'shows a rejected row with its values as written and its code' do
+      expect(line_of(rejected(3, %w[1212343433335665 9999888877776666 10.00], :unknown_account)))
+        .to eq("  Line 3  rejected  1212343433335665 -> 9999888877776666  10.00  unknown_account\n")
+    end
+
+    it 'shows an empty value as "" (page 10 pick 11)' do
+      expect(line_of(rejected(1, ['', '', ''], :invalid_account_number)))
+        .to eq(%(  Line 1  rejected  "" -> ""  ""  invalid_account_number\n))
+    end
+
+    it 'shows no values for a row with 2 fields (DEC-19)' do
+      expect(line_of(rejected(4, %w[1111234522226789 1212343433335665], :malformed_row)))
+        .to eq("  Line 4  rejected  malformed_row: 2 fields, expected 3\n")
+    end
+
+    it 'shows no values for a row with 1 field (item 8)' do
+      expect(line_of(rejected(1, %w[1111234522226789], :malformed_row)))
+        .to eq("  Line 1  rejected  malformed_row: 1 fields, expected 3\n")
+    end
+
+    it 'shows the header hint after a wrong field count (page 10 pick 10, DEC-06)' do
+      expect(line_of(rejected(1, %w[from to], :malformed_row, CsvRows::HEADER_HINT)))
+        .to eq("  Line 1  rejected  malformed_row: 2 fields, expected 3. #{CsvRows::HEADER_HINT}\n")
+    end
+
+    it 'shows the counts per reason in DEC-19 order between Rejected and Total before (AC-08.2)' do
+      results = [rejected(2, %w[a b 90.00], :insufficient_funds), rejected(3, %w[a b 10.00], :unknown_account),
+                 rejected(5, %w[a a 5.00], :same_account), applied(1, %w[a b 30.00])]
+      expect(printed(day_of(results)).lines[9..13].join)
+        .to eq("  Rejected: 3\n    same_account: 1\n    unknown_account: 1\n    insufficient_funds: 1\n" \
+               "  Total before: 150.00\n")
     end
   end
 end

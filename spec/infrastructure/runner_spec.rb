@@ -241,6 +241,179 @@ RSpec.describe Runner do
     end
   end
 
+  describe 'FR-02 Read the transfers file' do
+    describe 'AC-02.1 blank lines are skipped; a row with the wrong number of fields is rejected (DEC-05, DEC-19)' do
+      subject(:run) do
+        run_scenario(files: { 'transfers.csv' => "1111234522226789,1212343433335665,10.00\n\n   \n" \
+                                                 "1111234522226789,1212343433335665\n" \
+                                                 "1212343433335665,1111234522226789,5.00\n" })
+      end
+
+      it_behaves_like 'a completed run', stdout: <<~STDOUT, stderr: <<~STDERR
+        Transfers
+          Line 1  applied  1111234522226789 -> 1212343433335665  10.00
+          Line 4  rejected  malformed_row: 2 fields, expected 3
+          Line 5  applied  1212343433335665 -> 1111234522226789  5.00
+
+        Summary
+          Processed: 3
+          Applied: 2
+          Rejected: 1
+            malformed_row: 1
+          Total before: 150.00
+          Total after: 150.00
+
+        Final balances
+          1111234522226789  95.00
+          1212343433335665  55.00
+          0000123412341234  0.00
+
+        Output file: output/final_balances_2026-11-07_143005.csv
+      STDOUT
+        W, [<timestamp> #<pid>]  WARN -- : Line 4 rejected: ************6789 -> ************5665 malformed_row
+      STDERR
+    end
+
+    describe 'AC-02.2 a line of commas is a row with empty fields (DEC-05, DEC-06)' do
+      subject(:run) { run_scenario(files: { 'transfers.csv' => ",,\n" }) }
+
+      it_behaves_like 'a completed run',
+                      stdout: template_r(line: '  Line 1  rejected  "" -> ""  ""  invalid_account_number',
+                                         reason: 'invalid_account_number'),
+                      stderr: <<~STDERR
+                        W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: **** -> **** "" invalid_account_number
+                        W, [<timestamp> #<pid>]  WARN -- : All transfers were rejected; check this is the right file.
+                      STDERR
+    end
+
+    describe 'AC-02.3 a header row is rejected with a hint; every row rejected still completes (DEC-06, DEC-21)' do
+      subject(:run) { run_scenario(files: { 'transfers.csv' => "from,to,amount\n" }) }
+
+      it_behaves_like 'a completed run',
+                      output_file: "1111234522226789,100.00\n1212343433335665,50.00\n0000123412341234,0.00\n",
+                      stdout: <<~STDOUT, stderr: <<~STDERR
+                        Transfers
+                          Line 1  rejected  from -> to  amount  invalid_account_number: This looks like a header row; files must not have a header.
+
+                        Summary
+                          Processed: 1
+                          Applied: 0
+                          Rejected: 1
+                            invalid_account_number: 1
+                          Total before: 150.00
+                          Total after: 150.00
+
+                        Warning: All transfers were rejected; check this is the right file.
+
+                        Final balances
+                          1111234522226789  100.00
+                          1212343433335665  50.00
+                          0000123412341234  0.00
+
+                        Output file: output/final_balances_2026-11-07_143005.csv
+                      STDOUT
+                        W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: **** -> **** amount invalid_account_number
+                        W, [<timestamp> #<pid>]  WARN -- : All transfers were rejected; check this is the right file.
+                      STDERR
+    end
+
+    describe 'AC-02.3 from,to is malformed_row with the header hint (DEC-06, DEC-21)' do
+      subject(:run) { run_scenario(files: { 'transfers.csv' => "from,to\n" }) }
+
+      it_behaves_like 'a completed run',
+                      stdout: template_r(line: '  Line 1  rejected  malformed_row: 2 fields, expected 3. ' \
+                                               'This looks like a header row; files must not have a header.',
+                                         reason: 'malformed_row'),
+                      stderr: <<~STDERR
+                        W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: **** -> **** malformed_row
+                        W, [<timestamp> #<pid>]  WARN -- : All transfers were rejected; check this is the right file.
+                      STDERR
+    end
+
+    describe 'AC-02.4 an empty transfers file stops the run (DEC-20)' do
+      subject(:run) do
+        run_scenario(files: { 'empty.csv' => '' },
+                     arguments: %w[balances.csv empty.csv output/final_balances_2026-11-07_143005.csv])
+      end
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: the transfers file has no transfers: empty.csv
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: transfers file has no transfers
+      STDERR
+    end
+
+    describe 'AC-02.4 a transfers file of only blank lines stops the run (DEC-05, DEC-20)' do
+      subject(:run) do
+        run_scenario(files: { 'empty.csv' => "\n   \n\t\n" },
+                     arguments: %w[balances.csv empty.csv output/final_balances_2026-11-07_143005.csv])
+      end
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: the transfers file has no transfers: empty.csv
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: transfers file has no transfers
+      STDERR
+    end
+
+    describe 'AC-02.5 a transfers file that cannot be read past a line stops the run (DEC-04)' do
+      subject(:run) do
+        run_scenario(files: { 'bad.csv' => "1111234522226789,1212343433335665,10.00\n1111234522226789,\"10.00\n" },
+                     arguments: %w[balances.csv bad.csv output/final_balances_2026-11-07_143005.csv])
+      end
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: cannot read bad.csv from line 2. Check for an unclosed quote or characters that are not text.
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: cannot read file
+      STDERR
+    end
+
+    describe 'AC-02.5 a row rejected before the unreadable line is logged first (DEC-04, DEC-28)' do
+      subject(:run) do
+        run_scenario(files: { 'bad.csv' => "1111234522226789,1212343433335665,100.01\n1111234522226789,\"10.00\n" },
+                     arguments: %w[balances.csv bad.csv output/final_balances_2026-11-07_143005.csv])
+      end
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************6789 -> ************5665 100.01 insufficient_funds
+        Error: cannot read bad.csv from line 2. Check for an unclosed quote or characters that are not text.
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: cannot read file
+      STDERR
+    end
+  end
+
+  describe 'FR-07 The order transfers are applied in' do
+    describe 'AC-07.1 one pass, no retry, repeats applied (DEC-15, DEC-16)' do
+      subject(:run) do
+        run_scenario(files: { 'transfers.csv' => "0000123412341234,1212343433335665,20.00\n" \
+                                                 "1111234522226789,0000123412341234,20.00\n" \
+                                                 "1111234522226789,0000123412341234,20.00\n" })
+      end
+
+      it_behaves_like 'a completed run', stdout: <<~STDOUT, stderr: <<~STDERR
+        Transfers
+          Line 1  rejected  0000123412341234 -> 1212343433335665  20.00  insufficient_funds
+          Line 2  applied  1111234522226789 -> 0000123412341234  20.00
+          Line 3  applied  1111234522226789 -> 0000123412341234  20.00
+
+        Summary
+          Processed: 3
+          Applied: 2
+          Rejected: 1
+            insufficient_funds: 1
+          Total before: 150.00
+          Total after: 150.00
+
+        Final balances
+          1111234522226789  60.00
+          1212343433335665  50.00
+          0000123412341234  40.00
+
+        Output file: output/final_balances_2026-11-07_143005.csv
+      STDOUT
+        W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************1234 -> ************5665 20.00 insufficient_funds
+      STDERR
+    end
+  end
+
   describe 'FR-08 The end-of-day result and its output' do
     describe 'AC-08.1 the sample files give the exact expected result' do
       subject(:run) do
