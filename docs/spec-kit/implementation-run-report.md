@@ -358,3 +358,48 @@ Medium and low `/speckit-analyze` issues left after round 3. The three marked "R
   - Low: T059 sits in Phase 5, after T022, so the task IDs are out of sequence.
   - Low: plan "Decided in the run" item 19 uses history wording.
   - Low: research R-2 and spec item 4 say a lock file made on Windows lists only the Windows platform, which the analyzer says conflicts with the Gemfile.lock platform decision.
+
+## Part 2: Implementation
+
+Started by [P26](../prompts/prompts-implementation-phase.md#p26), from the pushed specs branch `spec-kit-specs` at `13c72c2`. Part 2 runs as a multi-agent workflow with the models in rule 6 of the brief. Every review is done by an independent Claude Opus 5.5 agent that did not write or fix what it reviews, and the reviewer model is recorded for each round.
+
+The specs are implemented one after another, each in its own worktree in `C:\Dev\`, branched from the previous spec's implementation: `001-domain-impl` from `spec-kit-specs`, `002-file-runner-impl` from `001-domain-impl`, and `003-delivery-impl` from `002-file-runner-impl`.
+
+**Status: In progress.**
+
+### Status
+
+| Step | State |
+|---|---|
+| 1. Start | Done: this section, [P26](../prompts/prompts-implementation-phase.md#p26) and the "Current stage" in `CLAUDE.md` |
+| 2. Implement 001-domain | Not started |
+| 2. Implement 002-file-runner | Not started |
+| 2. Implement 003-delivery | Not started |
+| 3. Whole-system checks | Not started |
+| 4. Merge and push | Not started |
+| 5. Stop | Not started |
+
+### Environment
+
+- Ruby 3.4.12 (RubyInstaller, `x64-mingw-ucrt`) with the MSYS2 development toolchain, which Bundler needs on Windows to build the native extensions of `bigdecimal`, `json` and `prism`. Both were installed for this run.
+- Docker 29.6.1 with Linux containers.
+
+### Check results
+
+None yet.
+
+### Decided in the run
+
+None yet.
+
+### Changed in the run
+
+None yet.
+
+### Fixed in review
+
+None yet.
+
+### Left for the developer
+
+To be filled in at the end of Part 2.

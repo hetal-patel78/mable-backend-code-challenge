@@ -8,7 +8,7 @@ Solution for the Mable back-end take-home challenge (`docs/challenge/MABLE_BACK_
 - Every decision gets a stable ID (`DEC-nn`). Reference the ID in a code comment or test name where it makes the link clearer. In documents, link it as `design-decisions.md#dec-nn`, for example `design-decisions.md#dec-04`.
 
 ## Current stage
-**GitHub Spec Kit specification.** The design analysis and the solution design are complete: `docs/design-analysis/design-decisions.md` is the single source of truth and `docs/solution-design/` is the main input. The specification is being written with GitHub Spec Kit, following the developer's brief in `docs/spec-kit/spec-kit-brief.md` (Part 1); the run is recorded in `docs/spec-kit/implementation-run-report.md`.
+**Implementation.** The design analysis, the solution design and the GitHub Spec Kit specification are complete: `docs/design-analysis/design-decisions.md` is the single source of truth, `docs/solution-design/` is the main input, and the specs are in `specs/`. The code and tests are being written test-first through the Spec Kit tasks, following Part 2 of the developer's brief in `docs/spec-kit/spec-kit-brief.md`; the run is recorded in `docs/spec-kit/implementation-run-report.md`.
 
 **Language and version:** Ruby, the latest 3.4.x release, tested with RSpec.
 
@@ -20,12 +20,12 @@ Design decisions belong to the developer. Once the design analysis has started, 
 - The developer's answers to review findings go in `docs/design-analysis/clarifications/`, kept unchanged, as the input to `design-decisions.md`. Where a later answer differs from an earlier one, the later one wins.
 
 ## Development approach
-Each step is written from the one before it. Step 3 is in progress; each later step starts only when the developer says so.
+Each step is written from the one before it. Step 4 is in progress; each later step starts only when the developer says so.
 
 1. **Design analysis (done):** review the developer's analysis against the challenge, raise findings (definite gaps, judgement calls, possible extras), agree answers with the developer, and consolidate them into `design-decisions.md`.
 2. **Solution design document (done):** high-level design, components, logical flows, alternatives considered and trade-offs, in `docs/solution-design/`.
-3. **GitHub Spec Kit specification (in progress):** constitution, spec, plan, tasks.
-4. **Implementation (planned):** test-first, through the Spec Kit tasks.
+3. **GitHub Spec Kit specification (done):** constitution, spec, plan, tasks.
+4. **Implementation (in progress):** test-first, through the Spec Kit tasks.
 
 These rules apply:
 - Precedence: `design-decisions.md`, then the solution design, then the Spec Kit files. If a later document contradicts an earlier one, point it out and ask; never resolve it quietly.
@@ -48,8 +48,8 @@ The design and code are generated with an AI assistant, so the prompts that shap
 - One file per phase, in `docs/prompts/`:
   - Initial analysis and setup (project instructions, analysis inputs): `prompts-initial-analysis-and-setup-phase.md`.
   - Design phase (design analysis and solution design): `prompts-design-phase.md`.
-  - Spec creation phase (Spec Kit specification): `prompts-spec-creation-phase.md`. This is the current log.
-  - Implementation phase: `prompts-implementation-phase.md`. Planned.
+  - Spec creation phase (Spec Kit specification): `prompts-spec-creation-phase.md`.
+  - Implementation phase: `prompts-implementation-phase.md`. This is the current log.
   - Review and refactor phase (the developer's review after implementation): `prompts-refactor-phase.md`. Planned.
 - Log a prompt when the developer makes a decision or gives an instruction about the solution, its design or how it is built. Quote it exactly as typed, typos included, and note its outcome.
 - Numbering runs across all the logs: number a new prompt after the last one in any log.
