@@ -449,7 +449,7 @@ Review rounds. Every round is by an independent Claude Opus 5.5 agent.
 
 Checks C-01 to C-43 of [quickstart.md](../../specs/003-delivery/quickstart.md), recorded phase by phase with the platform, date, commit and evidence. A check that cannot run on this machine is listed under "Left for the developer", never as passed.
 
-Scratch folders, outside the repository: `$CHECKS` is `/home/fortunatetechie/checks-003` on the WSL Ubuntu filesystem (used by the Bash and Docker checks), and the PowerShell `$env:CHECKS` is `C:\Users\hets7\AppData\Local\Temp\checks-003` (used by the Windows checks).
+Scratch folders, outside the repository: `$CHECKS` is a fixed folder in the WSL user's home folder (`~/checks-003`) on the WSL Ubuntu filesystem (used by the Bash and Docker checks), and the PowerShell `$env:CHECKS` is `%TEMP%\checks-003` (used by the Windows checks).
 
 Phase 1 (Setup), Windows 11 with Ruby 3.4.12 (`x64-mingw-ucrt`) and WSL Ubuntu, 2026-11-08, at commit `ba203ba` (the tip of `002-file-runner-impl`).
 
