@@ -197,11 +197,11 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 ### Tests for User Story 3 (write first)
 
-- [ ] T035 [US3] Add to `spec/domain/account_repository_spec.rb` a `describe '#find'` context for a number not held [FR-016; US3 scenario 4; DEC-17, DEC-31]:
+- [X] T035 [US3] Add to `spec/domain/account_repository_spec.rb` a `describe '#find'` context for a number not held [FR-016; US3 scenario 4; DEC-17, DEC-31]:
   - on a repository holding the three accounts, `find(account_number('9999888877776666'))` raises `UnknownAccount`, `account 9999888877776666 is not loaded` (DEC-17);
   - on an empty repository, after the refused `find` (`attempt(UnknownAccount)`), `include?` for `9999888877776666` is false (DEC-17 edge case: never creates);
   - on an empty repository, after the refused `find`, `all` is empty (DEC-31).
-- [ ] T036 [US3] Run `bundle exec rspec spec/domain/account_repository_spec.rb` and confirm the new examples fail (depends on T035)
+- [X] T036 [US3] Run `bundle exec rspec spec/domain/account_repository_spec.rb` and confirm the new examples fail (depends on T035)
 
 ### Implementation for User Story 3
 

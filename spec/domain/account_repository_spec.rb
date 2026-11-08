@@ -64,5 +64,26 @@ RSpec.describe AccountRepository do
       repository.find(account_number('1111234522226789')).withdraw(amount('30.00'))
       expect(repository.all.map { |held| held.balance.to_s }).to eq(%w[70.00])
     end
+
+    context 'with a number it does not hold' do
+      let(:unknown) { account_number('9999888877776666') }
+      let(:empty) { described_class.new }
+
+      it 'raises UnknownAccount (DEC-17)' do
+        three_accounts = repository_with(*three_numbers.map { |number| account(number) })
+        expect { three_accounts.find(unknown) }
+          .to raise_error(UnknownAccount, 'account 9999888877776666 is not loaded')
+      end
+
+      it 'does not create the account (DEC-17)' do
+        attempt(UnknownAccount) { empty.find(unknown) }
+        expect(empty.include?(unknown)).to be(false)
+      end
+
+      it 'leaves all empty (DEC-31)' do
+        attempt(UnknownAccount) { empty.find(unknown) }
+        expect(empty.all).to eq([])
+      end
+    end
   end
 end
