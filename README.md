@@ -1,38 +1,194 @@
 # Mable Back End Code Challenge
 
-A solution to the Mable back-end take-home challenge: load the starting account balances for one company from a CSV file, then apply one day's transfers from a second CSV file, never letting an account balance go below $0.
+A command-line program that loads one company's starting account balances from a CSV file and applies one day's transfers from a second CSV file, never letting an account balance go below $0. It prints a report of the day and writes the closing balances to a new CSV file.
 
-The challenge as received is in [`docs/challenge/`](docs/challenge/MABLE_BACK_END_CODE_TEST.md).
+## Build, test and run
 
-## Status
+### With Ruby 3.4
 
-Design analysis. The findings from reviewing the developer's analysis, and the follow-up clarifications, have been answered and consolidated into [`docs/design-analysis/design-decisions.md`](docs/design-analysis/design-decisions.md), which defines all behaviour and design. There is no implementation yet.
+You need Ruby at the version in [`.ruby-version`](.ruby-version) and Bundler. From the project root:
 
-The findings are in the Google Sheet [Mable challenge: design analysis findings](https://docs.google.com/spreadsheets/d/1XVG6noS4dteY7kQlzVXHi5_njcN6MwQjDlsQpP9FKG4/edit?usp=drivesdk), one tab per type: definite gaps (D), judgement calls (J), possible extras (X), clarifications (C), big findings (B) and small findings (S), each with the developer's answer. A copy of each tab is in [`docs/design-analysis/clarifications/`](docs/design-analysis/clarifications/).
+```
+bundle install
+bin/run
+```
 
-## Build
+Run the tests with `bundle exec rspec` and the style checker with `bundle exec rubocop`.
 
-To be added once the implementation exists.
+The program takes no arguments, 2 arguments or 3 arguments:
 
-## Test
+| Command | Balances | Transfers | Output |
+|---|---|---|---|
+| `bin/run` | `data/mable_account_balances.csv` | `data/mable_transactions.csv` | default name in `output/` |
+| `bin/run b.csv t.csv` | `b.csv` | `t.csv` | default name in `output/` |
+| `bin/run b.csv t.csv out/day1.csv` | `b.csv` | `t.csv` | `out/day1.csv` |
 
-To be added once the implementation exists.
+- Typed paths are relative to the current folder. The default paths are relative to the project root, so `bin/run` with no arguments works from any folder.
+- The default output file is `output/final_balances_YYYY-MM-DD_HHMMSS.csv`, named from the local date and time the run started. A typed output file is used as given, and missing folders are created.
+- An existing output file is never overwritten: the run stops instead.
 
-## Run
+With 1 argument, or with 4 or more (including `bin/run -h` and `bin/run --help`), the program prints this usage message on standard error and exits with status 1:
 
-To be added once the implementation exists.
+```
+Usage: bin/run [BALANCES_FILE TRANSFERS_FILE [OUTPUT_FILE]]
+With no arguments, runs the sample files in data/.
+```
+
+The sample run, `bin/run` with no arguments, prints this report:
+
+```
+Transfers
+  Line 1  applied  1111234522226789 -> 1212343433335665  500.00
+  Line 2  applied  3212343433335755 -> 2222123433331212  1000.00
+  Line 3  applied  3212343433335755 -> 1111234522226789  320.50
+  Line 4  applied  1111234522221234 -> 1212343433335665  25.60
+
+Summary
+  Processed: 4
+  Applied: 4
+  Rejected: 0
+  Total before: 66750.00
+  Total after: 66750.00
+
+Final balances
+  1111234522226789  4820.50
+  1111234522221234  9974.40
+  2222123433331212  1550.00
+  1212343433335665  1725.60
+  3212343433335755  48679.50
+
+Output file: output/final_balances_2026-11-07_143005.csv
+```
+
+A real run shows its own date and time in the last line.
+
+### On Windows
+
+Run the program as `ruby bin/run`, with the same arguments. Install and test as above. In PowerShell the exit status is in `$LASTEXITCODE`.
+
+### With Docker
+
+Docker is the alternative for a reviewer without Ruby 3.4. From the project root:
+
+| Purpose | Command |
+|---|---|
+| Build the image | `docker build -t mable-transfers .` |
+| Run the sample files, POSIX shell | `docker run --rm -e TZ=Australia/Sydney -v "$(pwd)/output:/app/output" mable-transfers` |
+| Run the sample files, PowerShell | `docker run --rm -e TZ=Australia/Sydney -v "${PWD}/output:/app/output" mable-transfers` |
+| Run the tests | `docker run --rm mable-transfers bundle exec rspec` |
+
+- The container uses UTC for the output file name unless `TZ` is set, so set `TZ` to your own time zone.
+- The mount keeps the output CSV on your machine, in `output/`.
+- Your own files must be mounted into the container the same way as `output`, and their paths given as seen inside it.
+- On a Linux host the output file may belong to root, because the container runs as the image's default user.
+
+## Input files
+
+- Both files are CSV with no header row.
+- The balances file has one account per line: `account number,balance`.
+- The transfers file has one transfer per line: `from account number,to account number,amount`.
+- A header row is a bad row. In the balances file it makes the file invalid and stops the run. In the transfers file that row is rejected and the run continues.
+
+## Log level and exit status
+
+- `LOG_LEVEL` is `warn` (the default) or `info`, in any letter case. Any other value falls back to `warn`.
+- Log lines go to standard error, with account numbers masked as `************6789`. The report alone goes to standard output.
+- Exit status 0: the run completed, even if some or all transfers were rejected.
+- Exit status 1: the run stopped, for one of these reasons: wrong arguments, a missing or unreadable input file, an invalid balances file, an empty transfers file, a file that cannot be read past a line, a changed total, an output file that already exists, or an output file that cannot be written.
 
 ## Assumptions
 
-To be listed with the implementation. Until then, every assumption is recorded as a decision in [`docs/design-analysis/design-decisions.md`](docs/design-analysis/design-decisions.md).
+| Assumption | Reason |
+|---|---|
+| The balances file lists every account of the company. | Transfers to or from any other account are rejected as unknown ([DEC-17](docs/design-analysis/design-decisions.md#dec-17)). |
+| The order of rows in the transfers file is the order the company intends. | Transfers are applied in file order ([DEC-15](docs/design-analysis/design-decisions.md#dec-15)). |
+| Money is in dollars and cents, with no other currency. | The challenge uses $ only, and amounts have at most 2 decimal places ([DEC-09](docs/design-analysis/design-decisions.md#dec-09)). |
+| One transfers file holds one day's transfers. | The challenge accepts "a day's transfers in a CSV file" ([DEC-02](docs/design-analysis/design-decisions.md#dec-02)). |
+| An account number may start with 0. | The challenge says only "16 digit number", so leading zeros are kept ([DEC-08](docs/design-analysis/design-decisions.md#dec-08)). |
+| The "test files" in the rubric are the two sample CSV files. | Their exact expected results are checked ([DEC-35](docs/design-analysis/design-decisions.md#dec-35)); reviewers' own files are covered by the rejection rules. |
+| The program is run from the command line by one person. | The rubric asks that it "runs and provides feedback"; no web service or concurrent use is described ([DEC-22](docs/design-analysis/design-decisions.md#dec-22)). |
+| The input files are UTF-8 text. | CSV files from spreadsheets and editors are UTF-8 by default; anything else is unreadable ([DEC-04](docs/design-analysis/design-decisions.md#dec-04)). |
+| A day's transfers fit in memory. | One company's daily transfers are small ([DEC-32](docs/design-analysis/design-decisions.md#dec-32)). |
+| The reviewer has Ruby 3.4, or Docker. | Docker is the fallback for anyone without Ruby 3.4 ([DEC-36](docs/design-analysis/design-decisions.md#dec-36)). |
+
+## Design
+
+- Light domain-driven design: the rules live inside the models (`AccountNumber`, `Money`, `Transfer`, `Account`, `AccountRepository`), with plain names and no ceremony.
+- The code is in three folders:
+  - `lib/domain` holds the models and their rules: what a valid account number and amount are, and that a balance never goes below $0.
+  - `lib/application` holds the use cases: loading the balances (`LoadBalances`) and running the day (`ProcessDailyTransfer`), with the day's results.
+  - `lib/infrastructure` holds what touches the outside world: the CSV readers and writer, the report printer and the `Runner` that `bin/run` starts.
+- `AccountRepository` keeps the accounts in memory, with `add`, `include?`, `find` and `all`.
+- `ProcessDailyTransfer` is given its parts (the readers, the writer, the repository, the report printer, the logger and the run time), so the tests pass fakes.
+- Every check runs before any balance changes, so each transfer is all or nothing.
+- Money is a `Money` value on `BigDecimal`, never floating point, and never rounded.
+
+The full reasoning is in [`docs/design-analysis/design-decisions.md`](docs/design-analysis/design-decisions.md) and the solution design in [`docs/solution-design/README.md`](docs/solution-design/README.md).
+
+## Test coverage
+
+SimpleCov's line coverage from a full `bundle exec rspec` run:
+
+```
+Line coverage: 501 / 501 (100.00%)
+```
+
+The full report is in `coverage/index.html` after a test run. No minimum figure is set.
+
+## Storage, production and known limitations
+
+**Persistent storage.** Every run starts from the balances file and remembers nothing. To stay safe to rerun, a version with storage would have to remember which files and transfers were already applied, so a rerun cannot apply a day twice. Remembering applied files across runs is out of scope.
+
+**Production items.**
+
+- Very large files would need streaming or chunking, so the results are not all held in memory.
+- A database repository would need database transactions, or sagas across services, to keep each transfer all or nothing.
+
+**Known limitations.**
+
+- No memory of earlier runs: running the same transfers file twice on a day's output applies it twice.
+- Results are held in memory, so memory grows with the number of transfer rows.
+- An unreadable line in the transfers file discards the whole day, including transfers already applied in memory.
+- A duplicate account whose first copy has an invalid balance is reported only after that row is fixed, on the next run.
+- A balances file missing an account rejects every transfer touching it as `unknown_account`.
+- Two default-path runs in the same second: the second stops, and the first file is never overwritten.
+- Full account numbers appear on screen and in the output CSV; only the logs are masked.
+- The Docker clock is UTC unless `TZ` is set.
+- The total-check failure cannot happen with correct code, so it is tested with fakes.
+
+## How this was built
+
+The design and the code were made with an AI assistant, in four steps:
+
+1. Design analysis: [`docs/design-analysis/design-decisions.md`](docs/design-analysis/design-decisions.md).
+2. Solution design: [`docs/solution-design/README.md`](docs/solution-design/README.md).
+3. GitHub Spec Kit specification: [`.specify/memory/constitution.md`](.specify/memory/constitution.md) and [`specs/`](specs/).
+4. Test-first implementation through the Spec Kit tasks: each spec's `tasks.md` in [`specs/`](specs/).
+
+The prompts that shaped them are in [`docs/prompts/`](docs/prompts/).
 
 ## Repository layout
 
 | Path | Contents |
 |---|---|
+| `bin/run` | The command that starts the program |
+| `lib/domain/` | The models and their rules |
+| `lib/application/` | The use cases: loading the balances and running the day |
+| `lib/infrastructure/` | The CSV readers and writer, the report printer and the runner |
+| `spec/` | The RSpec tests, with their fixture files |
+| `data/` | The two sample CSV files that `bin/run` uses with no arguments |
+| `output/` | The output files; created by a run, not committed |
 | `docs/challenge/` | The challenge brief and its two sample CSV files, unchanged |
-| `docs/design-analysis/handwritten/` | The developer's handwritten brainstorm pages and high-level design sketch, unchanged |
-| `docs/design-analysis/design-decisions.md` | The design decisions (`DEC-nn`): the single source of truth for behaviour and design |
-| `docs/design-analysis/clarifications/` | The review findings and the developer's answers, exported from the Google Sheet as HTML (one page per tab), unchanged |
+| `docs/design-analysis/` | `design-decisions.md`, the single source of truth for behaviour and design; `handwritten/`, the developer's brainstorm pages, unchanged; `clarifications/`, the review findings and the developer's answers, unchanged |
+| `docs/solution-design/` | The solution design: components, flows, alternatives and trade-offs |
+| `docs/spec-kit/` | The brief for the Spec Kit run and the run report |
 | `docs/prompts/` | The prompts given to the AI assistant, one log per phase |
+| `specs/` | The Spec Kit specifications, one folder per spec: spec, plan, tasks and contracts |
+| `.specify/` and `.claude/` | The Spec Kit set-up, including the constitution in `.specify/memory/` |
+| `.github/workflows/ci.yml` | The GitHub Actions workflow that runs RSpec and RuboCop on every push |
+| `Dockerfile` | The Docker image, the alternative way to run the program and the tests |
 | `CLAUDE.md` | Project instructions for the AI assistant |
+
+## The challenge
+
+The challenge as received is [`docs/challenge/MABLE_BACK_END_CODE_TEST.md`](docs/challenge/MABLE_BACK_END_CODE_TEST.md), with its two sample files kept unchanged beside it.
