@@ -403,7 +403,7 @@
   - AC-06.1: the six from values, including `0000123412341234` (leading zeros matched, `insufficient_funds`) and the masks `***********2678`, `*************7890`, `************6789`, `***************6789` (DEC-08, DEC-29);
   - AC-06.2: `10`, `10.5`, `10.50`, `007.50` applied with the amounts shown `10.00`, `10.50`, `10.50`, `7.50`; the thirteen invalid amounts `0`, `0.00`, `-5.00`, `-0`, `-0.00`, `1.234`, `abc`, `10.`, `.50`, `+10`, `1e3`, `$10`, `1 0`, each shown as written with `invalid_amount`; the empty amount (`""`); `"1,000.00"` quoted (`1,000.00`, `invalid_amount`); `1,000.00` not quoted (`malformed_row: 4 fields, expected 3`, warn line with `1`) (DEC-09, DEC-10);
   - AC-06.3 is covered by the FR-01 scenarios of Phase 4.
-- [ ] T078 [US6] Run `bundle exec rspec spec/infrastructure/runner_spec.rb`; every new example passes; for any that fails, write the failing unit example in the owning class's spec first, see it fail, fix the class, and run again. Then run the full `bundle exec rspec` until every example passes in random order, and `bundle exec rubocop` until it reports zero offences (depends on T077) [constitution IV; P24]
+- [X] T078 [US6] Run `bundle exec rspec spec/infrastructure/runner_spec.rb`; every new example passes; for any that fails, write the failing unit example in the owning class's spec first, see it fail, fix the class, and run again. Then run the full `bundle exec rspec` until every example passes in random order, and `bundle exec rubocop` until it reports zero offences (depends on T077) [constitution IV; P24]
 
 **Checkpoint**: every page 2 scenario of FR-01 to FR-09 runs through `Runner` with exact streams (SC-002); `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences.
 
