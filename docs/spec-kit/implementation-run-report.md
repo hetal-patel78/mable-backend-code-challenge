@@ -501,6 +501,19 @@ Phase 4 (User Story 1: Ruby on Linux, from a clean checkout), 2026-11-08, at com
 | Phase end | `bundle exec rspec` at `$REPO` (Windows, Ruby 3.4.12 `x64-mingw-ucrt`) | Pass: 726 examples, 0 failures. Randomized with seed 28974. Line coverage: 501 / 501 (100.00%). Exit 0 |
 | Phase end | `bundle exec rubocop` at `$REPO` | Pass: 52 files inspected, no offenses detected. Exit 0 |
 
+Phase 5 (User Story 2: Windows), Windows 11 Pro in Windows PowerShell 5.1 with RubyInstaller-built Ruby 3.4.12 (`ruby 3.4.12 (2026-10-23 revision 366f5fdc00) +PRISM [x64-mingw-ucrt]`) and Bundler 2.6.9, 2026-11-08, at commit `a239050` (the tip of `003-delivery-impl` when the checkout was made). `LOG_LEVEL` was unset for every run.
+
+| Task | Check | Result |
+|---|---|---|
+| T018 | C-13 first part: the Windows clean checkout | Pass: `git clone -c core.autocrlf=true --branch 003-delivery-impl $REPO $env:CHECKS\win`, exit 0; head `a239050`; `$env:BUNDLE_FROZEN='true'; bundle install` prints `Bundle complete! 7 Gemfile dependencies, 27 gems now installed.`, exit 0; `git status --porcelain` prints nothing (0 bytes) |
+| T019 | C-13: `cmd /c "ruby bin/run > ..\wout.txt 2> ..\werr.txt"` from the project root | Pass: `$LASTEXITCODE` 0; `wout.txt` holds 21 CR bytes (text-mode console stream, as expected); with CRLF changed to LF it equals `report.txt` with `<run time>` `2026-11-08_171018` (the file name's time), compared case-sensitively as one text; its last line is `Output file: output/final_balances_2026-11-08_171018.csv`, with `/`; `werr.txt` is 0 bytes; `[IO.File]::ReadAllBytes` of the output file equals `final.csv` byte for byte (126 bytes each, 0 CR bytes: LF, not CRLF) |
+| T020 | C-14: `cmd /c "ruby bin/run -h > ..\hout.txt 2> ..\herr.txt"` | Pass: `$LASTEXITCODE` 1; `hout.txt` is 0 bytes; `herr.txt` with CRLF changed to LF equals `usage.txt`; no new file in `output/` |
+| T021 | C-15: `cmd /c "ruby ..\bin\run > ..\..\dout.txt"` from `docs` (after `output/` was moved out of the checkout) | Pass: `$LASTEXITCODE` 0; `ruby -e 'puts Dir.pwd'` prints `C:/Users/hets7/AppData/Local/Temp/checks-003/win`; `dout.txt` with CRLF changed to LF equals the sample report with `<run time>` `2026-11-08_171039`, except its last line, which is `Output file: C:/Users/hets7/AppData/Local/Temp/checks-003/win/output/final_balances_2026-11-08_171039.csv`; standard error (captured to `derr.txt`) 0 bytes; the file is in the project's `output/` (no `docs\output`) and equals `final.csv` byte for byte |
+| T022 | C-16: `git ls-files --eol data/` | Pass: `i/lf w/crlf` for `data/mable_account_balances.csv` and `data/mable_transactions.csv`, so C-13 read CRLF input and gave the sample report and the LF sample file |
+| T059 | C-43: `git ls-files --eol bin/run lib`, then `bundle exec rubocop` in the same clone | Pass: `i/lf w/crlf` for `bin/run` and all 20 files under `lib/`; `52 files inspected, no offenses detected`, `$LASTEXITCODE` 0; `bundle exec rubocop -L` lists `bin/run`. No `.gitattributes` (`Test-Path` is `False`), `.rubocop.yml` unchanged, and `git grep "rubocop:disable" -- lib bin spec .rubocop.yml` finds nothing. RuboCop's notice about new cops that are not configured is a notice, not an offence |
+| Phase end | `bundle exec rspec` at `$REPO` (Windows, Ruby 3.4.12 `x64-mingw-ucrt`) | Pass: 726 examples, 0 failures. Randomized with seed 23947. Line coverage: 501 / 501 (100.00%). Exit 0 |
+| Phase end | `bundle exec rubocop` at `$REPO` | Pass: 52 files inspected, no offenses detected. Exit 0 |
+
 Finding for Phase 7 (T038, T043, C-33): SimpleCov 1.3.2 prints `Line coverage: 501 / 501 (100.00%)`, while plan item 10, research, data-model, the README contract and C-33 quote the line as `Line Coverage: <percent>% (<covered> / <total>)`, and C-33's `grep "Line Coverage"` is case-sensitive, so it would find nothing. C-12 is recorded as passing with the line SimpleCov prints. The wording in the specs is not changed in this phase.
 
 ### Decided in the run
@@ -571,6 +584,9 @@ Finding for Phase 7 (T038, T043, C-33): SimpleCov 1.3.2 prints `Line coverage: 5
   - T012: the WSL clone is made from the repository's main checkout, which shares its branches with the worktree, because git in WSL cannot open the worktree's `.git` file (it names a Windows path). The branch and commit are the same.
   - T016: C-12's "SimpleCov's `Line Coverage:` line" is taken as the line SimpleCov 1.3.2 actually prints, `Line coverage: 501 / 501 (100.00%)`. The different wording in plan item 10, research, data-model, the README contract and C-33 is reported as a finding for Phase 7, not changed here.
   - T016: RuboCop's notice about new cops that are not configured is recorded as a notice. It is not an offence, and `.rubocop.yml` stays unchanged (DEC-36).
+  - T018: the Windows clone is made from `$REPO` on the implementation branch; Windows git opens the worktree directly, so no other source is needed.
+  - T021: C-15's `Remove-Item -Recurse output` is done by moving `output/` out of the checkout into a scratch folder, so nothing is deleted; the effect, no `output/` before the run, is the same. Standard error is also captured (`2> ..\..\derr.txt`) to check it is empty, as T021 asks.
+  - T019 to T021: the CRLF-to-LF text of each stream is compared with the expected text as one case-sensitive string (`-ceq`), which checks it line by line and the final newline too.
 
 ### Changed in the run
 
