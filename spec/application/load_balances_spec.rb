@@ -61,13 +61,15 @@ RSpec.describe LoadBalances do
        balances_row(6, '2222123433331212', '-5.00'), balances_row(7, '3212343433335755', '1.234')]
     end
 
-    it 'lists every problem with its line, in file order (DEC-07, DEC-11, DEC-12)' do
-      expect(error_for(invalid_file_rows).message).to eq(
-        "the balances file is invalid (5 problems):\n  Line 3: account number \"12345\" must be exactly 16 digits\n  " \
+    let(:invalid_file_message) do
+      "the balances file is invalid (5 problems):\n  Line 3: account number \"12345\" must be exactly 16 digits\n  " \
         "Line 4: expected 2 fields, found 3\n  Line 5: account 1111234522226789 appears more than once " \
         "(first on line 1)\n  Line 6: balance \"-5.00\" must not be negative\n  Line 7: balance \"1.234\" has more " \
         'than 2 decimal places'
-      )
+    end
+
+    it 'lists every problem with its line, in file order (DEC-07, DEC-11, DEC-12)' do
+      expect(error_for(invalid_file_rows).message).to eq(invalid_file_message)
     end
 
     it 'counts a single problem in the singular' do

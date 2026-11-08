@@ -14,7 +14,7 @@ RSpec.describe Runner do
 
     describe 'AC-01.2 common CSV forms are accepted' do
       subject(:run) do
-        run_scenario(files: { 'balances.csv' => "﻿\"1111234522226789\", 100.00 \r\n" \
+        run_scenario(files: { 'balances.csv' => "\xEF\xBB\xBF\"1111234522226789\", 100.00 \r\n" \
                                                 "1212343433335665,50.00\r\n0000123412341234,0.00" })
       end
 
