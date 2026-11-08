@@ -380,9 +380,9 @@
 
 ### Implementation for User Story 5
 
-- [ ] T074 [US5] Add to `lib/infrastructure/runner.rb` the usage check (0, 2 or 3 arguments; otherwise the two usage lines on `stderr`, no logger used, return 1) and the level from `LOG_LEVEL` (`env['LOG_LEVEL'].to_s.casecmp?('info')` gives `Logger::INFO`, otherwise `Logger::WARN`) [FR-031, FR-032, FR-035; DEC-22, DEC-28; P16; item 13]
-- [ ] T075 [US5] Add the start checks to `lib/infrastructure/runner.rb`: `File.exist?` for the balances and transfers paths, `File.file?` for the output path; each problem as one `Error:` line in that order, with the path shown by `DisplayPath.of` (P11); then `logger.error("Run stopped: start checks failed (<reasons>)")` with `file not found` and `output file already exists`, each once and only if it occurred, joined by `, `; return 1 before any part is built (depends on T074) [FR-033; DEC-23, DEC-25; P28; page 10 pick 18]
-- [ ] T076 [US5] Run `bundle exec rspec` until every example passes in random order and `bundle exec rubocop` reports zero offences (depends on T074, T075)
+- [X] T074 [US5] Add to `lib/infrastructure/runner.rb` the usage check (0, 2 or 3 arguments; otherwise the two usage lines on `stderr`, no logger used, return 1) and the level from `LOG_LEVEL` (`env['LOG_LEVEL'].to_s.casecmp?('info')` gives `Logger::INFO`, otherwise `Logger::WARN`) [FR-031, FR-032, FR-035; DEC-22, DEC-28; P16; item 13]
+- [X] T075 [US5] Add the start checks to `lib/infrastructure/runner.rb`: `File.exist?` for the balances and transfers paths, `File.file?` for the output path; each problem as one `Error:` line in that order, with the path shown by `DisplayPath.of` (P11); then `logger.error("Run stopped: start checks failed (<reasons>)")` with `file not found` and `output file already exists`, each once and only if it occurred, joined by `, `; return 1 before any part is built (depends on T074) [FR-033; DEC-23, DEC-25; P28; page 10 pick 18]
+- [X] T076 [US5] Run `bundle exec rspec` until every example passes in random order and `bundle exec rubocop` reports zero offences (depends on T074, T075)
 
 **Checkpoint**: every FR-09 scenario gives its exact streams; the usage run through `bin/run`; `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences.
 

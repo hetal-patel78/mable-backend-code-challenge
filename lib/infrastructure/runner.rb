@@ -16,6 +16,9 @@ class Runner
   PROJECT_ROOT = File.expand_path('../..', __dir__)
   DEFAULT_INPUTS = %w[data/mable_account_balances.csv data/mable_transactions.csv].freeze
   STOPPING_ERRORS = [InvalidBalancesFile, NoTransfers, TotalChanged, UnreadableFile, OutputNotWritable].freeze
+  ARGUMENT_COUNTS = [0, 2, 3].freeze
+  USAGE = "Usage: bin/run [BALANCES_FILE TRANSFERS_FILE [OUTPUT_FILE]]\n" \
+          "With no arguments, runs the sample files in data/.\n"
 
   def initialize(stdout: $stdout, stderr: $stderr, env: ENV)
     @stdout = stdout
@@ -24,10 +27,14 @@ class Runner
   end
 
   def run(arguments)
-    logger = Logger.new(@stderr, level: Logger::WARN)
+    return usage unless ARGUMENT_COUNTS.include?(arguments.size)
+
+    logger = Logger.new(@stderr, level: log_level)
     run_time = Time.now
-    balances, transfers = input_paths(arguments)
-    output = output_path(arguments, run_time)
+    balances, transfers, output = paths(arguments, run_time)
+    problems = start_problems(balances, transfers, output)
+    return stop_at_start(problems, logger) if problems.any?
+
     day(run_time, logger).call(DisplayPath.of(balances), DisplayPath.of(transfers), output)
     0
   rescue *STOPPING_ERRORS => e
@@ -35,6 +42,38 @@ class Runner
   end
 
   private
+
+  def usage
+    @stderr.print(USAGE)
+    1
+  end
+
+  def log_level
+    @env['LOG_LEVEL'].to_s.casecmp?('info') ? Logger::INFO : Logger::WARN
+  end
+
+  def paths(arguments, run_time)
+    [*input_paths(arguments), output_path(arguments, run_time)]
+  end
+
+  def start_problems(balances, transfers, output)
+    problems = [balances, transfers].reject { |path| File.exist?(path) }.map do |path|
+      ["file not found: #{DisplayPath.of(path)}", 'file not found']
+    end
+    problems << output_exists(output) if File.file?(output)
+    problems
+  end
+
+  def output_exists(output)
+    ["output file already exists: #{DisplayPath.of(output)}. Delete it or give another output path.",
+     'output file already exists']
+  end
+
+  def stop_at_start(problems, logger)
+    @stderr.puts(problems.map { |message, _reason| "Error: #{message}" })
+    logger.error("Run stopped: start checks failed (#{problems.map(&:last).uniq.join(', ')})")
+    1
+  end
 
   def stop(error, logger)
     @stderr.puts("Error: #{error.message}")
