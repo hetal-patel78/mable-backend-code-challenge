@@ -380,6 +380,97 @@ RSpec.describe Runner do
     end
   end
 
+  describe 'FR-03 to FR-06 (owned by 001)' do
+    # Each row is line 1 of transfers.csv. An applied row gives Template A with its transfer and final balances;
+    # a rejected row gives Template R with its report line, and its warn line ends with the reason code.
+    invalid_amounts = ['0', '0.00', '-5.00', '-0', '-0.00', '1.234', 'abc', '10.', '.50', '+10', '1e3', '$10', '1 0']
+    domain_rows = [
+      { name: 'AC-03.1 1111234522226789,1212343433335665,30.00', row: '1111234522226789,1212343433335665,30.00',
+        transfer: '1111234522226789 -> 1212343433335665  30.00', balances: %w[70.00 80.00 0.00] },
+      { name: 'AC-03.3 12345,1212343433335665,abc', row: '12345,1212343433335665,abc',
+        report: '12345 -> 1212343433335665  abc  invalid_account_number',
+        warn: '*2345 -> ************5665 abc invalid_account_number' },
+      { name: 'AC-03.3 1111234522226789,1111234522226789,0', row: '1111234522226789,1111234522226789,0',
+        report: '1111234522226789 -> 1111234522226789  0  invalid_amount',
+        warn: '************6789 -> ************6789 0 invalid_amount' },
+      { name: 'AC-03.3 9999888877776666,9999888877776666,5.00', row: '9999888877776666,9999888877776666,5.00',
+        report: '9999888877776666 -> 9999888877776666  5.00  same_account',
+        warn: '************6666 -> ************6666 5.00 same_account' },
+      { name: 'AC-04.1 100.01 is more than the balance', row: '1111234522226789,1212343433335665,100.01',
+        report: '1111234522226789 -> 1212343433335665  100.01  insufficient_funds',
+        warn: '************6789 -> ************5665 100.01 insufficient_funds' },
+      { name: 'AC-04.2 100.00 leaves exactly 0.00 (DEC-13)', row: '1111234522226789,1212343433335665,100.00',
+        transfer: '1111234522226789 -> 1212343433335665  100.00', balances: %w[0.00 150.00 0.00] },
+      { name: 'AC-04.3 0.01 from the 0.00 account', row: '0000123412341234,1111234522226789,0.01',
+        report: '0000123412341234 -> 1111234522226789  0.01  insufficient_funds',
+        warn: '************1234 -> ************6789 0.01 insufficient_funds' },
+      { name: 'AC-05.1 an unknown to account (DEC-17)', row: '1111234522226789,9999888877776666,10.00',
+        report: '1111234522226789 -> 9999888877776666  10.00  unknown_account',
+        warn: '************6789 -> ************6666 10.00 unknown_account' },
+      { name: 'AC-05.2 an unknown from account (DEC-17)', row: '9999888877776666,1111234522226789,10.00',
+        report: '9999888877776666 -> 1111234522226789  10.00  unknown_account',
+        warn: '************6666 -> ************6789 10.00 unknown_account' },
+      { name: 'AC-06.1 from 1111234522226789', row: '1111234522226789,1212343433335665,10.00',
+        transfer: '1111234522226789 -> 1212343433335665  10.00', balances: %w[90.00 60.00 0.00] },
+      { name: 'AC-06.1 from 0000123412341234 matches the leading zeros (DEC-08)',
+        row: '0000123412341234,1212343433335665,10.00',
+        report: '0000123412341234 -> 1212343433335665  10.00  insufficient_funds',
+        warn: '************1234 -> ************5665 10.00 insufficient_funds' },
+      { name: 'AC-06.1 from 111123452222678 (DEC-08, DEC-29)', row: '111123452222678,1212343433335665,10.00',
+        report: '111123452222678 -> 1212343433335665  10.00  invalid_account_number',
+        warn: '***********2678 -> ************5665 10.00 invalid_account_number' },
+      { name: 'AC-06.1 from 11112345222267890 (DEC-08, DEC-29)', row: '11112345222267890,1212343433335665,10.00',
+        report: '11112345222267890 -> 1212343433335665  10.00  invalid_account_number',
+        warn: '*************7890 -> ************5665 10.00 invalid_account_number' },
+      { name: 'AC-06.1 from 1111O34522226789 (DEC-08, DEC-29)', row: '1111O34522226789,1212343433335665,10.00',
+        report: '1111O34522226789 -> 1212343433335665  10.00  invalid_account_number',
+        warn: '************6789 -> ************5665 10.00 invalid_account_number' },
+      { name: 'AC-06.1 from 1111-2345-2222-6789 (DEC-08, DEC-29)', row: '1111-2345-2222-6789,1212343433335665,10.00',
+        report: '1111-2345-2222-6789 -> 1212343433335665  10.00  invalid_account_number',
+        warn: '***************6789 -> ************5665 10.00 invalid_account_number' },
+      { name: 'AC-06.2 amount 10', row: '1111234522226789,1212343433335665,10',
+        transfer: '1111234522226789 -> 1212343433335665  10.00', balances: %w[90.00 60.00 0.00] },
+      { name: 'AC-06.2 amount 10.5', row: '1111234522226789,1212343433335665,10.5',
+        transfer: '1111234522226789 -> 1212343433335665  10.50', balances: %w[89.50 60.50 0.00] },
+      { name: 'AC-06.2 amount 10.50', row: '1111234522226789,1212343433335665,10.50',
+        transfer: '1111234522226789 -> 1212343433335665  10.50', balances: %w[89.50 60.50 0.00] },
+      { name: 'AC-06.2 amount 007.50', row: '1111234522226789,1212343433335665,007.50',
+        transfer: '1111234522226789 -> 1212343433335665  7.50', balances: %w[92.50 57.50 0.00] },
+      *invalid_amounts.map do |amount|
+        { name: "AC-06.2 amount #{amount} (DEC-09, DEC-10)", row: "1111234522226789,1212343433335665,#{amount}",
+          report: "1111234522226789 -> 1212343433335665  #{amount}  invalid_amount",
+          warn: "************6789 -> ************5665 #{amount} invalid_amount" }
+      end,
+      { name: 'AC-06.2 an empty amount (DEC-09)', row: '1111234522226789,1212343433335665,',
+        report: '1111234522226789 -> 1212343433335665  ""  invalid_amount',
+        warn: '************6789 -> ************5665 "" invalid_amount' },
+      { name: 'AC-06.2 amount "1,000.00" quoted (DEC-09)', row: '1111234522226789,1212343433335665,"1,000.00"',
+        report: '1111234522226789 -> 1212343433335665  1,000.00  invalid_amount',
+        warn: '************6789 -> ************5665 1,000.00 invalid_amount' },
+      { name: 'AC-06.2 amount 1,000.00 not quoted is 4 fields (DEC-09)',
+        row: '1111234522226789,1212343433335665,1,000.00', report: 'malformed_row: 4 fields, expected 3',
+        warn: '************6789 -> ************5665 1 malformed_row' }
+    ]
+
+    domain_rows.each do |scenario|
+      describe scenario[:name] do
+        subject(:run) { run_scenario(files: { 'transfers.csv' => "#{scenario[:row]}\n" }) }
+
+        if scenario[:balances]
+          it_behaves_like 'a completed run',
+                          stdout: template_a(transfer: scenario[:transfer], balances: scenario[:balances])
+        else
+          it_behaves_like 'a completed run',
+                          stdout: template_r(line: "  Line 1  rejected  #{scenario[:report]}",
+                                             reason: scenario[:warn].split.last),
+                          stderr: "W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: #{scenario[:warn]}\n" \
+                                  'W, [<timestamp> #<pid>]  WARN -- : All transfers were rejected; ' \
+                                  "check this is the right file.\n"
+        end
+      end
+    end
+  end
+
   describe 'FR-07 The order transfers are applied in' do
     describe 'AC-07.1 one pass, no retry, repeats applied (DEC-15, DEC-16)' do
       subject(:run) do
