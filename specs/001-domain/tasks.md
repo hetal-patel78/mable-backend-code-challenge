@@ -138,8 +138,8 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 ### Tests for User Story 2 (write first)
 
-- [ ] T024 [US2] Add `attempt(error_class)` to `spec/support/builders.rb`: it yields, rescues only `error_class` and returns nil [D17; research R10]
-- [ ] T025 [US2] Add to `spec/domain/account_spec.rb` a `describe '#withdraw'` and a `describe '#deposit'` [FR-010 to FR-012; AC-04.1 to AC-04.3; DEC-10, DEC-13, DEC-18; D17]:
+- [X] T024 [US2] Add `attempt(error_class)` to `spec/support/builders.rb`: it yields, rescues only `error_class` and returns nil [D17; research R10]
+- [X] T025 [US2] Add to `spec/domain/account_spec.rb` a `describe '#withdraw'` and a `describe '#deposit'` [FR-010 to FR-012; AC-04.1 to AC-04.3; DEC-10, DEC-13, DEC-18; D17]:
   - an account `1111234522226789` holding `100.00`: `withdraw(amount('30.00'))` leaves `70.00`;
   - exactly $0: `withdraw(amount('100.00'))` leaves `0.00` and raises nothing (DEC-13 edge case; AC-04.2);
   - one cent below $0: `withdraw(amount('100.01'))` raises `InsufficientFunds`, `account 1111234522226789 cannot pay 100.01 from a balance of 100.00` (DEC-13 edge case; AC-04.1);
@@ -147,8 +147,8 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
   - an account `0000123412341234` holding `0.00`: `withdraw(amount('0.01'))` raises `InsufficientFunds`, `account 0000123412341234 cannot pay 0.01 from a balance of 0.00` (DEC-10; AC-04.3);
   - the message writes both values with 2 decimals: an account holding `5` refusing `007.50` gives `account 1111234522226789 cannot pay 7.50 from a balance of 5.00`;
   - `deposit(amount('30.00'))` on `0.00` leaves `30.00`.
-- [ ] T026 [US2] Add the builder `account(number = '1111234522226789', opening = '100.00')` to `spec/support/builders.rb`, building `Account.new(account_number(number), balance(opening))` [DEC-34; research R10]
-- [ ] T027 [US2] Run `bundle exec rspec spec/domain/account_spec.rb` and confirm the new examples fail (depends on T024 to T026)
+- [X] T026 [US2] Add the builder `account(number = '1111234522226789', opening = '100.00')` to `spec/support/builders.rb`, building `Account.new(account_number(number), balance(opening))` [DEC-34; research R10]
+- [X] T027 [US2] Run `bundle exec rspec spec/domain/account_spec.rb` and confirm the new examples fail (depends on T024 to T026)
 
 ### Implementation for User Story 2
 

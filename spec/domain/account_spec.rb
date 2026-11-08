@@ -33,4 +33,46 @@ RSpec.describe Account do
       expect(described_class.new(account_number('1111234522226789'), balance('100.00')).balance.to_s).to eq('100.00')
     end
   end
+
+  describe '#withdraw' do
+    let(:holder) { account('1111234522226789', '100.00') }
+
+    it 'takes the amount from the balance' do
+      holder.withdraw(amount('30.00'))
+      expect(holder.balance.to_s).to eq('70.00')
+    end
+
+    it 'applies a withdrawal that leaves exactly 0.00 (DEC-13)' do
+      holder.withdraw(amount('100.00'))
+      expect(holder.balance.to_s).to eq('0.00')
+    end
+
+    it 'refuses a withdrawal that would leave the balance one cent below 0.00 (DEC-13)' do
+      expect { holder.withdraw(amount('100.01')) }
+        .to raise_error(InsufficientFunds, 'account 1111234522226789 cannot pay 100.01 from a balance of 100.00')
+    end
+
+    it 'keeps the balance after a refused withdrawal (DEC-18)' do
+      attempt(InsufficientFunds) { holder.withdraw(amount('100.01')) }
+      expect(holder.balance.to_s).to eq('100.00')
+    end
+
+    it 'refuses any withdrawal from an account holding 0.00 (DEC-10)' do
+      expect { account('0000123412341234', '0.00').withdraw(amount('0.01')) }
+        .to raise_error(InsufficientFunds, 'account 0000123412341234 cannot pay 0.01 from a balance of 0.00')
+    end
+
+    it 'writes both values in the refusal with 2 decimal places' do
+      expect { account('1111234522226789', '5').withdraw(amount('007.50')) }
+        .to raise_error(InsufficientFunds, 'account 1111234522226789 cannot pay 7.50 from a balance of 5.00')
+    end
+  end
+
+  describe '#deposit' do
+    it 'adds the amount to the balance' do
+      holder = account('1111234522226789', '0.00')
+      holder.deposit(amount('30.00'))
+      expect(holder.balance.to_s).to eq('30.00')
+    end
+  end
 end

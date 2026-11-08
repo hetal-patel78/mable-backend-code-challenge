@@ -16,4 +16,15 @@ module Builders
     require 'domain/money'
     Money.balance(text)
   end
+
+  def account(number = '1111234522226789', opening = '100.00')
+    require 'domain/account'
+    Account.new(account_number(number), balance(opening))
+  end
+
+  def attempt(error_class)
+    yield
+  rescue error_class
+    nil
+  end
 end
