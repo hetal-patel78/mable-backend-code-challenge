@@ -374,7 +374,7 @@ The specs are implemented one after another, each in its own worktree in `C:\Dev
 | 1. Start | Done: this section, [P26](../prompts/prompts-implementation-phase.md#p26) and the "Current stage" in `CLAUDE.md` |
 | 2. Implement 001-domain | Done: 2 review rounds. Round 1 found 1 low defect (fixed); the last round, round 2, found 0 defects. Branch `001-domain-impl` pushed with its small commits kept |
 | 2. Implement 002-file-runner | Done: 3 review rounds. Round 1 found 2 defects (1 high, 1 low; both fixed) and round 2 found 2 low defects (both fixed). The last round, round 3, found 0 defects. Branch `002-file-runner-impl` pushed with its small commits kept |
-| 2. Implement 003-delivery | In progress |
+| 2. Implement 003-delivery | Done: 1 review round. Round 1 found 0 defects, so the last round, round 1, found 0 defects. Branch `003-delivery-impl` pushed with its small commits kept |
 | 3. Whole-system checks | Not started |
 | 4. Merge and push | Not started |
 | 5. Stop | Not started |
@@ -599,6 +599,22 @@ Phase 8 (before the push), Windows 11 in Git Bash with Ruby 3.4.12 (`x64-mingw-u
 | Phase end | `bundle exec rspec` at `$REPO` (Windows, Ruby 3.4.12) | Pass: 726 examples, 0 failures. Randomized with seed 23038. Line coverage: 501 / 501 (100.00%). Exit 0 |
 | Phase end | `bundle exec rubocop` at `$REPO` | Pass: 52 files inspected, no offenses detected. Exit 0 |
 
+Final checks, run on the branch after the last review round. All criteria pass. The 10 unchecked tasks are the post-push and final-verification tasks, as expected.
+
+| Check | Result |
+|---|---|
+| RSpec (`bundle exec rspec`) | 726 examples, 0 failures. Randomized with seed 49463 |
+| Coverage (SimpleCov) | Line coverage: 501 / 501 (100.00%) |
+| RuboCop (`bundle exec rubocop`) | 0 offenses (52 files inspected, no offenses detected) |
+| Unchecked tasks in `specs/003-delivery/tasks.md` | 10: T049 to T058, the post-push and final-verification tasks |
+| Git status | Clean. The coverage report that the RSpec run regenerates is generated output and is ignored by git |
+
+Review rounds. Every round is by an independent Claude Opus 5.5 agent.
+
+| Round | Reviewer | Defects found | Result |
+|---|---|---|---|
+| 1 | Claude Opus 5.5 (independent, fresh) | 0 | Converged |
+
 ### Decided in the run
 
 - **001-domain**
@@ -684,6 +700,9 @@ Phase 8 (before the push), Windows 11 in Git Bash with Ruby 3.4.12 (`x64-mingw-u
   - T044: each of the nine known limitations is one line taken from page 9's risks table, with its effect; the duplicate-account line follows page 10.
   - T046: the layout table names paths in code, not as links, so `output/`, which a clean checkout does not have, gives C-32 nothing to resolve.
   - T047: C-29's two- and three-argument runs ran from the project root of the clean checkout with the copies `b.csv` and `t.csv` there, so the last lines are the ones the README shows (`output/...` and `out/day1.csv`). C-29 cloned from the repository's main checkout, as T012.
+  - T004/C-03: the "001 lock commit" for the `Gemfile.lock` diff is `d4764f6`, the only earlier commit that touches `Gemfile.lock` (recorded in the Phase 2 table).
+  - T005/T006: no change made. C-01 already showed mode `100755`, the first line `#!/usr/bin/env ruby` and no `i/crlf` file; C-02 already passed (no `.gitattributes`).
+  - T048: `ba203ba` (the tip of `002-file-runner-impl`, the same locally and on `origin`, and an ancestor of `HEAD`) is used as `<002 tip>` for C-34. Recorded in the Phase 8 table.
 
 ### Changed in the run
 
@@ -705,6 +724,8 @@ Phase 8 (before the push), Windows 11 in Git Bash with Ruby 3.4.12 (`x64-mingw-u
   - Round 2, R2-F1 (low): the example "reports the first failure" could not tell the first failure from the second. The spec now makes the first close raise `Errno::ENOSPC` and the second `Errno::EIO`, and asserts the exact message. The code already reported the first error, so no code change was needed. Commit `e9f690f`.
   - Round 2, R2-F2 (low): T037 was marked done, but the output file from its hand run was not deleted. The file was moved out of `output/`, which is now empty. No commit, because `output/` is git-ignored.
   - Not a defect: none.
+- **003-delivery**
+  - Round 1 found 0 defects, so nothing was fixed. Not a defect: none.
 
 ### Left for the developer
 
