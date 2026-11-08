@@ -541,6 +541,31 @@ Phase 6 (User Story 3: Docker), 2026-11-08. The checks before the change ran at 
 
 Finding for the developer (T035, C-41; blocks Phase 6 from closing): an image built from a Windows checkout made with `core.autocrlf=true` runs, gives the right report and the right file, but Ruby writes `bin/run:1: warning: shebang line ending with \r may cause problems` on standard error at every start. Spec item 17, research R-6, FR-022 and the Dockerfile contract say Ruby ignores the line ending of a `#!` line; it runs the file, but it prints this warning. The same warning comes with the command `ruby bin/run -h`, before the usage lines. `ruby -W0 bin/run` in the same image prints nothing on standard error. An image built from a LF checkout (C-17 to C-25) has no warning. Each way to remove it changes something a decision or the spec fixes: `CMD ["ruby", "-W0", "bin/run"]` (instruction 6 of DEC-36 and the contract; a command given after the image name still warns), `ENV RUBYOPT=-W0` or a line-ending fix in the image (a seventh instruction, against FR-024 and DEC-36), `bin/run text eol=lf` in `.gitattributes` (breaks C-43 and spec item 17), or accepting the warning and changing what C-41 and the README expect (weakens a check). No change is made here; the developer decides.
 
+Resolution in the run (T024, T035; spec item 18; 2026-11-08): the warning also breaks the README's test command in such an image. In the `win2` image of `212676e`, `docker run --rm mable-transfers bundle exec rspec` exited 1 with 5 failures, every one a standard-error comparison in a spec that starts `bin/run` as its own process (`spec/support/runs.rb`). So `-W0` on the default command alone would not be enough. No decision or solution-design text needs to change: [DEC-36](../design-analysis/design-decisions.md#dec-36) says only that the image copies the project in, runs `bundle install` and by default runs `bin/run`. The fifth Dockerfile instruction is now `RUN sed -i 's/\r$//' bin/run && bundle install`. It strips the carriage returns from the image's copy of `bin/run`, still within six instructions, and changes nothing in the repository or a checkout, so C-43 and spec item 17 hold. The spec, plan item 5, research R-3 and R-6, both contracts, the quickstart (C-26 now also checks standard error and `bundle exec rspec`, C-42 the new line) and tasks T024 and T035 say so (commit `578ebeb`); the Dockerfile is commit `3bbd12a`. Rejected: `CMD ["ruby", "-W0", "bin/run"]` (a command after the image name still warns, and the tests still fail), `ENV RUBYOPT=-W0` (hides every Ruby warning), a seventh instruction (FR-024), `bin/run text eol=lf` (breaks C-43), accepting the warning (weakens C-41).
+
+Phase 6 after the change, 2026-11-08, commit `3bbd12a`. C-04, C-42 and C-17 to C-25 and C-27 ran again from WSL Ubuntu on a fresh clean checkout `$CHECKS/docker` of `3bbd12a` (the old one was moved to a scratch folder), and C-26 and C-41 in Windows PowerShell 5.1 on a fresh `$env:CHECKS\win2` clone of `3bbd12a` made with `core.autocrlf=true` (the old clone and its output files were moved to a scratch folder).
+
+| Task | Check | Result |
+|---|---|---|
+| T024 | Dockerfile changed | `RUN sed -i 's/\r$//' bin/run && bundle install` as the fifth instruction; the other five unchanged. Commit `3bbd12a` |
+| T025 | C-04 and C-42 at `$REPO` and on the clean checkout | Pass: C-04 exits 0; C-42 counts `6`, the forbidden-word `grep` prints nothing (exit 1), `test ! -e .dockerignore` exits 0, and the six lines read in the contract's order. The clean checkout has no `output/`, `coverage/` or `vendor/` |
+| T026 | C-17 | Pass: exit 0; the log shows `[4/4] RUN sed -i 's/\r$//' bin/run && bundle install` and `Bundle complete! 7 Gemfile dependencies, 27 gems now installed.` |
+| T027 | C-18 | Pass: exit 0 |
+| T028 | C-19 | Pass: exit 0; `TZ=Australia/Sydney date` read `2026-11-08_174839` before and `2026-11-08_174840` after; standard output equals the sample report with `<run time>` `2026-11-08_174840`; standard error 0 bytes; the file equals `final.csv` |
+| T029 | C-20 | Pass: 726 examples, 0 failures. Randomized with seed 61700. Exit 0. `Line coverage: 501 / 501 (100.00%)` |
+| T030 | C-21 | Pass: with `-e LOG_LEVEL=info`, exit 0, the sample report (`<run time>` `2026-11-08_064841`), standard error equals `info.txt` after the timestamp and pid are replaced; with `ruby bin/run -h`, exit 1, standard output 0 bytes, standard error equals `usage.txt` |
+| T031 | C-22 | Pass: exit 0; `date -u` read `2026-11-08_064842` before and `2026-11-08_064843` after, and the file name carries `2026-11-08_064843`; the sample report; standard error 0 bytes; the file equals `final.csv` |
+| T032 | C-23 | Pass: exit 0; the sample report (`<run time>` `2026-11-08_064844`); standard error 0 bytes; no `output/` on the host |
+| T033 | C-24 | Pass: exit 1; standard output 0 bytes; standard error `Error: output file already exists: output/existing.csv. Delete it or give another output path.` then `E, [2026-11-08T06:48:45.036172 #1] ERROR -- : Run stopped: start checks failed (output file already exists)`; the file still holds `keep` |
+| T034 | C-25 | Pass: exit 0; the sample report (`<run time>` `2026-11-08_064846`); standard error 0 bytes; the file equals `final.csv`; `git status --porcelain` prints nothing |
+| T035 | C-26 in the fresh `win2` | Pass: no `output/` before; `git ls-files --eol bin/run` shows `i/lf w/crlf`; `docker build -t mable-transfers-win .` exit 0; `docker run --rm mable-transfers-win` exit 0, `c26out.txt` (CRLF changed to LF) equals the sample report with `<run time>` `2026-11-08_064138`, `c26err.txt` 0 bytes; `docker run --rm mable-transfers-win bundle exec rspec` exit 0, 726 examples, 0 failures, Randomized with seed 60569; `docker rmi mable-transfers-win` exit 0 |
+| T035 | C-41 in the same `win2` | Pass: `docker build -t mable-transfers .` exit 0, then `docker run --rm -e TZ=Australia/Sydney -v "${PWD}/output:/app/output" mable-transfers` through `cmd /c`: exit 0; `dockerout.txt` (CRLF changed to LF) equals the sample report with `<run time>` `2026-11-08_174204`; `dockererr.txt` 0 bytes; `output/final_balances_2026-11-08_174204.csv` (126 bytes) equals `final.csv` byte for byte; `git status --porcelain` prints nothing |
+| T036 | C-27 | Docker Desktop through WSL: the file the container wrote belongs to root (0:0), as before |
+| Phase end | `bundle exec rspec` at `$REPO` (Windows, Ruby 3.4.12) | Pass: 726 examples, 0 failures. Randomized with seed 33050. Line coverage: 501 / 501 (100.00%). Exit 0 |
+| Phase end | `bundle exec rubocop` at `$REPO` | Pass: 52 files inspected, no offenses detected. Exit 0 |
+
+Checkpoint: C-04, C-42 and C-17 to C-26 pass, C-27 is recorded and C-41 passes; Phase 6 is complete.
+
 Finding for Phase 7 (T038, T043, C-33): SimpleCov 1.3.2 prints `Line coverage: 501 / 501 (100.00%)`, while plan item 10, research, data-model, the README contract and C-33 quote the line as `Line Coverage: <percent>% (<covered> / <total>)`, and C-33's `grep "Line Coverage"` is case-sensitive, so it would find nothing. C-12 is recorded as passing with the line SimpleCov prints. The wording in the specs is not changed in this phase.
 
 ### Decided in the run
@@ -620,12 +645,16 @@ Finding for Phase 7 (T038, T043, C-33): SimpleCov 1.3.2 prints `Line coverage: 5
   - T032: C-23's `rm -r output` is done by moving `output/` out of the checkout into a scratch folder, so nothing is deleted; the effect, no `output/` before the run, is the same (as T021).
   - T035: C-41 ran before the README exists, with the PowerShell command of the Dockerfile contract, which the README copies (T039); T047's C-29 checks the README's command equals it. PowerShell expands `${PWD}` before `cmd /c` runs the line, as the README's command would.
   - T036: C-27 ran on Docker Desktop through WSL, not a native Linux host; the owner seen was recorded (root), as T036 allows.
+  - Spec item 18 (T024, T035): the Dockerfile's fifth instruction strips the carriage returns from `bin/run` in the image (`RUN sed -i 's/\r$//' bin/run && bundle install`), so an image built from a `core.autocrlf=true` Windows checkout writes no `shebang line ending with \r` warning and passes `bundle exec rspec`. C-26 now also checks that standard error is empty and that the tests pass in that image. Rejected: `-W0` on the default command, `ENV RUBYOPT=-W0`, a seventh instruction, `.gitattributes`, accepting the warning.
+  - Phase 6 re-run: after the Dockerfile change, C-17 to C-27 and C-42 ran again on fresh clean checkouts of `3bbd12a`, so every image check is on the committed Dockerfile.
 
 ### Changed in the run
 
 - **001-domain**: none.
 - **002-file-runner**
   - `109db43` changed `specs/002-file-runner/plan.md` P30 and `research.md` R2: invalid UTF-8 bytes are found by `CsvRows` per row, not by the csv gem's `InvalidEncodingError`. DEC-32's `CSV.open` with one row per shift still holds. No design-decisions or solution-design change.
+- **003-delivery**
+  - `578ebeb` changed `specs/003-delivery/spec.md` (Clarifications, edge case, FR-022, items 17 and 18), `plan.md` item 5, `research.md` R-3 and R-6, `contracts/dockerfile.md`, `contracts/repository-files.md`, `quickstart.md` C-26 and C-42, and `tasks.md` T024 and T035: Ruby does not silently ignore a CRLF `#!` line (it warns on standard error), so the image strips the carriage returns from `bin/run`. No design-decisions or solution-design change.
 
 ### Fixed in review
 
