@@ -413,9 +413,9 @@
 
 **Goal**: NFR-03 by design review; no timing test and no large file (DEC-03, DEC-26, DEC-32).
 
-- [ ] T079 [US7] Review `lib/application/` and `lib/infrastructure/` against the [time and space table](../../docs/solution-design/09-considerations.md#time-and-space) and record the result in the run report: `LoadBalances` does one `include?` and at most one `add` per row; each transfer does two `find`s through `TransferService`; each total and the writer visit each account once; no loop over rows or accounts inside another; O(m + n) time and space for the whole run (SC-007) [FR-039; NFR-03; DEC-32; US7 scenario 1]
-- [ ] T080 [US7] Review that `CsvRows` holds one row at a time and nothing reads a whole file into a string; that one `TransferResult` per row is kept and nothing else grows with the transfers; that there is no fixed limit on accounts or rows [FR-040; NFR-03; DEC-26, DEC-32; US7 scenarios 2, 3, 5]
-- [ ] T081 [US7] Review that nothing is kept between runs: no class variable, no global, no file written other than the output file; AC-09.7's two runs give the same result (Phase 7) [FR-041; NFR-03; DEC-03; US7 scenario 4]
+- [X] T079 [US7] Review `lib/application/` and `lib/infrastructure/` against the [time and space table](../../docs/solution-design/09-considerations.md#time-and-space) and record the result in the run report: `LoadBalances` does one `include?` and at most one `add` per row; each transfer does two `find`s through `TransferService`; each total and the writer visit each account once; no loop over rows or accounts inside another; O(m + n) time and space for the whole run (SC-007) [FR-039; NFR-03; DEC-32; US7 scenario 1]
+- [X] T080 [US7] Review that `CsvRows` holds one row at a time and nothing reads a whole file into a string; that one `TransferResult` per row is kept and nothing else grows with the transfers; that there is no fixed limit on accounts or rows [FR-040; NFR-03; DEC-26, DEC-32; US7 scenarios 2, 3, 5]
+- [X] T081 [US7] Review that nothing is kept between runs: no class variable, no global, no file written other than the output file; AC-09.7's two runs give the same result (Phase 7) [FR-041; NFR-03; DEC-03; US7 scenario 4]
 
 **Checkpoint**: the design review finds 0 steps whose cost grows faster than the rows in the two files.
 

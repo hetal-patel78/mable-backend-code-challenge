@@ -405,6 +405,26 @@ Review rounds. Every round is by an independent Claude Opus 5.5 agent.
 | 1 | Claude Opus 5.5 (independent, fresh) | 1 (low) | Fixed (F1) |
 | 2 | Claude Opus 5.5 (independent, fresh) | 0 | Converged |
 
+#### 002-file-runner
+
+Design review of the run's cost (Phase 9, T079 to T081), against the [time and space table](../solution-design/09-considerations.md#time-and-space). `m` is the number of accounts and `n` the number of transfer rows. Result: 0 steps whose cost grows faster than the rows in the two files.
+
+| Check | Result |
+|---|---|
+| T079 Load the balances | `LoadBalances` does one `include?` per row with a valid account number and at most one `add` per row (only for a row with no problem). Line numbers of loaded accounts sit in a `Hash`, so a duplicate's first line is one lookup. O(m) time and space |
+| T079 Apply one transfer | `TransferService#apply` does two `find`s (hash lookups in `AccountRepository`), then `withdraw` and `deposit`. O(1) per transfer |
+| T079 Total check and writer | `ProcessDailyTransfer#total` sums `AccountRepository#all` once before and once after the transfers; `FinalBalancesCsvWriter#write` writes one line per account. Each visits each account once. `all` returns a new array of the `m` accounts each time, so each pass holds O(m) references for a moment, still within O(m + n) |
+| T079 No nested loops | No loop over rows or accounts runs inside another. `DayResult`'s counts and `ReportPrinter` each pass over the results once; the rejected counts order a tally by the fixed list of reason codes |
+| T079 Whole run | O(m + n) time and space |
+| T080 Reading the files | `CsvRows` reads with `CSV.open` and `shift`, holding one row (`csv.line`) at a time; nothing in `lib/` reads a whole file into a string (no `File.read`, `readlines` or `IO.read`) |
+| T080 What grows with the transfers | Only the `results` array: one `TransferResult` per row, kept for the report (DEC-26) |
+| T080 Limits | No fixed limit on accounts or rows: no maximum, count check or size constant in `lib/` |
+| T081 Nothing kept between runs | No class variable, no global variable (`$stdout`, `$stderr` and `ENV` are only read as defaults for the `Runner` and `ReportPrinter` streams), no class-level state; every constant is frozen. `Runner#run` builds a new `AccountRepository` and new parts for each run |
+| T081 Files written | Only the output file, by `FinalBalancesCsvWriter` (which creates its folder if missing). Logs go to the error stream |
+| T081 AC-09.7 | The two runs on the sample files in `spec/infrastructure/runner_spec.rb` give the same report apart from the Output file line and the same output file contents: 9 examples, 0 failures |
+| RSpec (`bundle exec rspec`) | 721 examples, 0 failures. Randomized with seed 23498 |
+| RuboCop (`bundle exec rubocop`) | 52 files inspected, no offenses detected |
+
 ### Decided in the run
 
 - **001-domain**
