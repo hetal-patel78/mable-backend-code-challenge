@@ -3,6 +3,244 @@
 require 'infrastructure/runner'
 
 RSpec.describe Runner do
+  describe 'FR-01 Load the balances file' do
+    describe 'AC-01.1 a valid file is loaded, including leading zeros and a $0.00 balance' do
+      subject(:run) { run_scenario }
+
+      it_behaves_like 'a completed run',
+                      stdout: template_a(transfer: '1111234522226789 -> 1212343433335665  10.00',
+                                         balances: %w[90.00 60.00 0.00])
+    end
+
+    describe 'AC-01.2 common CSV forms are accepted' do
+      subject(:run) do
+        run_scenario(files: { 'balances.csv' => "﻿\"1111234522226789\", 100.00 \r\n" \
+                                                "1212343433335665,50.00\r\n0000123412341234,0.00" })
+      end
+
+      it_behaves_like 'a completed run',
+                      stdout: template_a(transfer: '1111234522226789 -> 1212343433335665  10.00',
+                                         balances: %w[90.00 60.00 0.00])
+    end
+
+    describe 'AC-01.3 blank lines are skipped but still counted in line numbers' do
+      subject(:run) { run_scenario(files: { 'balances.csv' => "1111234522226789,100.00\n\n   \n12345,50.00\n" }) }
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: the balances file is invalid (1 problem):
+          Line 4: account number "12345" must be exactly 16 digits
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 1 problem
+      STDERR
+    end
+
+    describe 'AC-01.4 an invalid file reports every problem and stops the run' do
+      subject(:run) do
+        run_scenario(files: { 'balances.csv' => "1111234522226789,5000.00\n\n12345,100.00\n1212343433335665,abc,9\n" \
+                                                "1111234522226789,10.00\n2222123433331212,-5.00\n" \
+                                                "3212343433335755,1.234\n" })
+      end
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: the balances file is invalid (5 problems):
+          Line 3: account number "12345" must be exactly 16 digits
+          Line 4: expected 2 fields, found 3
+          Line 5: account 1111234522226789 appears more than once (first on line 1)
+          Line 6: balance "-5.00" must not be negative
+          Line 7: balance "1.234" has more than 2 decimal places
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 5 problems
+      STDERR
+
+      it 'names no account number in the error log line (DEC-28)' do
+        expect(run.stderr.lines.grep(/\AE, \[/).join).not_to match(/\d{16}/)
+      end
+    end
+
+    describe 'AC-01.5 a row with several problems reports each one, in field order' do
+      subject(:run) { run_scenario(files: { 'balances.csv' => "12345,abc\n" }) }
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: the balances file is invalid (2 problems):
+          Line 1: account number "12345" must be exactly 16 digits
+          Line 1: balance "abc" is not a valid amount
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 2 problems
+      STDERR
+    end
+
+    describe 'AC-01.6 1111234522226789,' do
+      subject(:run) { run_scenario(files: { 'balances.csv' => "1212343433335665,50.00\n1111234522226789,\n" }) }
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: the balances file is invalid (1 problem):
+          Line 2: balance is empty
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 1 problem
+      STDERR
+    end
+
+    describe 'AC-01.6 1111234522226789,abc' do
+      subject(:run) { run_scenario(files: { 'balances.csv' => "1212343433335665,50.00\n1111234522226789,abc\n" }) }
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: the balances file is invalid (1 problem):
+          Line 2: balance "abc" is not a valid amount
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 1 problem
+      STDERR
+    end
+
+    describe 'AC-01.6 1111234522226789,5000.00,x' do
+      subject(:run) do
+        run_scenario(files: { 'balances.csv' => "1212343433335665,50.00\n1111234522226789,5000.00,x\n" })
+      end
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: the balances file is invalid (1 problem):
+          Line 2: expected 2 fields, found 3
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 1 problem
+      STDERR
+    end
+
+    describe 'AC-01.6 ,' do
+      subject(:run) { run_scenario(files: { 'balances.csv' => "1212343433335665,50.00\n,\n" }) }
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: the balances file is invalid (2 problems):
+          Line 2: account number "" must be exactly 16 digits
+          Line 2: balance is empty
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 2 problems
+      STDERR
+    end
+
+    describe 'AC-01.7 a header row makes the file invalid, with a hint (DEC-06)' do
+      subject(:run) do
+        run_scenario(files: { 'balances.csv' => "account,balance\n#{Runs::DEFAULT_FILES['balances.csv']}" })
+      end
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: the balances file is invalid (2 problems):
+          Line 1: account number "account" must be exactly 16 digits. This looks like a header row; files must not have a header.
+          Line 1: balance "balance" is not a valid amount
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 2 problems
+      STDERR
+    end
+
+    describe 'AC-01.7 1111O34522226789,100.00 has no header hint (DEC-06)' do
+      subject(:run) do
+        run_scenario(files: { 'balances.csv' => "1111O34522226789,100.00\n1212343433335665,50.00\n" \
+                                                "0000123412341234,0.00\n" })
+      end
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: the balances file is invalid (1 problem):
+          Line 1: account number "1111O34522226789" must be exactly 16 digits
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 1 problem
+      STDERR
+    end
+
+    describe 'AC-01.7 account,balance,x has the header hint (DEC-06)' do
+      subject(:run) do
+        run_scenario(files: { 'balances.csv' => "account,balance,x\n#{Runs::DEFAULT_FILES['balances.csv']}" })
+      end
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: the balances file is invalid (1 problem):
+          Line 1: expected 2 fields, found 3. This looks like a header row; files must not have a header.
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 1 problem
+      STDERR
+    end
+
+    describe 'AC-01.8 an empty balances file stops the run (DEC-11)' do
+      subject(:run) { run_scenario(files: { 'empty.csv' => '' }, arguments: ['empty.csv', 'transfers.csv', output]) }
+
+      let(:output) { Runs::OUTPUT_FILE }
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: the balances file has no rows: empty.csv
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 1 problem
+      STDERR
+    end
+
+    describe 'AC-01.8 a balances file of only blank lines stops the run (DEC-05, DEC-11)' do
+      subject(:run) do
+        run_scenario(files: { 'empty.csv' => "\n  \n\n" }, arguments: ['empty.csv', 'transfers.csv', output])
+      end
+
+      let(:output) { Runs::OUTPUT_FILE }
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: the balances file has no rows: empty.csv
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 1 problem
+      STDERR
+    end
+
+    describe 'AC-01.9 a balances file that cannot be read past a line (DEC-04, DEC-12)' do
+      subject(:run) do
+        run_scenario(files: { 'bad.csv' => "1111234522226789,100.00\n1212343433335665,50.00\n12345,100.00\n" \
+                                           "0000123412341234,0.00\n\n\n1111234522226789,\"100.00\n" },
+                     arguments: ['bad.csv', 'transfers.csv', Runs::OUTPUT_FILE])
+      end
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: the balances file is invalid (2 problems):
+          Line 3: account number "12345" must be exactly 16 digits
+          Line 7: cannot read bad.csv from this line. Check for an unclosed quote or characters that are not text.
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 2 problems
+      STDERR
+    end
+
+    describe 'AC-01.10 a duplicate account is reported even when its balance is invalid (DEC-12, DEC-31)' do
+      subject(:run) { run_scenario(files: { 'balances.csv' => "1111234522226789,5000.00\n1111234522226789,abc\n" }) }
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: the balances file is invalid (2 problems):
+          Line 2: account 1111234522226789 appears more than once (first on line 1)
+          Line 2: balance "abc" is not a valid amount
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 2 problems
+      STDERR
+    end
+
+    describe 'AC-01.10 known gap: a first copy with an invalid balance (DEC-12)' do
+      subject(:run) { run_scenario(files: { 'balances.csv' => "1111234522226789,abc\n1111234522226789,10.00\n" }) }
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: the balances file is invalid (1 problem):
+          Line 1: balance "abc" is not a valid amount
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 1 problem
+      STDERR
+    end
+
+    describe 'AC-01.10 known gap: a first copy with the wrong field count (DEC-12)' do
+      subject(:run) do
+        run_scenario(files: { 'balances.csv' => "1111234522226789,5000.00,x\n1111234522226789,10.00\n" })
+      end
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: the balances file is invalid (1 problem):
+          Line 1: expected 2 fields, found 3
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 1 problem
+      STDERR
+    end
+
+    describe 'AC-01.10 known gap: a first copy with a negative balance (DEC-12)' do
+      subject(:run) { run_scenario(files: { 'balances.csv' => "1111234522226789,-5.00\n1111234522226789,10.00\n" }) }
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: the balances file is invalid (1 problem):
+          Line 1: balance "-5.00" must not be negative
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 1 problem
+      STDERR
+    end
+
+    describe 'the balances file is checked before an empty transfers file (DEC-12, DEC-20)' do
+      subject(:run) { run_scenario(files: { 'balances.csv' => "12345,abc\n", 'transfers.csv' => '' }) }
+
+      it_behaves_like 'a stopped run', stderr: <<~STDERR
+        Error: the balances file is invalid (2 problems):
+          Line 1: account number "12345" must be exactly 16 digits
+          Line 1: balance "abc" is not a valid amount
+        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 2 problems
+      STDERR
+    end
+  end
+
   describe 'FR-08 The end-of-day result and its output' do
     describe 'AC-08.1 the sample files give the exact expected result' do
       subject(:run) do
