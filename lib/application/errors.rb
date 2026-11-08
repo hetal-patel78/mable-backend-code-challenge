@@ -24,3 +24,14 @@ class InvalidBalancesFile < StandardError
     problems.one? ? '1 problem' : "#{problems.size} problems"
   end
 end
+
+# A transfers file with no rows; it stops the run.
+class NoTransfers < StandardError
+  def initialize(path)
+    super("the transfers file has no transfers: #{path}")
+  end
+
+  def stop_reason
+    'transfers file has no transfers'
+  end
+end

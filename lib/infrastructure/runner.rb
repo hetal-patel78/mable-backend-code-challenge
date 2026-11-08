@@ -6,6 +6,7 @@ require_relative '../application/errors'
 require_relative '../application/process_daily_transfer'
 require_relative 'balances_csv_reader'
 require_relative 'display_path'
+require_relative 'errors'
 require_relative 'final_balances_csv_writer'
 require_relative 'report_printer'
 require_relative 'transfers_csv_reader'
@@ -14,7 +15,7 @@ require_relative 'transfers_csv_reader'
 class Runner
   PROJECT_ROOT = File.expand_path('../..', __dir__)
   DEFAULT_INPUTS = %w[data/mable_account_balances.csv data/mable_transactions.csv].freeze
-  STOPPING_ERRORS = [InvalidBalancesFile].freeze
+  STOPPING_ERRORS = [InvalidBalancesFile, NoTransfers, UnreadableFile].freeze
 
   def initialize(stdout: $stdout, stderr: $stderr, env: ENV)
     @stdout = stdout

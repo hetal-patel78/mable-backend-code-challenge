@@ -180,17 +180,17 @@ RSpec.describe ProcessDailyTransfer do
     end
 
     describe 'with the rows of AC-07.1' do
-      let(:ac_07_1) do
+      let(:retry_rows) do
         ['0000123412341234,1212343433335665,20.00', '1111234522226789,0000123412341234,20.00',
          '1111234522226789,0000123412341234,20.00']
       end
 
       it 'rejects line 1 once, with no retry, and applies both repeats (DEC-15, DEC-16)' do
-        expect(reasons(*ac_07_1)).to eq([:insufficient_funds, nil, nil])
+        expect(reasons(*retry_rows)).to eq([:insufficient_funds, nil, nil])
       end
 
       it 'gives the final balances of AC-07.1 (DEC-15, DEC-16)' do
-        expect(balances_after(*ac_07_1)).to eq(%w[60.00 50.00 40.00])
+        expect(balances_after(*retry_rows)).to eq(%w[60.00 50.00 40.00])
       end
     end
 
@@ -242,11 +242,11 @@ RSpec.describe ProcessDailyTransfer do
     end
 
     it 'counts each reason at the end of the run in DEC-19 order (DEC-19, DEC-28)' do
-      ac_08_2 = rows('1111234522226789,1212343433335665,30.00', '1111234522226789,1212343433335665,90.00',
-                     '1212343433335665,9999888877776666,10.00', '1111234522226789,0000123412341234,70.00',
-                     '1212343433335665,1212343433335665,5.00')
-      expect(logged(ac_08_2).last).to eq('INFO Run ended: processed 5, applied 2, rejected 3 ' \
-                                         '(same_account 1, unknown_account 1, insufficient_funds 1)')
+      mixed_rows = rows('1111234522226789,1212343433335665,30.00', '1111234522226789,1212343433335665,90.00',
+                        '1212343433335665,9999888877776666,10.00', '1111234522226789,0000123412341234,70.00',
+                        '1212343433335665,1212343433335665,5.00')
+      expect(logged(mixed_rows).last).to eq('INFO Run ended: processed 5, applied 2, rejected 3 ' \
+                                            '(same_account 1, unknown_account 1, insufficient_funds 1)')
     end
   end
 
