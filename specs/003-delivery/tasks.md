@@ -183,7 +183,7 @@ description: "Task list for 003-delivery: README, CI, Docker and the submission"
 - [X] T052 [P] [US6] Run C-36 on `main`: `git ls-files output coverage` prints nothing, and `git status --porcelain` on the clean checkout after a run and a test run prints nothing (US6 scenario 2; FR-027, SC-006; DEC-27, DEC-36).
 - [X] T053 [P] [US6] Run C-37 on `main`: `docs/challenge/` has no difference from the commit that added it, and the blob IDs of the copies in `data/` and `spec/fixtures/sample/` equal the challenge files' (US6 scenario 3; FR-028, SC-006; DEC-22).
 - [X] T054 [US6] Run C-38: the latest `main` commit's GitHub Actions run has conclusion `success` (US6 scenario 4; FR-029, SC-002; DEC-36).
-- [ ] T055 [US6] Run C-39 and C-28: the run report's "left for the developer" list names making the repository public or sharing it with the reviewer at submission time, and every hand check that could not be run, with its reason (US6 scenario 4; FR-025, FR-029; DEC-38).
+- [X] T055 [US6] Run C-39 and C-28: the run report's "left for the developer" list names making the repository public or sharing it with the reviewer at submission time, and every hand check that could not be run, with its reason (US6 scenario 4; FR-025, FR-029; DEC-38).
 
 **Checkpoint**: C-07 and C-34 to C-39 pass; every C-08 to C-27, C-29, C-41, C-42 and C-43 result on `main` is recorded as passed or left for the developer.
 

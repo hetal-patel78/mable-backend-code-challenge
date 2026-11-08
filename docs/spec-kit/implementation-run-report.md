@@ -655,6 +655,8 @@ Tools: Ruby 3.4.12 (`x64-mingw-ucrt`, RubyInstaller) and Bundler 2.6.9 on Window
 | T052 | C-36 on `main` | Pass: `git ls-files output coverage` prints nothing; on `clean`, after C-10, C-11 and C-12 (with `output/` and `coverage/` written), `git status --porcelain` prints nothing (0 bytes, exit 0) |
 | T053 | C-37 on `main` | Pass: `docs/challenge/MABLE_BACK_END_CODE_TEST.md` was added in `c2873b2`, and `git diff --exit-code c2873b2 HEAD -- docs/challenge/` exits 0. Blob IDs: `mable_account_balances.csv` `57d2567` and `mable_transactions.csv` `dc410e0` in `docs/challenge/`, `data/` and `spec/fixtures/sample/` alike |
 | T054 | C-38 | Pass: `gh run list --branch main --limit 1` shows run 42465278983, event `push`, status `completed`, conclusion `success`, head `06164046c2fa188d302ad54f4ccf62415d5d1e15` (`git rev-parse origin/main`). `gh run watch 42465278983 --exit-status` reported the run already completed with `success` (exit 0). Log: `BUNDLE_FROZEN: true`, `Bundle complete! 7 Gemfile dependencies, 27 gems now installed.`, `726 examples, 0 failures`, `Randomized with seed 42032`, `52 files inspected, no offenses detected`; job `checks` passed in 56s |
+| T055 | C-39 | Pass: Part 2 "Left for the developer" names making the repository public, or sharing it with the reviewer, at submission time (DEC-38) |
+| T055 | C-28 | Pass: Part 2 "Left for the developer" names the one hand check not run, C-27 on a native Linux host, with its reason; it is not recorded as passed |
 
 Phase 9 (Polish) on `main`, 2026-11-08, at commit `0616404`, from the results above and the clones of `origin` `main` described there.
 
@@ -804,4 +806,13 @@ Phase 9 (Polish) on `main`, 2026-11-08, at commit `0616404`, from the results ab
 
 ### Left for the developer
 
-To be filled in at the end of Part 2.
+1. Make the repository public, or share it with the reviewer, at submission time ([DEC-38](../design-analysis/design-decisions.md#dec-38)). On 2026-11-08 `gh repo view` reports the repository as private.
+2. Review every item under Part 2 "Decided in the run" (the assistant's picks for `001-domain`, `002-file-runner` and `003-delivery`, including the checks on `main`).
+3. Review every item under Part 2 "Changed in the run":
+   - `002-file-runner`, `109db43`: plan P30 and research R2, invalid UTF-8 bytes found by `CsvRows` per row rather than by the csv gem's `InvalidEncodingError`.
+   - `003-delivery`, `578ebeb`: the spec change for the Dockerfile's fifth instruction, `RUN sed -i 's/\r$//' bin/run && bundle install`, which strips the carriage returns from the image's copy of `bin/run` so an image built from a Windows checkout writes no shebang warning (spec item 18).
+   - `003-delivery`, `b82af35`: the specs quote SimpleCov's coverage line as SimpleCov 1.3.2 prints it, `Line coverage: <covered> / <total> (<percent>%)`, and C-33 greps for `Line coverage`.
+4. Checks that could not be run here (C-28):
+   - C-27 on a native Linux host: only Docker Desktop through WSL was available, so the file the container writes was not seen to belong to root on a Linux host (Docker Desktop showed root on the WSL filesystem and the WSL user on the Windows drive).
+   - Every other hand check ran and passed on `main`. C-08 to C-12 ran in the `ruby:3.4.12` container (the Phase 4 fallback the quickstart allows), as no native Linux or macOS host with Ruby 3.4.12 was available; a native run there is optional.
+5. C-34 run on `main` as the quickstart writes it lists 7 spec files changed by `3b291f3` (AC IDs added to 10 example descriptions during the whole-system checks, no expectation changed); `003-delivery`'s own commits change no file under `lib/`, `spec/` or `data/` (T048, T058). Confirm this is acceptable.
