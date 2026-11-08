@@ -33,7 +33,8 @@ RSpec.describe Row do
 
   describe '#==' do
     it 'is equal to a row with the same members' do
-      expect(row(%w[a b c])).to eq(row(%w[a b c]))
+      same = described_class.new(line_number: 1, fields: %w[a b c], expected_size: 3)
+      expect(row(%w[a b c])).to eq(same)
     end
   end
 end

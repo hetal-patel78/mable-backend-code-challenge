@@ -3,9 +3,9 @@
 require 'infrastructure/balances_csv_reader'
 
 RSpec.describe BalancesCsvReader do
-  around { |example| in_temp_folder { example.run } }
-
   subject(:reader) { described_class.new }
+
+  around { |example| in_temp_folder { example.run } }
 
   def rows_of(path)
     rows = []

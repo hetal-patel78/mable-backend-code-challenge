@@ -46,7 +46,7 @@
 
 ### Tests (write first)
 
-- [ ] T006 [P] Create the fixture files, each exactly as listed, with no other content [FR-043; DEC-34; P20]:
+- [X] T006 [P] Create the fixture files, each exactly as listed, with no other content [FR-043; DEC-34; P20]:
   - `spec/fixtures/reading/blank_lines.csv`: line 1 `1111234522226789,100.00`, line 2 empty, line 3 three spaces, line 4 one tab, line 5 `1212343433335665,50.00`;
   - `spec/fixtures/reading/header_row.csv`: `account,balance` then `1111234522226789,100.00`;
   - `spec/fixtures/reading/byte_order_mark.csv`: the bytes `EF BB BF` then `1111234522226789,100.00` and a line feed (write it with `File.binwrite` once and commit the file);
@@ -54,11 +54,11 @@
   - `spec/fixtures/reading/empty.csv`: zero bytes;
   - `spec/fixtures/reading/only_blank_lines.csv`: an empty line, a line of three spaces, an empty line;
   - `spec/fixtures/reading/field_counts.csv`: lines `1`, `1,2`, `1,2,3`, `1,2,3,4`.
-- [ ] T007 [P] Write `spec/infrastructure/row_spec.rb` [FR-003, FR-004; DEC-06, DEC-19; P2]:
+- [X] T007 [P] Write `spec/infrastructure/row_spec.rb` [FR-003, FR-004; DEC-06, DEC-19; P2]:
   - `wrong_field_count?` is false for 3 fields with `expected_size: 3`, and true for 2 and for 4;
   - `header_hint` is nil when not given, and returns the text when given;
   - two `Row`s with the same members are equal.
-- [ ] T008 [P] Write `spec/infrastructure/csv_rows_spec.rb`, with `CsvRows.new(path, 2)` unless an example says otherwise, collecting the yielded rows as `[line_number, fields, header_hint]` [FR-001 to FR-005; DEC-04 to DEC-07, DEC-23; P3, P20; research R1, R2]:
+- [X] T008 [P] Write `spec/infrastructure/csv_rows_spec.rb`, with `CsvRows.new(path, 2)` unless an example says otherwise, collecting the yielded rows as `[line_number, fields, header_hint]` [FR-001 to FR-005; DEC-04 to DEC-07, DEC-23; P3, P20; research R1, R2]:
   - blank lines (`blank_lines.csv`): yields two rows, at lines 1 and 5; the empty line, the line of spaces and the line with a tab are not rows (DEC-05, DEC-07);
   - an empty file (`empty.csv`) and a file of blank lines only (`only_blank_lines.csv`) yield no row and raise nothing (DEC-05, DEC-11, DEC-20);
   - a byte-order mark (`byte_order_mark.csv`): the first field is `1111234522226789`, with no mark, and the row has no header hint (DEC-04);
@@ -77,16 +77,16 @@
   - a missing file (`fixture_path('reading', 'missing.csv')`, which does not exist) raises `UnreadableFile` whose message matches `cannot read file <path>: ` followed by non-empty text, with `line_number` nil (DEC-23; P9);
   - a folder at the path raises `UnreadableFile` whose message matches `cannot read file <path>: ` followed by non-empty text (DEC-23; P21);
   - the reason is the system's text without Ruby's call details: the message for the missing file does not contain ` @ ` (P9).
-- [ ] T009 [P] Write `spec/infrastructure/balances_csv_reader_spec.rb` [FR-003, FR-006; DEC-04, DEC-11; P4]:
+- [X] T009 [P] Write `spec/infrastructure/balances_csv_reader_spec.rb` [FR-003, FR-006; DEC-04, DEC-11; P4]:
   - `BalancesCsvReader::FIELD_COUNT` is 2;
   - `each_row(path)` gives `Row`s with `expected_size` 2: in a written file `1111234522226789,100.00` is not marked and `1212343433335665,abc,9` is marked `wrong_field_count?`;
   - it is built with no path, and reads the path it is given (two different files read by one reader).
-- [ ] T010 [P] Write `spec/infrastructure/transfers_csv_reader_spec.rb` [FR-003, FR-005, FR-006; DEC-04, DEC-19, DEC-20, DEC-32; P4]:
+- [X] T010 [P] Write `spec/infrastructure/transfers_csv_reader_spec.rb` [FR-003, FR-005, FR-006; DEC-04, DEC-19, DEC-20, DEC-32; P4]:
   - `TransfersCsvReader::FIELD_COUNT` is 3;
   - `field_counts.csv` gives `Row`s with `expected_size` 3, marked wrong on lines 1, 2 and 4 (DEC-19);
   - one row at a time: with `unclosed_quote.csv`, the block has already received line 1 when `UnreadableFile` is raised (DEC-32, DEC-04);
   - a written file whose line 1 is `"1111234522226789,1212343433335665,"10.00` raises `UnreadableFile` at line 1 before any row is given, not an empty read (DEC-04, DEC-20; item 16).
-- [ ] T011 [P] Write `spec/infrastructure/display_path_spec.rb`, building every folder from `Dir.tmpdir` so the paths are real on every system, with no file needing to exist [FR-029, FR-030; DEC-26; P10; research R3]:
+- [X] T011 [P] Write `spec/infrastructure/display_path_spec.rb`, building every folder from `Dir.tmpdir` so the paths are real on every system, with no file needing to exist [FR-029, FR-030; DEC-26; P10; research R3]:
   - a file in the folder: `DisplayPath.of(File.join(folder, 'day1.csv'), folder)` is `day1.csv`;
   - a relative path is kept relative: `DisplayPath.of('output/day1.csv', folder)` is `output/day1.csv`;
   - below the folder: `output/final_balances_2026-11-07_143005.csv`;
@@ -95,16 +95,16 @@
   - outside: from `<root>/project/docs`, `File.expand_path('/day1.csv')` is shown in full (AC-08.4);
   - a path already in its shown form is unchanged (`output/x.csv`, and the full path of a file outside the folder) (P10);
   - with no folder given, the current folder is used (inside `in_temp_folder`, `DisplayPath.of(File.join(Dir.pwd, 'b.csv'))` is `b.csv`).
-- [ ] T012 Run `bundle exec rspec spec/infrastructure` and confirm every new example fails because the classes do not exist (depends on T006 to T011)
+- [X] T012 Run `bundle exec rspec spec/infrastructure` and confirm every new example fails because the classes do not exist (depends on T006 to T011)
 
 ### Implementation
 
-- [ ] T013 Create `lib/infrastructure/errors.rb` with a one-line comment per class and `UnreadableFile < StandardError`: `UnreadableFile.cannot_open(path, error)` (message `cannot read file <path>: <reason>`, where `<path>` is `DisplayPath.of(path)` (P11) and `<reason>` is `error.message` up to ` @ `; `line_number` nil), `UnreadableFile.at_line(path, line_number)` (message with `<path>` as `DisplayPath.of(path)`: `cannot read <path> from line <N>. Check for an unclosed quote or characters that are not text.`), readers `path` and `line_number`, `line_problem` (`<path>` shown the same way: `cannot read <path> from this line. Check for an unclosed quote or characters that are not text.`) and `stop_reason` (`cannot read file`) [FR-005, FR-009, FR-030, FR-034; DEC-04, DEC-23, DEC-26; P8, P9, P11] (depends on T017)
-- [ ] T014 [P] Create `lib/infrastructure/row.rb`: `Row = Data.define(:line_number, :fields, :expected_size, :header_hint)` with `initialize(line_number:, fields:, expected_size:, header_hint: nil)` and `wrong_field_count?` (`fields.size != expected_size`) [FR-003, FR-004; P2]
-- [ ] T015 Create `lib/infrastructure/csv_rows.rb`: `CsvRows::HEADER_HINT`, `CsvRows.new(path, expected_size)`, `include Enumerable`, `each` as in research R1 and R2 (`CSV.open(path, 'r:bom|utf-8')` and one row per `csv.shift`, as DEC-32 says, the running count of physical lines (before each `shift` the row's line is the count plus 1; after it the count grows by the line breaks in `csv.line`; `csv.lineno` is not used, as it does not count a quoted newline), blank by the raw line, trimming spaces and tabs, `nil` to `""`, the header hint only on the first non-blank row whose first field is not empty and has no digit, `CSV::MalformedCSVError` to `UnreadableFile.at_line`, `SystemCallError` to `UnreadableFile.cannot_open`); every method within 10 lines (depends on T013, T014) [FR-001 to FR-005; DEC-04 to DEC-07, DEC-32; P3, P29; research R1, R2]
-- [ ] T016 [P] Create `lib/infrastructure/balances_csv_reader.rb` (`FIELD_COUNT = 2`, `each_row(path, &)` through `CsvRows`) and `lib/infrastructure/transfers_csv_reader.rb` (`FIELD_COUNT = 3`, the same) (depends on T015) [FR-006; DEC-32; P4]
-- [ ] T017 [P] Create `lib/infrastructure/display_path.rb`: `DisplayPath.of(path, folder = Dir.pwd)` as in research R3 (`File.expand_path`, `Pathname#relative_path_from`, the relative path only when it has no `..` part, full path otherwise or on `ArgumentError`) [FR-029, FR-030; DEC-26; P10]
-- [ ] T017a Run `bundle exec rspec` until every example passes in random order, and `bundle exec rubocop` until it reports zero offences (depends on T013 to T017)
+- [X] T013 Create `lib/infrastructure/errors.rb` with a one-line comment per class and `UnreadableFile < StandardError`: `UnreadableFile.cannot_open(path, error)` (message `cannot read file <path>: <reason>`, where `<path>` is `DisplayPath.of(path)` (P11) and `<reason>` is `error.message` up to ` @ `; `line_number` nil), `UnreadableFile.at_line(path, line_number)` (message with `<path>` as `DisplayPath.of(path)`: `cannot read <path> from line <N>. Check for an unclosed quote or characters that are not text.`), readers `path` and `line_number`, `line_problem` (`<path>` shown the same way: `cannot read <path> from this line. Check for an unclosed quote or characters that are not text.`) and `stop_reason` (`cannot read file`) [FR-005, FR-009, FR-030, FR-034; DEC-04, DEC-23, DEC-26; P8, P9, P11] (depends on T017)
+- [X] T014 [P] Create `lib/infrastructure/row.rb`: `Row = Data.define(:line_number, :fields, :expected_size, :header_hint)` with `initialize(line_number:, fields:, expected_size:, header_hint: nil)` and `wrong_field_count?` (`fields.size != expected_size`) [FR-003, FR-004; P2]
+- [X] T015 Create `lib/infrastructure/csv_rows.rb`: `CsvRows::HEADER_HINT`, `CsvRows.new(path, expected_size)`, `include Enumerable`, `each` as in research R1 and R2 (`CSV.open(path, 'r:bom|utf-8')` and one row per `csv.shift`, as DEC-32 says, the running count of physical lines (before each `shift` the row's line is the count plus 1; after it the count grows by the line breaks in `csv.line`; `csv.lineno` is not used, as it does not count a quoted newline), blank by the raw line, trimming spaces and tabs, `nil` to `""`, the header hint only on the first non-blank row whose first field is not empty and has no digit, `CSV::MalformedCSVError` to `UnreadableFile.at_line`, `SystemCallError` to `UnreadableFile.cannot_open`); every method within 10 lines (depends on T013, T014) [FR-001 to FR-005; DEC-04 to DEC-07, DEC-32; P3, P29; research R1, R2]
+- [X] T016 [P] Create `lib/infrastructure/balances_csv_reader.rb` (`FIELD_COUNT = 2`, `each_row(path, &)` through `CsvRows`) and `lib/infrastructure/transfers_csv_reader.rb` (`FIELD_COUNT = 3`, the same) (depends on T015) [FR-006; DEC-32; P4]
+- [X] T017 [P] Create `lib/infrastructure/display_path.rb`: `DisplayPath.of(path, folder = Dir.pwd)` as in research R3 (`File.expand_path`, `Pathname#relative_path_from`, the relative path only when it has no `..` part, full path otherwise or on `ArgumentError`) [FR-029, FR-030; DEC-26; P10]
+- [X] T017a Run `bundle exec rspec` until every example passes in random order, and `bundle exec rubocop` until it reports zero offences (depends on T013 to T017)
 
 **Checkpoint**: `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences. Every file-level edge case of DEC-04 to DEC-07 is green.
 
