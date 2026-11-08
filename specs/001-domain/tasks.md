@@ -152,8 +152,8 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 ### Implementation for User Story 2
 
-- [ ] T028 [US2] Add `InsufficientFunds` to `lib/domain/errors.rb`, built with `new(account_number, amount, balance)` and the message `account <number> cannot pay <amount.to_s> from a balance of <balance.to_s>` [FR-011, FR-027; DEC-13; D21]
-- [ ] T029 [US2] Add `withdraw(money)` to `lib/domain/account.rb`: raise `InsufficientFunds` when `(balance - money).negative?`, before changing anything; otherwise set the balance to `balance - money`. Add `deposit(money)`: set the balance to `balance + money`. Neither checks that the amount is above $0 (depends on T028) [FR-010 to FR-012; DEC-13, DEC-18; spec clarification 3]
+- [X] T028 [US2] Add `InsufficientFunds` to `lib/domain/errors.rb`, built with `new(account_number, amount, balance)` and the message `account <number> cannot pay <amount.to_s> from a balance of <balance.to_s>` [FR-011, FR-027; DEC-13; D21]
+- [X] T029 [US2] Add `withdraw(money)` to `lib/domain/account.rb`: raise `InsufficientFunds` when `(balance - money).negative?`, before changing anything; otherwise set the balance to `balance - money`. Add `deposit(money)`: set the balance to `balance + money`. Neither checks that the amount is above $0 (depends on T028) [FR-010 to FR-012; DEC-13, DEC-18; spec clarification 3]
 
 **Checkpoint**: `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences.
 

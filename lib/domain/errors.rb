@@ -24,3 +24,10 @@ class NegativeBalance < StandardError
     super(%(balance "#{balance.text}" must not be negative))
   end
 end
+
+# A withdrawal that would take a balance below $0.
+class InsufficientFunds < StandardError
+  def initialize(account_number, amount, balance)
+    super("account #{account_number} cannot pay #{amount} from a balance of #{balance}")
+  end
+end

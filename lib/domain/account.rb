@@ -15,4 +15,14 @@ class Account
     @number = number
     @balance = balance
   end
+
+  def withdraw(money)
+    raise InsufficientFunds.new(number, money, balance) if (balance - money).negative?
+
+    @balance = balance - money
+  end
+
+  def deposit(money)
+    @balance = balance + money
+  end
 end
