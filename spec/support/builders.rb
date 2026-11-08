@@ -42,6 +42,16 @@ module Builders
     )
   end
 
+  def balances_row(line, *fields, header_hint: nil)
+    require 'infrastructure/row'
+    Row.new(line_number: line, fields: fields, expected_size: 2, header_hint: header_hint)
+  end
+
+  def transfers_row(line, *fields, header_hint: nil)
+    require 'infrastructure/row'
+    Row.new(line_number: line, fields: fields, expected_size: 3, header_hint: header_hint)
+  end
+
   def attempt(error_class)
     yield
   rescue error_class
