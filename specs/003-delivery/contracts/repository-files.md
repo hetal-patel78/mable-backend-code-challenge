@@ -4,7 +4,7 @@ the [`Gemfile.lock`](../../../Gemfile.lock) platforms, [`bin/run`](../../../bin/
 
 ## No `.gitattributes`
 
-The repository holds no `.gitattributes` file (`test ! -e .gitattributes`, [C-02](../quickstart.md#c-02)) and no attribute that changes how a file is checked out. A Windows checkout made with `core.autocrlf=true` therefore gives every Ruby file, [`bin/run`](../../../bin/run) included, CRLF, and `bundle exec rubocop` reports `no offenses detected` in it ([C-43](../quickstart.md#c-43)), because RuboCop's default `Layout/EndOfLine` (`native`) wants CRLF on Windows. RuboCop's settings are not changed ([DEC-36](../../../docs/design-analysis/design-decisions.md#dec-36)).
+The repository holds no `.gitattributes` file (`test ! -e .gitattributes`, [C-02](../quickstart.md#c-02)) and no attribute that changes how a file is checked out. A Windows checkout made with `core.autocrlf=true` therefore gives every Ruby file, [`bin/run`](../../../bin/run) included, CRLF, and `bundle exec rubocop` reports `no offenses detected` in it ([C-43](../quickstart.md#c-43)), because RuboCop's line-ending check, `Layout/EndOfLine`, is turned off; it is the only setting changed from RuboCop's defaults ([DEC-36](../../../docs/design-analysis/design-decisions.md#dec-36)).
 
 ## `Gemfile.lock`
 

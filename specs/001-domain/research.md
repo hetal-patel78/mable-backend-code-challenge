@@ -19,15 +19,18 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
 <a id="r3"></a>
 ## R3. RuboCop with `rubocop-rspec`
 
-- **Decision**: [`.rubocop.yml`](../../.rubocop.yml) contains only:
+- **Decision**: [`.rubocop.yml`](../../.rubocop.yml) contains only the plugin and the line-ending cop turned off ([DEC-36](../../docs/design-analysis/design-decisions.md#dec-36)):
 
   ```yaml
   plugins:
     - rubocop-rspec
+
+  Layout/EndOfLine:
+    Enabled: false
   ```
 
   RuboCop reads the target Ruby version from [`.ruby-version`](../../.ruby-version) (plan [D15](plan.md#d15)).
-- **Rationale**: [DEC-36](../../docs/design-analysis/design-decisions.md#dec-36) asks for default settings and `rubocop-rspec`; current `rubocop-rspec` releases are loaded with `plugins:`. The defaults that shape the code are `Metrics/MethodLength` (10 lines), `Metrics/AbcSize`, `Style/Documentation` (a comment before each class), `Style/FrozenStringLiteralComment`; for specs `RSpec/MultipleExpectations` (1), `RSpec/ExampleLength` (5), `RSpec/NestedGroups` (3), `RSpec/SpecFilePathFormat` and `RSpec/DescribeClass`. Pending new cops print a notice but are not offences.
+- **Rationale**: [DEC-36](../../docs/design-analysis/design-decisions.md#dec-36) asks for default settings and `rubocop-rspec`, apart from `Layout/EndOfLine`, which on Windows expects CRLF, so a download with LF files, such as a GitHub ZIP, would fail it; current `rubocop-rspec` releases are loaded with `plugins:`. The defaults that shape the code are `Metrics/MethodLength` (10 lines), `Metrics/AbcSize`, `Style/Documentation` (a comment before each class), `Style/FrozenStringLiteralComment`; for specs `RSpec/MultipleExpectations` (1), `RSpec/ExampleLength` (5), `RSpec/NestedGroups` (3), `RSpec/SpecFilePathFormat` and `RSpec/DescribeClass`. Pending new cops print a notice but are not offences.
 - **Alternatives considered**: `require: rubocop-rspec` (the older form, which current versions warn about); `NewCops: enable` or changed limits (not the defaults).
 - **Research note (Metrics/BlockLength)**: rubocop-rspec's own `config/default.yml` sets `Metrics/BlockLength` with `inherit_mode: merge: Exclude` and adds `"**/*_spec.rb"` and `"**/spec/**/*"` to its `Exclude`. With `plugins: [rubocop-rspec]` and default settings, spec files are therefore not checked by `Metrics/BlockLength`, and zero offences is reachable under [DEC-36](../../docs/design-analysis/design-decisions.md#dec-36) and [NFR-05](../../docs/solution-design/03-non-functional-requirements.md#nfr-05) with no change to [`.rubocop.yml`](../../.rubocop.yml) or to [DEC-36](../../docs/design-analysis/design-decisions.md#dec-36).
 

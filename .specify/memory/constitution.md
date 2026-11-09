@@ -36,7 +36,8 @@ every part testable on its own.
 - Methods are short, do one thing and read as the domain they describe.
 - Code is clear without comments that explain the design; the design reasoning goes in the
   README (DEC-30, DEC-37).
-- RuboCop, with its default settings and `rubocop-rspec`, reports zero offences (DEC-36).
+- RuboCop, with its default settings apart from the line-ending check and with `rubocop-rspec`,
+  reports zero offences (DEC-36).
 
 Rationale: short and readable methods are rubric items, and RuboCop makes them a checked rule
 rather than a matter of taste.
@@ -136,4 +137,4 @@ Only the choices the decisions already fix (DEC-01, DEC-28, DEC-36):
   removing or redefining a principle, MINOR for a new principle or section, PATCH for wording.
 - Runtime guidance for the assistant is in `CLAUDE.md`.
 
-**Version**: 1.1.0 | **Ratified**: 2026-11-07 | **Last Amended**: 2026-11-09
+**Version**: 1.1.1 | **Ratified**: 2026-11-07 | **Last Amended**: 2026-11-10
