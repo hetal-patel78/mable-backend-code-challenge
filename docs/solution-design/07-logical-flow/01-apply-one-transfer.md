@@ -22,18 +22,18 @@ flowchart TD
     F -->|"no: InsufficientFunds,<br/>insufficient_funds"| R
 ```
 
-## Where each check lives
+## The checks in order
 
-| Order | Check | Checked by | Refused with | Reason code | Decision |
-|---|---|---|---|---|---|
-| 1 | Exactly 3 fields | `TransfersCsvReader` (file-reading layer) | the row is marked; no error is raised | `malformed_row` | [DEC-04](../../design-analysis/design-decisions.md#dec-04) |
-| 2 | Both account numbers are 16 digits | `AccountNumber` | `InvalidAccountNumber` | `invalid_account_number` | [DEC-08](../../design-analysis/design-decisions.md#dec-08) |
-| 3 | Amount is valid money and above $0 | `Money` for the format, `Transfer` for above $0 | `InvalidAmount`, from either | `invalid_amount` | [DEC-09](../../design-analysis/design-decisions.md#dec-09), [DEC-10](../../design-analysis/design-decisions.md#dec-10) |
-| 4 | From and to are different | `Transfer` | `SameAccount` | `same_account` | [DEC-13](../../design-analysis/design-decisions.md#dec-13) |
-| 5 | Both accounts are loaded | `AccountRepository` `find` | `UnknownAccount` | `unknown_account` | [DEC-17](../../design-analysis/design-decisions.md#dec-17), [DEC-31](../../design-analysis/design-decisions.md#dec-31) |
-| 6 | No overdraft | `Account` `withdraw` | `InsufficientFunds` | `insufficient_funds` | [DEC-13](../../design-analysis/design-decisions.md#dec-13) |
+| Order | Check | Reason code | Decision |
+|---|---|---|---|
+| 1 | Exactly 3 fields | `malformed_row` | [DEC-04](../../design-analysis/design-decisions.md#dec-04) |
+| 2 | Both account numbers are 16 digits | `invalid_account_number` | [DEC-08](../../design-analysis/design-decisions.md#dec-08) |
+| 3 | Amount is valid money and above $0 | `invalid_amount` | [DEC-09](../../design-analysis/design-decisions.md#dec-09), [DEC-10](../../design-analysis/design-decisions.md#dec-10) |
+| 4 | From and to are different | `same_account` | [DEC-13](../../design-analysis/design-decisions.md#dec-13) |
+| 5 | Both accounts are loaded | `unknown_account` | [DEC-17](../../design-analysis/design-decisions.md#dec-17), [DEC-31](../../design-analysis/design-decisions.md#dec-31) |
+| 6 | No overdraft | `insufficient_funds` | [DEC-13](../../design-analysis/design-decisions.md#dec-13) |
 
-`ProcessDailyTransfer` catches each of these domain errors and turns it into the reason code on the same table row ([DEC-19](../../design-analysis/design-decisions.md#dec-19)). None of them stops the run.
+Which component makes each check, and the error it raises, is in [Which checks live where](../06-components.md#which-checks-live-where) and the [errors table](../06-components.md#errors-and-who-raises-them) on page 6. The field count is marked by the reader, with no error. `ProcessDailyTransfer` turns each domain error into the reason code on the same row of this table ([DEC-19](../../design-analysis/design-decisions.md#dec-19)). None of them stops the run.
 
 Points the flow depends on:
 

@@ -48,7 +48,7 @@ sequenceDiagram
     R-->>U: exit status 1
 ```
 
-- The `Runner` catches exactly the five run-stopping errors: `InvalidBalancesFile`, `NoTransfers`, `UnreadableFile`, `TotalChanged` and `OutputNotWritable` ([DEC-25](../../design-analysis/design-decisions.md#dec-25)). Domain errors such as `InsufficientFunds` never reach it, because `ProcessDailyTransfer` turns them into rejected transfers ([DEC-14](../../design-analysis/design-decisions.md#dec-14)).
+- The `Runner` catches only the five run-stopping errors in the [errors table on page 6](../06-components.md#errors-and-who-raises-them) ([DEC-25](../../design-analysis/design-decisions.md#dec-25)). Domain errors such as `InsufficientFunds` never reach it, because `ProcessDailyTransfer` turns them into rejected transfers ([DEC-14](../../design-analysis/design-decisions.md#dec-14)).
 - Every stop ends the same way: the full message on standard error as plain text, then one log line at error level, no report and exit status 1 ([DEC-25](../../design-analysis/design-decisions.md#dec-25), [DEC-28](../../design-analysis/design-decisions.md#dec-28)). The one exception is a wrong number of arguments: the usage message has no log line, because the run never started (assistant's pick; the message is in [Functional requirements](../02-functional-requirements.md)).
 - The run never creates or leaves an output file, and an output file that already existed is not changed ([DEC-25](../../design-analysis/design-decisions.md#dec-25)). If writing fails partway, `FinalBalancesCsvWriter` deletes the partial file ([DEC-27](../../design-analysis/design-decisions.md#dec-27)).
 - A failed total check raises `TotalChanged` before the writer is called ([DEC-24](../../design-analysis/design-decisions.md#dec-24)).
