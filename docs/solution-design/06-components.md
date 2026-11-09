@@ -91,7 +91,7 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
 - **Responsibility:** one account number: exactly 16 digits, kept as text so leading zeros stay ([DEC-08](../design-analysis/design-decisions.md#dec-08)).
 - **In:** the text from a file field, already trimmed.
 - **Out:** a value that compares equal to another `AccountNumber` with the same digits, and its full text for the report and the output file. Raises `InvalidAccountNumber` for any other text.
-- **Does not:** turn the number into an integer; run a check-digit check; mask itself (masking also applies to values that are not valid account numbers, see `ProcessDailyTransfer`).
+- **Does not:** turn the number into an integer; run a check-digit check; mask itself (masking also applies to values that are not valid account numbers, see [`LogMessages`](#logmessages)).
 
 ### `Money`
 
@@ -167,13 +167,26 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
   1. logs the run start, loads the balances through `LoadBalances`, notes each account's opening balance before any transfer is applied, and adds up the total before from those opening balances;
   2. reads each transfers row in file order ([DEC-15](../design-analysis/design-decisions.md#dec-15)), builds the `AccountNumber`s, the `Money` and the `Transfer`, and hands it to `TransferService`;
   3. turns each outcome, or the domain error that refused it, into a `TransferResult` with its reason code, as in the [errors table](#errors-and-who-raises-them); a row the reader marked with the wrong number of fields becomes `malformed_row` ([DEC-19](../design-analysis/design-decisions.md#dec-19));
-  4. logs each result, with account numbers masked ([DEC-29](../design-analysis/design-decisions.md#dec-29)). Masking is a private step of this class, because it is the only class that logs account numbers. **(assistant's pick)**
+  4. logs each result, at info if applied and at warn if rejected, with account numbers masked ([DEC-28](../design-analysis/design-decisions.md#dec-28), [DEC-29](../design-analysis/design-decisions.md#dec-29)). It decides when to log and at which level; the text of every log line, masking included, comes from [`LogMessages`](#logmessages), except the all-rejected warning, whose text `DayResult` owns (shared with the report). **(assistant's pick)**
   5. raises `NoTransfers` if there were no transfers rows ([DEC-20](../design-analysis/design-decisions.md#dec-20)); logs the warning if every row was rejected ([DEC-21](../design-analysis/design-decisions.md#dec-21));
   6. adds up the total after from `all`, and raises `TotalChanged` if it differs from the total before ([DEC-24](../design-analysis/design-decisions.md#dec-24)). **(assistant's pick)**
   7. writes the output file through the writer ([DEC-27](../design-analysis/design-decisions.md#dec-27));
   8. prints the report through the reporter, only after the file is written ([DEC-26](../design-analysis/design-decisions.md#dec-26));
   9. logs the run end with the counts per reason ([DEC-28](../design-analysis/design-decisions.md#dec-28)).
-- **Does not:** create its own readers, writer, repository, reporter or logger; read the clock when a run time is given; write to standard output except through the reporter; parse CSV; check arguments or file existence; print error messages; set the exit status; retry a rejected transfer.
+- **Does not:** create its own readers, writer, repository, reporter or logger; read the clock when a run time is given; write to standard output except through the reporter; parse CSV; check arguments or file existence; print error messages; set the exit status; retry a rejected transfer; build the text of a log line or mask a value.
+
+### `LogMessages`
+
+- **Responsibility:** the text of each log line of the day's run, except the all-rejected warning, whose text `DayResult` owns (shared with the report), with account values masked ([DEC-28](../design-analysis/design-decisions.md#dec-28), [DEC-29](../design-analysis/design-decisions.md#dec-29)). It keeps `ProcessDailyTransfer` to running the day. **(assistant's pick)**
+- **In:** for `run_started`, the balances and transfers paths as given; for `applied` and `rejected`, a `TransferResult`; for `run_ended`, the `DayResult`; for `mask`, any text.
+- **Out:** the text of one log line:
+  - `run_started`: `Run started: balances <path>, transfers <path>`;
+  - `applied`: `Line <N> applied: <from> -> <to> <amount>`, with both accounts masked and the amount as `Money` writes it;
+  - `rejected`: `Line <N> rejected: ` then the masked from, `-> ` and the masked to, and the amount as written (`""` when empty), then the reason code; fields the row does not have are left out, and fields after the third are not shown;
+  - `run_ended`: `Run ended: processed <p>, applied <a>, rejected <r>`, then the count per reason in [DEC-19](../design-analysis/design-decisions.md#dec-19) order in brackets when any row was rejected;
+  - `mask`: every character except the last 4 becomes `*`; a value of 4 characters or fewer, including an empty value, is `****`.
+- **Does not:** write to the logger or any stream; decide when a line is logged or at which level; show the header hint.
+
 
 ### `DayResult`
 

@@ -469,6 +469,28 @@
 
 ---
 
+## Phase 13: Refactor ProcessDailyTransfer (code review)
+
+**Goal**: `ProcessDailyTransfer` focuses on running the day: it loads the balances, applies the transfers, closes the day and reports. It still decides when to log and at which level, but the text of every log line, masking included, comes from the new application class `LogMessages` (page 6 pick 37), except the all-rejected warning, whose text `DayResult` owns (shared with the report). Its six parts are passed as one `ProcessDailyTransfer::Parts`, a parameter object that names each part, with the run time as a separate keyword (plan P6, page 10 pick 54). Nothing a user sees changes: the same report, output file, exit status and log lines.
+
+**Independent Test**: `log_messages_spec.rb` for every log text it owns and the masking rule; `process_daily_transfer_spec.rb` for the parameter object (`ProcessDailyTransfer::Parts`) and for which line is logged, when and at which level; every runner scenario and end-to-end spec that checks standard error, unchanged.
+
+### Tests for the log text (write first)
+
+- [X] T100 [P] Write `spec/application/log_messages_spec.rb`: `run_started` names both paths as given; `applied` gives the line number, both accounts masked and the amount as `Money` writes it (`007.50` as `7.50`); `rejected` gives the masked accounts, the amount as written and the reason code, shows an empty amount as `""`, shows the fields of a row with 1 or 2 fields by position and only the first three of a row with 4, and never shows the header hint; `run_ended` gives the counts with no brackets when nothing was rejected and the count per reason in the order `DayResult` gives them otherwise; `mask` gives `************6789`, `*2345` and `****` for 4 characters or fewer, an empty value included, and masks values that are not account numbers (`12345`, `from`, an empty value, `1111-2345-2222-6789`), the one place masking is tested [FR-020, FR-021; AC-02.2, AC-09.6; DEC-19, DEC-28, DEC-29; item 8]
+- [X] T101 [P] Move the examples that check only a log text out of `spec/application/process_daily_transfer_spec.rb` (the amount `007.50`, the values that are not account numbers, the empty amount, the rows with 1, 2 and 4 fields, the header hint), now covered by T100; keep the examples that check which lines are logged, in which order and at which level, including the warn-level run, the all-rejected run, the counts at the end, a run with no rows and a file that cannot be read past a line [FR-013, FR-020; DEC-28, DEC-34]
+- [X] T102 Run `bundle exec rspec` and confirm `log_messages_spec.rb` fails to load because `application/log_messages` does not exist, and no other example fails (depends on T100, T101)
+
+### Implementation of the log text
+
+- [X] T103 Create `lib/application/log_messages.rb`: the class `LogMessages` with the class methods `run_started(balances_path, transfers_path)`, `applied(result)`, `rejected(result)`, `run_ended(day_result)` and `mask(value)`, returning the texts `ProcessDailyTransfer` built, unchanged; no logger, stream or state [FR-020, FR-021; DEC-28, DEC-29]
+- [X] T104 In `lib/application/process_daily_transfer.rb`, log `LogMessages.run_started`, `LogMessages.applied` at info, `LogMessages.rejected` at warn and `LogMessages.run_ended`, and remove the private methods `applied_text`, `rejected_fields`, `run_ended` and `mask` (depends on T103) [FR-013, FR-020; DEC-28]
+- [X] T105 [P] Bring the documents in line: page 6 (`ProcessDailyTransfer` step 4 and "Does not", a new `LogMessages` section, the `AccountNumber` pointer), page 5 (log lines), page 10 (pick 37, the FR-09 row, the glossary); in this spec, FR-020, FR-021 and the key entities, the plan's summary, project structure and test approach, research R5, the data model and the contract; the README's design section [DEC-29; page 6 pick 37]
+- [X] T106 Run `bundle exec rspec` until every example passes in random order with 100% line coverage, `bundle exec rubocop` reports zero offences, and `ruby bin/run` on the sample files exits with 0 and prints AC-08.1's report; with `LOG_LEVEL=info`, the log lines (timestamps and process IDs aside) are the same as before the change for the sample files and for `spec/fixtures/acceptance/balances.csv` with `mixed_rejections_transfers.csv`; write the output files outside the project (depends on T104, T105) [SC-001, SC-005, SC-008; DEC-28, DEC-29, DEC-35]
+
+
+---
+
 ## Edge cases and their tests
 
 Every edge case in the spec's [Edge Cases](spec.md#edge-cases) list, with the task that tests it.
@@ -495,7 +517,7 @@ Every edge case in the spec's [Edge Cases](spec.md#edge-cases) list, with the ta
 | Bytes that are not UTF-8 | DEC-04 | T008 |
 | Every transfer rejected, a header-only file included | DEC-21 | T025, T047, T049, T050, T051 |
 | No retry; two equal rows both applied | DEC-15, DEC-16 | T047, T050 (AC-07.1) |
-| A transfers row with 1, 2, 4 or more fields | DEC-19, DEC-28 | T010, T047, T049, T050 (AC-02.1), T077 |
+| A transfers row with 1, 2, 4 or more fields | DEC-19, DEC-28 | T010, T047, T049, T050 (AC-02.1), T077, T100 |
 | The output file already exists at the start | DEC-25 | T070 (AC-09.3) |
 | The output file appears after the start checks | DEC-27 | T060 |
 | The output path is an existing folder | DEC-25 | T060, T061 (AC-09.4) |
@@ -511,7 +533,7 @@ Every edge case in the spec's [Edge Cases](spec.md#edge-cases) list, with the ta
 | `LOG_LEVEL` unset, `warn`, `info`, `INFO`, `Info`, `debug` | DEC-28 | T070 (AC-09.5) |
 | At info level a stopped run logs `Run started`, never `Run ended` | DEC-28 | T047, T070 (AC-09.5) |
 | `bin/run` on Windows writes CR LF to the streams | NFR-04, DEC-34 | T021 (`run_command`), T022, T041, T051, T062, T072 |
-| Masking of valid numbers, other values, short and empty values | DEC-29 | T028, T047, T070 (AC-09.6), T077 (AC-06.1) |
+| Masking of valid numbers, other values, short and empty values | DEC-29 | T028, T047, T070 (AC-09.6), T077 (AC-06.1), T100 |
 | Error log lines name no account number | DEC-28 | T039, T070 |
 | The total-check failure | DEC-24 | T059, T061 (AC-08.5) |
 | An unexpected error is not caught | page 10 pick 45 | T070 |
@@ -536,6 +558,7 @@ Every edge case in the spec's [Edge Cases](spec.md#edge-cases) list, with the ta
 - **Phases 9 and 10 (US7, US8)**: after Phase 8.
 - **Phase 11 (Polish)**: after Phases 1 to 10.
 - **Phase 12 (Opening balances in the report)**: after Phase 11.
+- **Phase 13 (Refactor ProcessDailyTransfer)**: after Phase 12.
 
 ### Within each phase
 

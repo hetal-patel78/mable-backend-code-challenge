@@ -72,18 +72,12 @@ RSpec.describe ProcessDailyTransfer do
       expect(result.then { reporter.file_existed }).to eq([true])
     end
 
-    it 'logs the start, each applied row with masked numbers, and the end (DEC-28, DEC-29)' do
+    it 'logs the start, each applied row at info, and the end (DEC-28)' do
       expect(result.then { log_lines(logger) })
         .to eq(['INFO Run started: balances balances.csv, transfers transfers.csv',
                 'INFO Line 1 applied: ************6789 -> ************5665 10.00',
                 'INFO Line 2 applied: ************5665 -> ************6789 5.00',
                 'INFO Run ended: processed 2, applied 2, rejected 0'])
-    end
-
-    it 'logs an applied amount written 007.50 as 7.50' do
-      reader = FakeReader.new([transfers_row(1, '1111234522226789', '1212343433335665', '007.50')])
-      day(transfers_reader: reader).call('balances.csv', 'transfers.csv', 'output/day.csv')
-      expect(log_lines(logger)).to include('INFO Line 1 applied: ************6789 -> ************5665 7.50')
     end
   end
 
@@ -205,44 +199,9 @@ RSpec.describe ProcessDailyTransfer do
       end
     end
 
-    it 'logs a rejected row as a warn line with masked numbers (DEC-28, DEC-29)' do
+    it 'logs a rejected row as a warn line (DEC-28)' do
       expect(logged(rows('1111234522226789,1212343433335665,10.00', '1111234522226789,1212343433335665,100.01')))
         .to include('WARN Line 2 rejected: ************6789 -> ************5665 100.01 insufficient_funds')
-    end
-
-    {
-      '12345,1212343433335665,10.00' => '*2345 -> ************5665 10.00 invalid_account_number',
-      'from,1212343433335665,10.00' => '**** -> ************5665 10.00 invalid_account_number',
-      ',1212343433335665,10.00' => '**** -> ************5665 10.00 invalid_account_number',
-      '1111-2345-2222-6789,1212343433335665,10.00' => '***************6789 -> ************5665 10.00 ' \
-                                                      'invalid_account_number'
-    }.each do |line, shown|
-      it "masks the values of #{line} that are not account numbers (DEC-29, AC-09.6)" do
-        expect(logged(rows(line))).to include("WARN Line 1 rejected: #{shown}")
-      end
-    end
-
-    it 'logs an empty amount as "" (AC-02.2)' do
-      expect(logged(rows(',,'))).to include('WARN Line 1 rejected: **** -> **** "" invalid_account_number')
-    end
-
-    it 'logs the two fields of a row with 2 fields by position (item 8)' do
-      expect(logged([transfers_row(4, '1111234522226789', '1212343433335665')]))
-        .to include('WARN Line 4 rejected: ************6789 -> ************5665 malformed_row')
-    end
-
-    it 'logs the one field of a row with 1 field (item 8)' do
-      expect(logged(rows('1111234522226789'))).to include('WARN Line 1 rejected: ************6789 malformed_row')
-    end
-
-    it 'logs only the first three fields of a row with 4 fields (item 8)' do
-      expect(logged(rows('1111234522226789,1212343433335665,1,000.00')))
-        .to include('WARN Line 1 rejected: ************6789 -> ************5665 1 malformed_row')
-    end
-
-    it 'never logs the header hint (FR-021)' do
-      header = transfers_row(1, 'from', 'to', 'amount', header_hint: CsvRows::HEADER_HINT)
-      expect(logged([header])).to include('WARN Line 1 rejected: **** -> **** amount invalid_account_number')
     end
 
     it 'logs only warn and error lines at warn level (DEC-28)' do

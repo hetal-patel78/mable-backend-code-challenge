@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'load_balances'
+require_relative 'log_messages'
 require_relative 'day_result'
 require_relative 'errors'
 require_relative '../domain/account_number'
@@ -27,13 +28,13 @@ class ProcessDailyTransfer
 
   def call(balances_path, transfers_path, output_path = nil)
     output_path ||= FinalBalancesCsvWriter.default_path(@run_time)
-    @logger.info("Run started: balances #{balances_path}, transfers #{transfers_path}")
+    @logger.info(LogMessages.run_started(balances_path, transfers_path))
     LoadBalances.new(@balances_reader, @repository).call(balances_path)
     opening_balances = take_opening_balances
     results = apply_transfers(transfers_path)
     day_result = close_day(results, opening_balances, output_path)
     @reporter.print(day_result)
-    @logger.info(run_ended(day_result))
+    @logger.info(LogMessages.run_ended(day_result))
     day_result
   end
 
@@ -66,21 +67,11 @@ class ProcessDailyTransfer
 
   def logged(result)
     if result.applied?
-      @logger.info("Line #{result.line_number} applied: #{applied_text(result.fields)}")
+      @logger.info(LogMessages.applied(result))
     else
-      @logger.warn("Line #{result.line_number} rejected: #{[*rejected_fields(result.fields), result.reason].join(' ')}")
+      @logger.warn(LogMessages.rejected(result))
     end
     result
-  end
-
-  def applied_text(fields)
-    from, to, amount = fields
-    "#{mask(from)} -> #{mask(to)} #{Money.amount(amount)}"
-  end
-
-  def rejected_fields(fields)
-    from, to, amount = fields
-    [from && mask(from), to && "-> #{mask(to)}", amount && (amount.empty? ? '""' : amount)].compact
   end
 
   def take_opening_balances
@@ -95,16 +86,5 @@ class ProcessDailyTransfer
     @writer.write(@repository.all, output_path)
     DayResult.new(results: results, total_before: total_before, total_after: total_after,
                   opening_balances: opening_balances, accounts: @repository.all, output_path: output_path)
-  end
-
-  def run_ended(day_result)
-    text = "Run ended: processed #{day_result.processed_count}, applied #{day_result.applied_count}, " \
-           "rejected #{day_result.rejected_count}"
-    counts = day_result.rejected_counts.map { |code, count| "#{code} #{count}" }
-    counts.empty? ? text : "#{text} (#{counts.join(', ')})"
-  end
-
-  def mask(value)
-    value.length <= 4 ? '****' : ('*' * (value.length - 4)) + value[-4..]
   end
 end

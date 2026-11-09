@@ -17,6 +17,7 @@ classDiagram
     ProcessDailyTransfer ..> LoadBalances : creates
     ProcessDailyTransfer ..> TransferService : creates
     ProcessDailyTransfer ..> DayResult : builds
+    ProcessDailyTransfer ..> LogMessages : log text
     LoadBalances --> BalancesCsvReader
     LoadBalances --> AccountRepository
     BalancesCsvReader ..> CsvRows : 2 fields
@@ -43,7 +44,7 @@ classDiagram
 | No transfers rows | `ProcessDailyTransfer` | `NoTransfers` | DEC-20 |
 | Every row rejected | `ProcessDailyTransfer` (log), `DayResult#all_rejected?` (report) | the warning | DEC-21 |
 | Total before equals total after | `ProcessDailyTransfer` | `TotalChanged` | DEC-24 |
-| Masking in log lines | `ProcessDailyTransfer` (private) | log text | DEC-29 |
+| Masking in log lines | `LogMessages.mask` | log text | DEC-29 |
 | Counts processed, applied, rejected, per reason | `DayResult` | numbers | DEC-19, DEC-26 |
 | Opening balance next to closing balance | `ProcessDailyTransfer` (takes them after loading), `DayResult#opening_balances`, `ReportPrinter` (the table) | the `Final balances` table | DEC-26 |
 | Default output name; never overwrite; folders created; LF; partial file removed | `FinalBalancesCsvWriter` | `OutputNotWritable` | DEC-25, DEC-27 |
@@ -108,6 +109,19 @@ classDiagram
 - Steps and log texts: [research R5](research.md#r5-processdailytransfer-step-by-step).
 - Reason codes: `InvalidAccountNumber` `invalid_account_number`; `InvalidAmount` `invalid_amount`; `SameAccount` `same_account`; `UnknownAccount` `unknown_account`; `InsufficientFunds` `insufficient_funds`; a `Row` with `wrong_field_count?` `malformed_row` (DEC-19).
 - Keeps one `TransferResult` per row until the report (NFR-03).
+- Decides when to log and at which level; takes every log text from `LogMessages`, except the all-rejected warning, whose text `DayResult` owns (shared with the report).
+
+### `LogMessages` (application; page 6 pick 37)
+
+| Member | Type | Meaning |
+|---|---|---|
+| `LogMessages.run_started(balances_path, transfers_path)` | String | `Run started: balances <path>, transfers <path>` |
+| `LogMessages.applied(result)` | String, from a `TransferResult` | `Line <N> applied: <masked from> -> <masked to> <amount>` |
+| `LogMessages.rejected(result)` | String, from a `TransferResult` | `Line <N> rejected: ` then the fields the row has, by position, then the reason code |
+| `LogMessages.run_ended(day_result)` | String, from a `DayResult` | `Run ended: processed <p>, applied <a>, rejected <r>`, then the counts per reason when any row was rejected |
+| `LogMessages.mask(value)` | String | Every character except the last 4 becomes `*`; 4 characters or fewer is `****` (DEC-29) |
+
+- Class methods only; it holds no state and writes to no logger or stream.
 
 ### `DayResult` (application; plan P7)
 

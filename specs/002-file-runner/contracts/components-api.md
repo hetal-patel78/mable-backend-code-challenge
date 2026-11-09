@@ -11,7 +11,8 @@ Code files load their own dependencies with `require_relative`. A spec requires 
 | `application/errors` | `InvalidBalancesFile`, `NoTransfers`, `TotalChanged` | |
 | `application/load_balances` | `LoadBalances` | `domain/account_number`, `domain/money`, `domain/account`, `domain/errors`, `application/errors`, `infrastructure/errors` |
 | `application/day_result` | `DayResult` | `domain/transfer_result` |
-| `application/process_daily_transfer` | `ProcessDailyTransfer` | `application/load_balances`, `application/day_result`, `application/errors`, `domain/account_number`, `domain/money`, `domain/errors`, `domain/transfer`, `domain/transfer_result`, `domain/transfer_service`, `infrastructure/final_balances_csv_writer` (for `default_path`) |
+| `application/log_messages` | `LogMessages` | `domain/money` |
+| `application/process_daily_transfer` | `ProcessDailyTransfer` | `application/load_balances`, `application/log_messages`, `application/day_result`, `application/errors`, `domain/account_number`, `domain/money`, `domain/errors`, `domain/transfer`, `domain/transfer_result`, `domain/transfer_service`, `infrastructure/final_balances_csv_writer` (for `default_path`) |
 | `infrastructure/errors` | `UnreadableFile`, `OutputNotWritable` | `infrastructure/display_path` |
 | `infrastructure/row` | `Row` | |
 | `infrastructure/csv_rows` | `CsvRows` | `csv`, `infrastructure/row`, `infrastructure/errors` |
@@ -50,6 +51,11 @@ Code files load their own dependencies with `require_relative`. A spec requires 
 | `ProcessDailyTransfer.new(run_time: Time.now, balances_reader:, transfers_reader:, writer:, repository:, reporter:, logger:)` | a day | `KeyError` when a part is missing |
 | `day.call(balances_path, transfers_path, output_path = nil)` | the `DayResult` | `InvalidBalancesFile`, `UnreadableFile`, `NoTransfers`: `the transfers file has no transfers: <path>`, `TotalChanged`: `the total of all balances changed from <before> to <after>. No output file was written.`, `OutputNotWritable` |
 | `DayResult::ALL_REJECTED_WARNING` | `All transfers were rejected; check this is the right file.` | |
+| `LogMessages.run_started(balances_path, transfers_path)` | `Run started: balances <balances path>, transfers <transfers path>` | |
+| `LogMessages.applied(result)` | `Line <N> applied: <masked from> -> <masked to> <amount with 2 decimal places>` | |
+| `LogMessages.rejected(result)` | `Line <N> rejected: <masked from> -> <masked to> <amount as written> <reason code>`, with only the fields the row has | |
+| `LogMessages.run_ended(day_result)` | `Run ended: processed <p>, applied <a>, rejected <r>`, then ` (<code> <count>, ...)` when <r> is above 0 | |
+| `LogMessages.mask(value)` | the value with every character except the last 4 as `*`, or `****` | |
 | `DayResult.new(results:, total_before:, total_after:, opening_balances:, accounts:, output_path:)` | a `DayResult` | |
 | `result.results`, `.total_before`, `.total_after`, `.opening_balances`, `.accounts`, `.output_path` | as given | |
 | `result.processed_count`, `.applied_count`, `.rejected_count` | Integer | |

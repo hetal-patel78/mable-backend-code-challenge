@@ -6,7 +6,7 @@
 
 ## Summary
 
-Build, on the finished domain of [`001-domain`](../001-domain/plan.md), the application layer in `lib/application/` (`LoadBalances`, `ProcessDailyTransfer`, `DayResult`, and the run-stopping errors `InvalidBalancesFile`, `NoTransfers`, `TotalChanged`), the infrastructure layer in `lib/infrastructure/` (`BalancesCsvReader`, `TransfersCsvReader`, `FinalBalancesCsvWriter` with `default_path`, `ReportPrinter`, `Runner`, and the run-stopping errors `UnreadableFile`, `OutputNotWritable`), and the command `bin/run`, with `data/` holding the two sample files ([DEC-22](../../docs/design-analysis/design-decisions.md#dec-22)).
+Build, on the finished domain of [`001-domain`](../001-domain/plan.md), the application layer in `lib/application/` (`LoadBalances`, `ProcessDailyTransfer`, `LogMessages`, `DayResult`, and the run-stopping errors `InvalidBalancesFile`, `NoTransfers`, `TotalChanged`), the infrastructure layer in `lib/infrastructure/` (`BalancesCsvReader`, `TransfersCsvReader`, `FinalBalancesCsvWriter` with `default_path`, `ReportPrinter`, `Runner`, and the run-stopping errors `UnreadableFile`, `OutputNotWritable`), and the command `bin/run`, with `data/` holding the two sample files ([DEC-22](../../docs/design-analysis/design-decisions.md#dec-22)).
 
 The `Runner` checks the arguments, shows every path once by one rule, reads `LOG_LEVEL` and the clock once, runs the start checks together, builds the real parts and hands them to `ProcessDailyTransfer` ([DEC-30](../../docs/design-analysis/design-decisions.md#dec-30)). `ProcessDailyTransfer` loads the balances through `LoadBalances`, turns every transfers row into a `TransferResult` in file order, checks the total, writes the output file and then prints the report through the reporter ([DEC-15](../../docs/design-analysis/design-decisions.md#dec-15), [DEC-24](../../docs/design-analysis/design-decisions.md#dec-24), [DEC-26](../../docs/design-analysis/design-decisions.md#dec-26)). Every run-stopping error reaches the `Runner`, which prints `Error: ` and the error's own message, logs one line and returns 1 ([DEC-25](../../docs/design-analysis/design-decisions.md#dec-25)).
 
@@ -92,6 +92,7 @@ lib/
 │   ├── errors.rb                        # InvalidBalancesFile, NoTransfers, TotalChanged
 │   ├── load_balances.rb                 # LoadBalances
 │   ├── day_result.rb                    # DayResult
+│   ├── log_messages.rb                  # LogMessages (page 6 pick 37)
 │   └── process_daily_transfer.rb        # ProcessDailyTransfer
 └── infrastructure/
     ├── errors.rb                        # UnreadableFile, OutputNotWritable
@@ -115,6 +116,7 @@ spec/
 ├── application/
 │   ├── load_balances_spec.rb
 │   ├── day_result_spec.rb
+│   ├── log_messages_spec.rb
 │   └── process_daily_transfer_spec.rb
 ├── infrastructure/
 │   ├── row_spec.rb
@@ -146,7 +148,7 @@ The public members, their arguments and the exact messages are in [contracts/com
 
 - **Reading** (FR-001 to FR-006): `BalancesCsvReader#each_row(path)` and `TransfersCsvReader#each_row(path)` yield one `Row` at a time through `CsvRows`, which opens the file as `r:bom|utf-8` with Ruby's CSV library, skips blank lines, trims spaces and tabs around each value, gives each row its physical line number (the line where it starts), marks the expected number of fields (2 or 3) and the header hint on a header-looking first data row, and raises `UnreadableFile` for a file that cannot be opened or a line it cannot read past (research R1, R2).
 - **Loading the balances** (FR-007 to FR-011): `LoadBalances.new(reader, repository).call(path)` checks every row in the order of page 6 and raises `InvalidBalancesFile` with every problem, or the no-rows problem (research R4).
-- **Running the day** (FR-012 to FR-023): `ProcessDailyTransfer.new(run_time: Time.now, **parts).call(balances_path, transfers_path, output_path = nil)` logs the start, loads the balances, takes each account's opening balance and the total before, turns each row into a `TransferResult` (logging each), raises `NoTransfers` or logs the all-rejected warning, checks the total, writes the output file, prints the report through the reporter, logs the end and returns the `DayResult` (research R5).
+- **Running the day** (FR-012 to FR-023): `ProcessDailyTransfer.new(run_time: Time.now, **parts).call(balances_path, transfers_path, output_path = nil)` logs the start, loads the balances, takes each account's opening balance and the total before, turns each row into a `TransferResult` (logging each, with the text from `LogMessages`), raises `NoTransfers` or logs the all-rejected warning, checks the total, writes the output file, prints the report through the reporter, logs the end and returns the `DayResult` (research R5).
 - **The output file** (FR-024 to FR-026): `FinalBalancesCsvWriter.default_path(run_time)` and `#write(accounts, path)`, which creates missing folders, creates the file only if none exists at that moment, writes one LF-ended line per account, and deletes its own partial file on failure (research R6).
 - **The report** (FR-027 to FR-030): `ReportPrinter.new(output:, current_folder:).print(day_result)` prints the five parts; the output line shows the path by `DisplayPath` (research R3).
 - **The runner** (FR-031 to FR-037): `Runner.new(stdout:, stderr:, env:).run(arguments)` returns 0 or 1; `bin/run` exits with it (research R7).
@@ -156,7 +158,7 @@ Each message has one owner: the domain errors own their text (`001`); each run-s
 ## Test approach
 
 - **Tests first.** Each task phase writes its spec examples, runs them and sees them fail (a missing class or a failed expectation), then writes the code until the phase's specs pass in random order and `bundle exec rubocop` reports zero offences. Where a phase's scenario specs check behaviour that an earlier phase already built and tested in a unit spec, the phase says so; a scenario that fails is fixed test-first in the class that owns the behaviour (P24).
-- **One rule, one place.** Each rule is tested in the spec of the class that owns it (DEC-34): the reading rules once in `csv_rows_spec.rb`, the field counts in the reader specs, every balances problem in `load_balances_spec.rb`, the reason mapping, masking and log lines in `process_daily_transfer_spec.rb`, the path rule in `display_path_spec.rb`, the report layout in `report_printer_spec.rb`, the writer's rules in `final_balances_csv_writer_spec.rb`, and the runner's own steps in `runner_spec.rb`. Domain rules are not tested again (`001`).
+- **One rule, one place.** Each rule is tested in the spec of the class that owns it (DEC-34): the reading rules once in `csv_rows_spec.rb`, the field counts in the reader specs, every balances problem in `load_balances_spec.rb`, the reason mapping and which line is logged when and at which level in `process_daily_transfer_spec.rb`, the log texts and masking in `log_messages_spec.rb`, the path rule in `display_path_spec.rb`, the report layout in `report_printer_spec.rb`, the writer's rules in `final_balances_csv_writer_spec.rb`, and the runner's own steps in `runner_spec.rb`. Domain rules are not tested again (`001`).
 - **Page 2 scenarios through the runner** (brief rule 4, FR-045). In `runner_spec.rb`, grouped by FR, each scenario writes its CSV files into a temporary folder used as the current folder, runs `Runner` with `StringIO` streams and the third argument `output/final_balances_2026-11-07_143005.csv`, and checks standard output, standard error and the exit status in three separate examples; `<timestamp>`, `<pid>` and `<reason from the system>` are matched as patterns (spec items 1 and 10).
 - **End to end** (FR-044). Five specs run `ruby bin/run` as a separate process with `Open3.capture3` in a temporary folder, with `LOG_LEVEL` removed from the environment, turn CR LF into LF in the captured streams, compare standard output, standard error and the exit status, and compare the output file byte for byte (P25).
 - **RuboCop's RSpec defaults shape the specs**, as in `001` (`001` plan D17): one expectation per example, examples of at most 5 lines, at most 3 levels of nesting; a scenario's three streams are three examples sharing one memoised run.
