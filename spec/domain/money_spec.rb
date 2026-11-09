@@ -49,6 +49,15 @@ RSpec.describe Money do
     end
   end
 
+  describe '.new' do
+    { 'a Float' => 10.5, 'a String' => '10.50' }.each do |kind, value|
+      it "refuses #{kind}, as it needs a BigDecimal" do
+        expect { described_class.new(value) }
+          .to raise_error(ArgumentError, "Money needs a BigDecimal, got #{value.class}")
+      end
+    end
+  end
+
   describe '#text' do
     it 'returns the text as written' do
       expect(described_class.amount('007.50').text).to eq('007.50')

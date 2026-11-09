@@ -28,6 +28,8 @@ class Money
   private_class_method :parse
 
   def initialize(value, text = nil)
+    raise ArgumentError, "Money needs a BigDecimal, got #{value.class}" unless value.is_a?(BigDecimal)
+
     @value = value
     @written = text
     freeze
