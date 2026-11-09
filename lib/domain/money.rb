@@ -42,6 +42,7 @@ class Money
     "#{'-' if value.negative?}#{units}.#{fraction.ljust(2, '0')}"
   end
 
+  # A written minus sign counts too: BigDecimal treats -0.00 as not below zero, but "-0.00" is still a negative balance.
   def negative?
     @written.to_s.start_with?('-') || value.negative?
   end
@@ -67,6 +68,7 @@ class Money
   end
   alias eql? ==
 
+  # 0.00 and -0.00 are equal, so they must share a hash.
   def hash
     value.zero? ? BigDecimal('0').hash : value.hash
   end
