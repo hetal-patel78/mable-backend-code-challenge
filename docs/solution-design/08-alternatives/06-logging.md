@@ -37,7 +37,7 @@ flowchart LR
 **Cons**
 - A log line for every transfer is mixed into the report in the terminal, which makes the report hard to read.
 
-**Cost.** O(t) log lines for t transfers, against O(r) for r rejected transfers at warn level.
+**Cost.** O(n) log lines for n transfers, against O(r) for the r rejected transfers at warn level.
 
 **Why not chosen.** With warn as the default, a terminal shows the report plus only rejections and errors ([DEC-28](../../design-analysis/design-decisions.md#dec-28)). `LOG_LEVEL=info` still gives the full trace when wanted.
 

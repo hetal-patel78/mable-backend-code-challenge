@@ -47,9 +47,9 @@ Each term is defined once here. Component details are on the [components page](0
 | Aggregate root | The one model that owns a piece of changing data and guards its rules. Here it is `Account`. |
 | Applied | A transfer that passed every check and moved the money. |
 | Assistant's pick | A small detail the decisions leave open, decided by the AI assistant and listed below for the developer to review. |
-| Balances file | The CSV file of starting balances: `account number,balance`, no header. |
+| Balances file | The CSV file of opening balances: `account number,balance`, no header. |
 | `BigDecimal` | Ruby's exact decimal number type, used for all money. |
-| Blank line | An empty line, or one with only spaces or tabs. It is skipped and not counted ([DEC-05](../design-analysis/design-decisions.md#dec-05)). |
+| Blank line | An empty line, or one with only spaces or tabs. It is skipped and is not a row, but it still counts in line numbers ([DEC-05](../design-analysis/design-decisions.md#dec-05), [DEC-07](../design-analysis/design-decisions.md#dec-07)). |
 | Builder | A test helper that makes a valid object, so a test sets only the field it is about. |
 | Byte-order mark | An invisible marker some editors put at the start of a file. It is ignored. |
 | CI (continuous integration) | A service that runs the tests and RuboCop on every push; here, GitHub Actions. |
@@ -72,7 +72,7 @@ Each term is defined once here. Component details are on the [components page](0
 | Gem | A packaged Ruby library; `bundle install` installs the project's gems at the locked versions. |
 | Growth rate | How the time or memory of a step changes as its input grows, for example O(1) (stays the same) or O(m) (grows with m). |
 | Header hint | The message `This looks like a header row; files must not have a header.` added to a header-looking first row ([DEC-06](../design-analysis/design-decisions.md#dec-06)). |
-| Integration test | A spec for an infrastructure class that reads or writes real files, using fixture files or a temporary folder; page 3 calls it a fixture-file test. |
+| Integration test | A spec for an infrastructure class (readers, writer, `ReportPrinter`, `Runner`) that reads or writes real files, using fixture files or a temporary folder. |
 | LF | Line feed only: the line ending used in the output file on every operating system. |
 | Line number | The physical line in the file, starting at 1 and counting blank lines ([DEC-07](../design-analysis/design-decisions.md#dec-07)). |
 | Log line | A timestamped line from Ruby's `Logger` on standard error. |

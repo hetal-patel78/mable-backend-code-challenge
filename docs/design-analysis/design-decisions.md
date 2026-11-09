@@ -173,11 +173,11 @@ How to read it:
 
 **Rule**
 - A transfer amount must be greater than $0, so `0` and `0.00` are invalid amounts.
-- A starting balance of `0.00` is valid. **[assistant's pick]**
+- An opening balance of `0.00` is valid. **[assistant's pick]**
 
 **Reason:** a transfer of nothing is not a transfer. A balance may end a transfer at exactly $0.00 ([DEC-13](#dec-13)), so $0.00 is a normal balance.
 
-**Rejected:** allowing zero transfers; treating a zero starting balance as invalid.
+**Rejected:** allowing zero transfers; treating a zero opening balance as invalid.
 
 **From:** Page 3 of the handwritten analysis, X5, D11.
 
@@ -196,7 +196,7 @@ The balances file is invalid when any of these is true:
 - a balance is empty, not a number, has more than 2 decimal places ([DEC-09](#dec-09)) or is negative;
 - an account number appears more than once, whether the balances are the same or different.
 
-**Reason:** every transfer depends on the starting balances, so doubtful balances must not be used.
+**Reason:** every transfer depends on the opening balances, so doubtful balances must not be used.
 
 **Rejected:** running with no accounts when the file is empty (every transfer would fail as unknown); for a duplicate, letting the last row win (hides an error) or adding the balances together (guesses what was meant).
 
@@ -484,7 +484,7 @@ The report is printed on stdout once, at the end of a completed run, after the o
 - What is logged, and at which level:
   - info: the run start; each applied transfer (line number, masked from and to accounts, amount); the run end, with the counts per rejection reason;
   - warn: each rejected transfer with its reason code; the warning from [DEC-21](#dec-21). A rejected transfer's line gives the same details as an applied one (line number, masked from and to accounts, amount), then its reason code; fields the row does not have are left out. **[assistant's pick]**
-  - error: one line saying why the run stopped, for example `Balances file invalid: 3 problems`, with no account numbers.
+  - error: one line saying why the run stopped, for example `Run stopped: balances file invalid: 3 problems`, with no account numbers.
 - The level comes from the `LOG_LEVEL` environment variable, which accepts only `warn` and `info`, in any letter case. The default is warn, and any other value falls back to warn. The logger has no other settings.
 - When the run stops, the full error message (every problem, with line numbers and full account numbers) is printed on stderr as plain text, not through the logger.
 
@@ -522,8 +522,8 @@ The report is printed on stdout once, at the end of a completed run, after the o
   - the repository: no duplicate on add, unknown account on find ([DEC-31](#dec-31)).
 - Class and file names are plain domain words such as `Account`, `Money` and `Transfer`. There are no base classes, no suffixes such as `AggregateRoot` or `ValueObject`, and no domain events, factories or commands.
 - The code is organised in three folders: `domain`, `application` and `infrastructure`. A new folder is added only when it holds several files.
-- A value that is equal to another with the same data, and never changes, is a Ruby `Data` record: `AccountNumber` and `Transfer` in the domain, and `TransferResult` in the application. `Money` keeps its own equality, which ignores how the amount was written.
-- The class that runs the day takes the run time as a constructor argument, defaulting to the current time. **[assistant's pick]** `bin/run` passes nothing; tests pass a fixed time so the output file name is known.
+- A value that is equal to another with the same data, and never changes, is a Ruby `Data` record: `AccountNumber` and `Transfer` in the domain; `TransferResult`, the day's result and the parameter object of the class that runs the day in the application; and the row a file reader gives in the infrastructure. `Money` keeps its own equality, which ignores how the amount was written.
+- The class that runs the day takes the run time as a constructor argument, defaulting to the current time. **[assistant's pick]** `bin/run` passes no run time; tests pass a fixed time so the output file name is known.
 - The runner reads the clock once. When no output path is given, it gets the default path for that time from the output writer ([DEC-27](#dec-27)), checks it at the start, and passes the same run time and output path to the class that runs the day.
 - The class that runs the day takes its six parts (the balances reader, the transfers reader, the output writer, the repository, the report printer and the logger) as one parameter object that names each part.
 - The balances reader, the transfers reader, the output writer, the repository, the report printer and the logger are all passed in to the class that runs the day. The runner builds the real ones; tests pass fakes. The class that runs the day prints the report through the report printer after the output file is written ([DEC-26](#dec-26)).
@@ -607,7 +607,7 @@ The report is printed on stdout once, at the end of a completed run, after the o
 
 Applying the sample transfers in file order, all four are applied, and the final balances are:
 
-| Account | Starting balance | Final balance |
+| Account | Opening balance | Final balance |
 |---|---:|---:|
 | 1111234522226789 | 5000.00 | 4820.50 |
 | 1111234522221234 | 10000.00 | 9974.40 |
@@ -743,7 +743,7 @@ Assistant's picks the developer has reviewed and agreed. Where the developer cha
 | [DEC-09](#dec-09) | `007.50` is valid; `100.` and `.50` are invalid | A digit must appear on both sides of the point; leading zeros do not change the value | Rejecting leading zeros; accepting a bare point | S1 |
 | [DEC-09](#dec-09) | `-0` and `-0.00` are negative, so invalid | A minus sign never appears in valid money | Reading them as zero | S2 |
 | [DEC-09](#dec-09) | No upper limit on amounts or balances | `BigDecimal` is exact at any size, and the challenge sets no limit | An arbitrary maximum | S3 |
-| [DEC-10](#dec-10) | A starting balance of $0.00 is valid | A transfer may leave exactly $0.00, so it is a normal balance | Treating it as invalid | P12 |
+| [DEC-10](#dec-10) | An opening balance of $0.00 is valid | A transfer may leave exactly $0.00, so it is a normal balance | Treating it as invalid | P12 |
 | [DEC-12](#dec-12) | A row with several problems reports each one, with the same line number | Every problem is reported (C2) | Only the first problem in a row | S4 |
 | [DEC-19](#dec-19) | The six reason codes and the order of the checks | The checks run from the row's shape, to its values, to the accounts' state, so the most basic problem is given | A code per field problem; listing every failed check | P12 |
 | [DEC-21](#dec-21) | The all-rejected warning is logged at warn and comes after the summary | Warn shows by default; next to the summary it explains the counts | Info level; at the top of the report | P12 |

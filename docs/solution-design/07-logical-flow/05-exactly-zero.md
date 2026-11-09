@@ -28,7 +28,7 @@ The rule `withdraw` applies is "the balance minus the amount is $0.00 or more" (
 Visible results:
 
 - Report line, printed through the reporter at the end of the run: `Line 1  applied  2222123433331212 -> 1212343433335665  550.00`
-- The output file holds `2222123433331212,0.00` and `1212343433335665,1750.00`. A balance of 0.00 is a valid starting balance for the next day's run ([DEC-10](../../design-analysis/design-decisions.md#dec-10), [DEC-27](../../design-analysis/design-decisions.md#dec-27)).
+- The output file holds `2222123433331212,0.00` and `1212343433335665,1750.00`. A balance of 0.00 is a valid opening balance for the next day's run ([DEC-10](../../design-analysis/design-decisions.md#dec-10), [DEC-27](../../design-analysis/design-decisions.md#dec-27)).
 - If a later row then asks for 0.01 from 2222123433331212, that row is rejected with `insufficient_funds`, as on [page 04](04-insufficient-funds.md).
 
 [Back to the overview](README.md)

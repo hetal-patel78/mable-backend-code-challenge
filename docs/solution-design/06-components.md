@@ -7,11 +7,11 @@ The code has three folders ([DEC-30](../design-analysis/design-decisions.md#dec-
 Six terms used below:
 
 - An **aggregate root** is the one model that owns a piece of changing data and guards its rules. Other code may change that data only by asking the root.
-- A **value** model (such as `Money`) holds data that never changes once it is built. Two values with the same content are equal. `AccountNumber`, `Transfer` and `TransferResult` are Ruby `Data` records, Ruby's built-in form of such a value ([DEC-30](../design-analysis/design-decisions.md#dec-30)); `Money` keeps its own equality, which ignores how the amount was written.
+- A **value** model (such as `Money`) holds data that never changes once it is built. Two values with the same content are equal. `AccountNumber`, `Transfer`, `TransferResult`, `DayResult`, `ProcessDailyTransfer::Parts` and `Row` are Ruby `Data` records, Ruby's built-in form of such a value ([DEC-30](../design-analysis/design-decisions.md#dec-30)); `Money` keeps its own equality, which ignores how the amount was written.
 - A **repository** is the one place that holds the accounts and finds them by number.
 - **Passed in** means a class is given the parts it uses when it is created, instead of creating them itself. A test can then pass a fake part in their place.
 - A **reason code** is a short fixed word that says why a transfer was rejected, such as `insufficient_funds` ([DEC-19](../design-analysis/design-decisions.md#dec-19)).
-- **Masked** means an account number shown in the logs with only its last 4 digits, as `************6789` ([DEC-29](../design-analysis/design-decisions.md#dec-29)).
+- **Masked** means an account value shown in the logs with all but its last 4 characters hidden, as `************6789`; the full rule is under [`LogMessages`](#logmessages) ([DEC-29](../design-analysis/design-decisions.md#dec-29)).
 
 ---
 
@@ -191,7 +191,7 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
 
 - **Responsibility:** everything the report needs about a completed run.
 - **In:** the `TransferResult`s, the totals before and after, the opening balance of each account by account number, the final accounts in load order, and the output path.
-- **Out:** the same data, read by `ReportPrinter`.
+- **Out:** the same data, read by `ReportPrinter`, and the counts worked out from the results: processed, applied, rejected, the count per reason code in [DEC-19](../design-analysis/design-decisions.md#dec-19) order, and whether every row was rejected. It also owns the text of the all-rejected warning, shared by the report and the log ([DEC-21](../design-analysis/design-decisions.md#dec-21)). A `Data` record: never changed once built.
 - **Does not:** format or print anything; change any account.
 
 ### Application errors
@@ -230,14 +230,13 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
 - **In:** the command-line arguments and the `LOG_LEVEL` environment variable.
 - **Out:** the exit status, 0 or 1, returned to `bin/run`. **(assistant's pick)** In order, it:
   1. checks the number of arguments, and prints the usage message if it is wrong (no log line, because the run never started), and returns 1 ([DEC-22](../design-analysis/design-decisions.md#dec-22));
-  2. resolves the paths;
-  3. reads `LOG_LEVEL` and builds the logger;
-  4. reads the clock once for the run time;
-  5. works out the output path: the third argument (already resolved against the current folder), or `FinalBalancesCsvWriter.default_path` for the run time, resolved against the project root ([DEC-22](../design-analysis/design-decisions.md#dec-22), [DEC-27](../design-analysis/design-decisions.md#dec-27));
-  6. runs the start checks together: both input files exist and the output file does not. It reports every problem found, one `Error:` line each with the path shown through [`DisplayPath`](#infrastructure-helpers-csvrows-row-and-displaypath), then one error log line naming only the reasons that occurred ([DEC-23](../design-analysis/design-decisions.md#dec-23), [DEC-25](../design-analysis/design-decisions.md#dec-25)); if any problem was found, it returns 1 and nothing is read;
-  7. builds the real readers, writer, repository and reporter;
-  8. runs `ProcessDailyTransfer` with the run time, the parts it built and the three paths: the balances and transfers paths in the form they are shown in, worked out through [`DisplayPath`](#infrastructure-helpers-csvrows-row-and-displaypath), and the output path as a full path, which `DayResult` keeps for `ReportPrinter`. A path in its shown form opens the same file from the current folder, so the application classes show the paths they are given in their messages and log lines, and never work out a shown path themselves ([DEC-26](../design-analysis/design-decisions.md#dec-26), [DEC-30](../design-analysis/design-decisions.md#dec-30)). **(assistant's pick)**
-  9. returns 0, or for a run-stopping error prints its message and one error log line and returns 1.
+  2. reads `LOG_LEVEL` and builds the logger ([DEC-28](../design-analysis/design-decisions.md#dec-28));
+  3. reads the clock once for the run time ([DEC-30](../design-analysis/design-decisions.md#dec-30));
+  4. resolves the paths: with no arguments, the sample files in `data/` against the project root, so `bin/run` works from any folder; otherwise the typed paths against the current folder. The output path is the third argument, resolved against the current folder, or the default path for the run time, which it asks the class method `FinalBalancesCsvWriter.default_path` for before any writer is built, resolved against the project root ([DEC-22](../design-analysis/design-decisions.md#dec-22), [DEC-27](../design-analysis/design-decisions.md#dec-27));
+  5. runs the start checks together: both input files exist and the output file does not. It reports every problem found, one `Error:` line each with the path shown through [`DisplayPath`](#infrastructure-helpers-csvrows-row-and-displaypath), then one error log line naming only the reasons that occurred ([DEC-23](../design-analysis/design-decisions.md#dec-23), [DEC-25](../design-analysis/design-decisions.md#dec-25)); if any problem was found, it returns 1 and nothing is read;
+  6. builds the real readers, writer, repository and reporter (`ReportPrinter`), and passes them with the logger as `ProcessDailyTransfer::Parts`;
+  7. runs `ProcessDailyTransfer` with the run time, the parts it built and the three paths: the balances and transfers paths in the form they are shown in, worked out through [`DisplayPath`](#infrastructure-helpers-csvrows-row-and-displaypath), and the output path as a full path, which `DayResult` keeps for `ReportPrinter`. A path in its shown form opens the same file from the current folder, so the application classes show the paths they are given in their messages and log lines, and never work out a shown path themselves ([DEC-26](../design-analysis/design-decisions.md#dec-26), [DEC-30](../design-analysis/design-decisions.md#dec-30)). **(assistant's pick)**
+  8. returns 0, or for a run-stopping error prints its message and one error log line and returns 1.
 - **Does not:** contain business rules; read CSV; print the report; show a Ruby error trace for a run-stopping error.
 
 ### `bin/run`
@@ -252,7 +251,7 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
 Three small helpers used only inside `infrastructure/`. Without them, both readers would repeat the CSV, line-number, byte-order-mark and malformed-row handling, and the `Runner`, `ReportPrinter` and the infrastructure errors would each hold a copy of the path rule. **(assistant's pick)**
 
 - **`CsvRows`:** reads one file with Ruby's CSV library, opened as `bom|utf-8`, one row at a time (`CSV.open`, one row per `shift`, [DEC-32](../design-analysis/design-decisions.md#dec-32)), and gives each non-blank row as a `Row` with its physical line number ([DEC-04](../design-analysis/design-decisions.md#dec-04), [DEC-05](../design-analysis/design-decisions.md#dec-05), [DEC-07](../design-analysis/design-decisions.md#dec-07)). It trims the values, marks a row whose number of fields is not the one the reader expects, and marks a header-looking first row with the header hint ([DEC-06](../design-analysis/design-decisions.md#dec-06)). It reads the rows as raw bytes and checks that each row is UTF-8 text, so a row that is not text is reported at its own line; the values are then turned into text. A file that cannot be opened, or that the library cannot read past a line, raises `UnreadableFile`; a system error while the file is opened or read is reported as one that cannot be read, but an error raised by the code the rows are given to passes through unchanged; the file is opened in its own method and closed however the reading ends. **(assistant's pick)** Each reader builds one with the number of fields it expects: 2 for balances, 3 for transfers.
-- **`Row`:** one row as a reader gives it: its line number, its values as written and trimmed, the expected number of fields, and the header hint if the row was marked. A value: it never changes once built.
+- **`Row`:** one row as a reader gives it: its line number, its values as written and trimmed, the expected number of fields, and the header hint if the row was marked. A `Data` record: it never changes once built, and it says whether it has the wrong number of fields.
 - **`DisplayPath`:** works out how a path is shown: relative to the folder the command was run from when the file is in or below it, otherwise in full ([DEC-26](../design-analysis/design-decisions.md#dec-26)). The `Runner` uses it for its start-check lines and for the balances and transfers paths it passes on, `ReportPrinter` for the output line, and the infrastructure errors for the paths in their messages. No `domain/` or `application/` class uses it ([DEC-30](../design-analysis/design-decisions.md#dec-30)).
 - **Do not:** check account numbers or amounts; build domain models; print anything.
 

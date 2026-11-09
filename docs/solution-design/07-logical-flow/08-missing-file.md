@@ -11,9 +11,10 @@ sequenceDiagram
     participant L as Logger
     participant P as ProcessDailyTransfer
     U->>R: bin/run data/missing.csv data/mable_transactions.csv output/day1.csv
-    R->>R: 3 arguments: valid, resolve paths
+    R->>R: 3 arguments: valid
     R->>L: LOG_LEVEL not set: build the logger at warn
-    R->>R: read the clock once, output path is the third argument
+    R->>R: read the clock once
+    R->>R: resolve the paths; the output path is the third argument
     R->>R: start checks, all together: balances, transfers, output
     Note over R: data/missing.csv does not exist, output/day1.csv exists
     R-->>U: standard error: one Error: line for each problem

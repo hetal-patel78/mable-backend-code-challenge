@@ -15,7 +15,7 @@ Terms used below:
 - **Docker** packages the program with the right Ruby version, so it runs without installing Ruby.
 - **Continuous integration (CI)** is a service that runs the tests on every change.
 - A **unit test** checks one rule in one part of the code.
-- A **fixture-file test** reads a small prepared file to check file-level behaviour.
+- An **integration test** checks an infrastructure class with real files: a small prepared file (a fixture file) or a temporary folder.
 - An **end-to-end test** runs the whole program and checks its report, output file and exit status.
 - A **growth rate** says how the time or memory a step needs changes as its input gets bigger. "Grows in proportion to the rows" means twice the rows take about twice the time. "The same however many accounts there are" means the size does not matter.
 - A **design review** is a reviewer reading the design and the code against a stated target. Cost and scale are checked this way. There is no timing test, because timings depend on the machine and a day's file is small ([DEC-32](../design-analysis/design-decisions.md#dec-32)).
@@ -98,7 +98,7 @@ Decisions: [DEC-01](../design-analysis/design-decisions.md#dec-01), [DEC-36](../
 - CI: a GitHub Actions workflow runs the tests and RuboCop on every push, and must pass.
 - Before submission, the Docker image is built from a clean checkout, then the sample files and the tests are run in it ([DEC-36](../design-analysis/design-decisions.md#dec-36), [DEC-37](../design-analysis/design-decisions.md#dec-37)).
 - `ruby bin/run` is run by hand on Windows on the sample files before submission, and must give the sample result. (assistant's pick)
-- A fixture-file test covers the byte-order mark ([NFR-06](#nfr-06)). Windows line endings and a missing final newline are handled by Ruby's CSV library ([DEC-04](../design-analysis/design-decisions.md#dec-04)) and are checked by design review that the files are read only through that library.
+- An integration test covers the byte-order mark ([NFR-06](#nfr-06)). Windows line endings and a missing final newline are handled by Ruby's CSV library ([DEC-04](../design-analysis/design-decisions.md#dec-04)) and are checked by design review that the files are read only through that library.
 
 <a id="nfr-05"></a>
 ## NFR-05 Code organisation and readability
@@ -124,7 +124,7 @@ These targets follow the rubric's items on domain models, separation of concerns
 
 Decisions: [DEC-34](../design-analysis/design-decisions.md#dec-34), [DEC-36](../design-analysis/design-decisions.md#dec-36), [DEC-24](../design-analysis/design-decisions.md#dec-24), [DEC-30](../design-analysis/design-decisions.md#dec-30), [DEC-28](../design-analysis/design-decisions.md#dec-28).
 
-Three kinds of test are used: unit tests, fixture-file tests and end-to-end tests (see the terms at the top of this page).
+Three kinds of test are used: unit tests, integration tests and end-to-end tests (see the terms at the top of this page).
 
 **Targets**
 - The tests must be written with RSpec and must all pass, in random order.

@@ -1,6 +1,6 @@
 # Mable Back End Code Challenge
 
-A command-line program that loads one company's starting account balances from a CSV file and applies one day's transfers from a second CSV file, never letting an account balance go below $0. It prints a report of the day and writes the closing balances to a new CSV file.
+A command-line program that loads one company's opening account balances from a CSV file and applies one day's transfers from a second CSV file, never letting an account balance go below $0. It prints a report of the day and writes the closing balances to a new CSV file.
 
 ## Prerequisites
 
@@ -159,7 +159,7 @@ $env:Path = [Environment]::GetEnvironmentVariable('Path','User') + ';' + [Enviro
   - `lib/application` holds the use cases: loading the balances (`LoadBalances`) and running the day (`ProcessDailyTransfer`), with each row's outcome (`TransferResult`), the day's results and the text of its log lines (`LogMessages`, except the all-rejected warning, whose text `DayResult` owns).
   - `lib/infrastructure` holds what touches the outside world: the CSV readers and writer, the report printer and the `Runner` that `bin/run` starts.
 - `AccountRepository` keeps the accounts in memory, keyed by `AccountNumber`, with `add`, `include?`, `find` and `all`.
-- The values compared by their data (`AccountNumber` and `Transfer` in the domain, `TransferResult` in the application) are Ruby `Data` records, so they are equal by content and never change. `Money` keeps its own equality, because `10.5` and `10.50` are the same amount.
+- The values compared by their data (`AccountNumber` and `Transfer` in the domain; `TransferResult`, `DayResult` and `ProcessDailyTransfer::Parts` in the application; `Row` in the infrastructure) are Ruby `Data` records, so they are equal by content and never change. `Money` keeps its own equality, because `10.5` and `10.50` are the same amount.
 - `ProcessDailyTransfer` is given its parts as one `ProcessDailyTransfer::Parts` value, each by name (the readers, the writer, the repository, the report printer and the logger), and the run time, so the tests pass fakes.
 - Every check runs before any balance changes, so each transfer is all or nothing. An account also refuses a deposit or withdrawal of $0 or less with `ArgumentError`, a guard against programming errors: a transfer with such an amount is already rejected as `invalid_amount`.
 - The CSV files are read as raw bytes, and each row is checked for UTF-8 text on its own, so a row that is not text is reported at its own line number. A system error while a file is opened or read is reported as `cannot read file`; an error raised by the code the rows are given to is not.

@@ -1,6 +1,6 @@
 # Mable Back End Code Challenge
 
-Solution for the Mable back-end take-home challenge (`docs/challenge/MABLE_BACK_END_CODE_TEST.md`): load the starting account balances for one company from a CSV file, then apply one day's transfers from a second CSV file, never letting an account balance go below $0.
+Solution for the Mable back-end take-home challenge (`docs/challenge/MABLE_BACK_END_CODE_TEST.md`): load the opening account balances for one company from a CSV file, then apply one day's transfers from a second CSV file, never letting an account balance go below $0.
 
 ## Source of truth
 - **`docs/design-analysis/design-decisions.md`** defines all behaviour and design. Implement exactly what the decisions say.

@@ -25,7 +25,7 @@ What the program must do, as nine requirements (FR-01 to FR-09), each with accep
 
 ## FR-01 Load the balances file
 
-The program must load every account and its starting balance from the balances file, and must stop the run, listing every problem, if the file is invalid.
+The program must load every account and its opening balance from the balances file, and must stop the run, listing every problem, if the file is invalid.
 
 Decisions: [DEC-04](../design-analysis/design-decisions.md#dec-04), [DEC-05](../design-analysis/design-decisions.md#dec-05), [DEC-06](../design-analysis/design-decisions.md#dec-06), [DEC-07](../design-analysis/design-decisions.md#dec-07), [DEC-08](../design-analysis/design-decisions.md#dec-08), [DEC-09](../design-analysis/design-decisions.md#dec-09), [DEC-10](../design-analysis/design-decisions.md#dec-10), [DEC-11](../design-analysis/design-decisions.md#dec-11), [DEC-12](../design-analysis/design-decisions.md#dec-12), [DEC-31](../design-analysis/design-decisions.md#dec-31).
 
@@ -467,15 +467,6 @@ Output file: output/final_balances_2026-11-07_143005.csv
 1212343433335665,1725.60
 3212343433335755,48679.50
 ```
-
-| Account | Starting balance | Closing balance |
-|---|---:|---:|
-| 1111234522226789 | 5000.00 | 4820.50 |
-| 1111234522221234 | 10000.00 | 9974.40 |
-| 2222123433331212 | 550.00 | 1550.00 |
-| 1212343433335665 | 1200.00 | 1725.60 |
-| 3212343433335755 | 50000.00 | 48679.50 |
-| **Total** | **66750.00** | **66750.00** |
 
 **AC-08.2 A day with mixed rejections.**
 - Given `balances.csv` and this `transfers.csv`:

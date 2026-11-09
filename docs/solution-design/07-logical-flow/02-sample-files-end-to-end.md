@@ -14,9 +14,10 @@ sequenceDiagram
     participant P as ProcessDailyTransfer
     participant RP as ReportPrinter
     U->>R: bin/run (no arguments)
-    R->>R: 0 arguments: use the data/ sample files
+    R->>R: 0 arguments: valid
     R->>R: LOG_LEVEL not set: logger at warn
     R->>R: read the clock once: 2026-11-07 14:30:05
+    R->>R: use the data/ sample files, found from the project root
     R->>W: default_path for 14:30:05 (class method, no writer built yet)
     W-->>R: output/final_balances_2026-11-07_143005.csv
     R->>R: start checks: both input files exist, output file does not

@@ -4,7 +4,7 @@ How the solution to the [Mable back-end challenge](../challenge/MABLE_BACK_END_C
 
 **Sources.** Every rule comes from [`design-decisions.md`](../design-analysis/design-decisions.md), cited by its ID (for example [DEC-13](../design-analysis/design-decisions.md#dec-13)). If this design and a decision ever differ, the decision wins. This design adds the detail of *how*; it does not change *what* was decided. The pages follow the developer's [brief](solution-design-brief.md).
 
-**In one paragraph.** A command-line program loads one company's starting balances from a CSV file, then applies one day's transfers from a second CSV file, in file order. A transfer is applied only if it is valid and leaves the paying account at $0.00 or more; otherwise it is rejected with a reason, and the run carries on. At the end, the program prints a report, writes the final balances to a new CSV file, and exits with status 0. Problems that make the day unsafe to process, such as an invalid balances file, stop the run with a clear error and exit status 1.
+**In one paragraph.** A command-line program loads one company's opening balances from a CSV file, then applies one day's transfers from a second CSV file, in file order. A transfer is applied only if it is valid and leaves the paying account at $0.00 or more; otherwise it is rejected with a reason, and the run carries on. At the end, the program prints a report, writes the final balances to a new CSV file, and exits with status 0. Problems that make the day unsafe to process, such as an invalid balances file, stop the run with a clear error and exit status 1.
 
 ---
 

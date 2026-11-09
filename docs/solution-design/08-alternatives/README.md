@@ -4,7 +4,7 @@ The main options the design decisions considered and rejected, grouped by topic,
 
 Every alternative here comes from a **Rejected** entry in [`design-decisions.md`](../../design-analysis/design-decisions.md). None of them is a new proposal. Each page gives, per alternative, a short description, its pros and cons, its time and space cost where that matters, and the reason it was not chosen, citing the decision.
 
-Costs use "big O" notation: O(1) means the work stays the same however much data there is; O(n) means it grows in step with the number of rows or accounts, n.
+Costs use "big O" notation, with the letters of the [time and space table](../09-considerations.md#time-and-space): `n` is the number of rows in the transfers file and `m` the number of accounts. O(1) means the work stays the same however much data there is; O(n) means it grows in step with n.
 
 | Page | Topic | Main decisions |
 |---|---|---|

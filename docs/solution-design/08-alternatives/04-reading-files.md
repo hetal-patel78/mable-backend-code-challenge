@@ -39,7 +39,7 @@ flowchart LR
 - Quoted values, Windows (CRLF) line endings, a missing final newline and a byte-order mark (an invisible marker some editors put at the start of a file) all need handling and tests.
 - More code, more chances of a parsing bug, and no gain for the rubric.
 
-**Cost.** O(n) time over n lines in both designs.
+**Cost.** O(m + n) time over the lines of both files, in both designs.
 
 **Why not chosen.** A standard parser already handles the awkward parts of CSV correctly ([DEC-04](../../design-analysis/design-decisions.md#dec-04)).
 
@@ -55,7 +55,7 @@ flowchart LR
 - A quoted value that contains a newline spans two lines, so splitting on lines can break a valid row.
 - It replaces the row-by-row reading the decisions chose ([DEC-32](../../design-analysis/design-decisions.md#dec-32)).
 
-**Cost.** O(n) time over n lines, O(1) space per line: the same as the chosen design.
+**Cost.** O(n) time over the n lines of the transfers file, O(1) space per line: the same as the chosen design.
 
 **Why not chosen.** An unreadable file stops the run instead, which avoids a half-applied day ([DEC-04](../../design-analysis/design-decisions.md#dec-04)). Keeping the transfers applied before the unreadable line was rejected for the same reason: it would be a partial day.
 
@@ -72,7 +72,7 @@ flowchart LR
 - The balances file must be read in full anyway, because all its errors must be found before any transfer runs ([DEC-12](../../design-analysis/design-decisions.md#dec-12)).
 - The report lists every transfer, so the transfer results are kept until the end in any design that prints that report ([DEC-26](../../design-analysis/design-decisions.md#dec-26)).
 
-**Cost.** Chosen design: O(a) space for a accounts, and O(t) space for the t transfer results kept for the report; the transfers file itself is never fully in memory. Chunking would not lower this without changing the report.
+**Cost.** Chosen design: O(m) space for the m accounts, and O(n) space for the n transfer results kept for the report; the transfers file itself is never fully in memory. Chunking would not lower this without changing the report.
 
 **Why not chosen.** Reading row by row costs nothing extra and already copes with a larger file ([DEC-32](../../design-analysis/design-decisions.md#dec-32)). The README lists very large files as a production item ([DEC-37](../../design-analysis/design-decisions.md#dec-37)); scale is discussed in [Considerations](../09-considerations.md).
 

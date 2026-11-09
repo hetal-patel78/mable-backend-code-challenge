@@ -8,7 +8,7 @@ The [challenge](../challenge/MABLE_BACK_END_CODE_TEST.md) describes a very simpl
 
 The system must:
 
-- load the starting balances of the accounts of **one company** from a CSV file;
+- load the opening balances of the accounts of **one company** from a CSV file;
 - then accept **one day's transfers** from a second CSV file and apply them;
 - never move money out of an account if that would take its balance below $0.
 

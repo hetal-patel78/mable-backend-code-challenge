@@ -28,7 +28,7 @@ flowchart LR
 - The duplicate rule and the unknown-account rule are spread across the loader and the transfer step, so each must handle them and each must be tested for them.
 - A test cannot swap in a fake store as easily, for example the fake repository whose total changes, used to test the total check ([DEC-24](../../design-analysis/design-decisions.md#dec-24)).
 
-**Cost.** With a lookup keyed by account number, finding an account is O(1) and holding the accounts is O(n) space in both designs. The difference is where the rules live, not speed.
+**Cost.** With a lookup keyed by account number, finding an account is O(1) and holding the accounts is O(m) space in both designs. The difference is where the rules live, not speed.
 
 **Why not chosen.** With a repository, the rules stay in one place; otherwise the balances loader and the transfer step would each need to handle them ([DEC-31](../../design-analysis/design-decisions.md#dec-31)).
 

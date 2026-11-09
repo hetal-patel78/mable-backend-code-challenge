@@ -81,9 +81,9 @@ flowchart LR
 
 **Cons**
 - Transfers touching a skipped account fail as unknown, which hides the real cause.
-- Money moves on doubtful starting balances.
+- Money moves on doubtful opening balances.
 
-**Cost.** The same as the chosen design: O(n) time and space over n balance rows.
+**Cost.** The same as the chosen design: O(m) time and space over m balance rows.
 
 **Why not chosen.** Every problem is reported, with its line number, and then the run stops, so nothing runs on doubtful balances ([DEC-11](../../design-analysis/design-decisions.md#dec-11), [DEC-12](../../design-analysis/design-decisions.md#dec-12)). Stopping at the first bad row was also rejected: the user could fix only one problem per run ([DEC-12](../../design-analysis/design-decisions.md#dec-12)).
 

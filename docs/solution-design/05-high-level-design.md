@@ -36,7 +36,7 @@ flowchart LR
 
 *Passed in* means a class is given the parts it uses when it is created, instead of creating them itself. A test can then pass a fake part in their place. A *repository* is the one place that holds the accounts and finds them by number.
 
-- `bin/run` passes nothing; the `Runner` does all the setup.
+- `bin/run` passes only the command-line arguments; the `Runner` does all the setup.
 - The `Runner` reads the clock once. When no output path is given, it asks `FinalBalancesCsvWriter` for the default path for that run time. It checks that path at the start, then passes the same run time and path to `ProcessDailyTransfer`, so the checked path and the written path are always the same ([DEC-25](../design-analysis/design-decisions.md#dec-25), [DEC-27](../design-analysis/design-decisions.md#dec-27)).
 - The `Runner` builds the real readers, writer, repository, reporter (`ReportPrinter`) and logger, and passes them all in to `ProcessDailyTransfer` ([DEC-28](../design-analysis/design-decisions.md#dec-28), [DEC-31](../design-analysis/design-decisions.md#dec-31)).
 - `ProcessDailyTransfer` takes the run time as a constructor argument, defaulting to the current time ([DEC-30](../design-analysis/design-decisions.md#dec-30)), so a test can pass a fixed time.

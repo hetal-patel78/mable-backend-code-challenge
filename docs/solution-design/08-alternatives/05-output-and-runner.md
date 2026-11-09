@@ -80,7 +80,7 @@ flowchart LR
 | Show the output path as typed, or relative to the project root | No path work | Wrong when the command is run from another folder ([DEC-26](../../design-analysis/design-decisions.md#dec-26)) |
 | Always show the full output path | Never ambiguous | Long; the path relative to the current folder is enough ([DEC-26](../../design-analysis/design-decisions.md#dec-26)) |
 
-**Cost.** None of these changes the growth rate: the report is O(t + a) for t transfers and a accounts.
+**Cost.** None of these changes the growth rate: the report is O(n + m) for n transfers and m accounts.
 
 ## Other rejected options in this area
 
