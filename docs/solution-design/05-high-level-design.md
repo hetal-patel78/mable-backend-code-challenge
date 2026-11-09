@@ -4,6 +4,39 @@ Purpose: show how the program is put together, where data comes in and goes out,
 
 This is the updated high-level design that replaces the developer's handwritten sketch. It adds the parts the sketch did not have: validation, rejection reasons, the summary and logging ([DEC-33](../design-analysis/design-decisions.md#dec-33)). Each component is described in full on [page 6](06-components.md); the step-by-step flows are on [page 7](07-logical-flow/README.md).
 
+## Overview
+
+The whole program in one diagram; the four diagrams below show each part in detail.
+
+```mermaid
+flowchart LR
+    In[("Balances CSV<br/>Transfers CSV")]
+    Out[("Output CSV<br/>closing balances")]
+    Screen[["Screen<br/>report · errors and logs"]]
+
+    subgraph infra["Infrastructure"]
+        Run["bin/run → Runner"]
+        IO["Readers · writer<br/>report printer · logger"]
+    end
+
+    subgraph app["Application"]
+        PDT["ProcessDailyTransfer<br/>runs one day"]
+    end
+
+    subgraph dom["Domain"]
+        TS["TransferService"]
+        Models["Account · Transfer · Money<br/>AccountNumber · AccountRepository"]
+    end
+
+    Run -- "builds the parts, runs the day" --> PDT
+    In --> IO
+    PDT -- "rows in, results out" --> IO
+    IO --> Out
+    IO --> Screen
+    PDT -- "each transfer" --> TS
+    TS -- "find, withdraw, deposit" --> Models
+```
+
 ## The three layers
 
 The code is split into three folders ([DEC-30](../design-analysis/design-decisions.md#dec-30)):
