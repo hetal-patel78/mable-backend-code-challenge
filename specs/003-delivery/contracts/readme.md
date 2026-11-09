@@ -99,7 +99,7 @@ Read the finished README against each item; every item must be "present". The se
 
 | ID | Item | FR | Present when |
 |---|---|---|---|
-| <a id="r-01"></a>R-01 | Build, test and run come first; sections in the order above | [FR-001](../spec.md#fr-001) | Headings appear in the order 1 to 12 |
+| <a id="r-01"></a>R-01 | Prerequisites come first, then build, test and run; sections in the order above | [FR-001](../spec.md#fr-001) | Headings appear in the order 1 to 12 |
 | <a id="r-02"></a>R-02 | The three command forms, path rules, default output name, no overwrite, the usage message exactly | [FR-002](../spec.md#fr-002) | All five points present; usage lines equal [AC-09.2](../../../docs/solution-design/02-functional-requirements.md#ac-09-2) |
 | <a id="r-03"></a>R-03 | The sample report exactly as [AC-08.1](../../../docs/solution-design/02-functional-requirements.md#ac-08-1) | [FR-003](../spec.md#fr-003) | Character for character equal, run time `2026-11-07_143005` |
 | <a id="r-04"></a>R-04 | `ruby bin/run` on Windows | [FR-004](../spec.md#fr-004) | Present |

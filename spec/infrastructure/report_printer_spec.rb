@@ -146,6 +146,11 @@ RSpec.describe ReportPrinter do
         .to eq("  Line 1  rejected  malformed_row: 1 fields, expected 3\n")
     end
 
+    it 'shows no values for a row with 4 fields, such as an unquoted 1,000.00 (AC-06.2)' do
+      expect(line_of(rejected(5, %w[1111234522226789 1212343433335665 1 000.00], :malformed_row)))
+        .to eq("  Line 5  rejected  malformed_row: 4 fields, expected 3\n")
+    end
+
     it 'shows the header hint after a wrong field count (page 10 pick 10, DEC-06)' do
       expect(line_of(rejected(1, %w[from to], :malformed_row, CsvRows::HEADER_HINT)))
         .to eq("  Line 1  rejected  malformed_row: 2 fields, expected 3. #{CsvRows::HEADER_HINT}\n")
