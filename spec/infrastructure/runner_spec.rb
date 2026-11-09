@@ -684,7 +684,9 @@ RSpec.describe Runner do
       before do
         day = instance_double(ProcessDailyTransfer, call: nil)
         allow(day).to receive(:call) { |*called_with| given[:paths] = called_with }
-        allow(ProcessDailyTransfer).to receive(:new) { |**parts| given.store(:parts, parts) && day }
+        allow(ProcessDailyTransfer).to receive(:new) do |parts, run_time:|
+          given.update(parts: parts, run_time: run_time) && day
+        end
       end
     end
 
@@ -702,7 +704,7 @@ RSpec.describe Runner do
     end
 
     def default_output
-      in_project(FinalBalancesCsvWriter.default_path(given[:parts][:run_time]))
+      in_project(FinalBalancesCsvWriter.default_path(given[:run_time]))
     end
 
     describe 'AC-09.1 no arguments' do
@@ -792,16 +794,15 @@ RSpec.describe Runner do
       include_context 'with a stand-in ProcessDailyTransfer'
 
       it 'gives a run time that is a Time' do
-        expect(parts[:run_time]).to be_a(Time)
+        expect(run.then { given[:run_time] }).to be_a(Time)
       end
 
-      it 'gives exactly the six parts and the run time' do
-        expect(parts.keys).to contain_exactly(:run_time, :balances_reader, :transfers_reader, :writer, :repository,
-                                              :reporter, :logger)
+      it 'gives the parts as one ProcessDailyTransfer::Parts' do
+        expect(parts).to be_a(ProcessDailyTransfer::Parts)
       end
 
       it 'gives the real readers, writer, repository, reporter and logger' do
-        expect(parts.except(:run_time).transform_values(&:class)).to eq(
+        expect(parts.to_h.transform_values(&:class)).to eq(
           balances_reader: BalancesCsvReader, transfers_reader: TransfersCsvReader, writer: FinalBalancesCsvWriter,
           repository: AccountRepository, reporter: ReportPrinter, logger: Logger
         )

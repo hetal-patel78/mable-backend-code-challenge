@@ -103,7 +103,8 @@ classDiagram
 
 | Member | Type | Meaning |
 |---|---|---|
-| `ProcessDailyTransfer.new(run_time: Time.now, **parts)` | `Time`; the six parts | `parts` holds exactly `balances_reader`, `transfers_reader`, `writer`, `repository`, `reporter`, `logger` |
+| `ProcessDailyTransfer::Parts.new(balances_reader:, transfers_reader:, writer:, repository:, reporter:, logger:)` | a `Data` value | The six parts, each by name; a missing or unknown name raises `ArgumentError` |
+| `ProcessDailyTransfer.new(parts, run_time: Time.now)` | a `Parts`; `Time` | Reads each part by its name |
 | `call(balances_path, transfers_path, output_path = nil)` | String | Returns the `DayResult`, or raises a run-stopping error |
 
 - Steps and log texts: [research R5](research.md#r5-processdailytransfer-step-by-step).

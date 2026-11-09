@@ -48,7 +48,8 @@ Code files load their own dependencies with `require_relative`. A spec requires 
 |---|---|---|
 | `LoadBalances.new(reader, repository)` | a loader | |
 | `loader.call(path)` | nil; the repository holds every account, in file order | `InvalidBalancesFile`: `the balances file is invalid (<count>):` followed by `\n  Line <N>: <problem>` per problem; or `the balances file has no rows: <path>`. `UnreadableFile` for a file that cannot be opened, unchanged |
-| `ProcessDailyTransfer.new(run_time: Time.now, balances_reader:, transfers_reader:, writer:, repository:, reporter:, logger:)` | a day | `KeyError` when a part is missing |
+| `ProcessDailyTransfer::Parts.new(balances_reader:, transfers_reader:, writer:, repository:, reporter:, logger:)` | the parts, a frozen `Data` value read by name | `ArgumentError` when a part is missing or a name is unknown |
+| `ProcessDailyTransfer.new(parts, run_time: Time.now)` | a day | |
 | `day.call(balances_path, transfers_path, output_path = nil)` | the `DayResult` | `InvalidBalancesFile`, `UnreadableFile`, `NoTransfers`: `the transfers file has no transfers: <path>`, `TotalChanged`: `the total of all balances changed from <before> to <after>. No output file was written.`, `OutputNotWritable` |
 | `DayResult::ALL_REJECTED_WARNING` | `All transfers were rejected; check this is the right file.` | |
 | `LogMessages.run_started(balances_path, transfers_path)` | `Run started: balances <balances path>, transfers <transfers path>` | |

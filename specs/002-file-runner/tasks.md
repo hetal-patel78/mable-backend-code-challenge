@@ -488,6 +488,21 @@
 - [X] T105 [P] Bring the documents in line: page 6 (`ProcessDailyTransfer` step 4 and "Does not", a new `LogMessages` section, the `AccountNumber` pointer), page 5 (log lines), page 10 (pick 37, the FR-09 row, the glossary); in this spec, FR-020, FR-021 and the key entities, the plan's summary, project structure and test approach, research R5, the data model and the contract; the README's design section [DEC-29; page 6 pick 37]
 - [X] T106 Run `bundle exec rspec` until every example passes in random order with 100% line coverage, `bundle exec rubocop` reports zero offences, and `ruby bin/run` on the sample files exits with 0 and prints AC-08.1's report; with `LOG_LEVEL=info`, the log lines (timestamps and process IDs aside) are the same as before the change for the sample files and for `spec/fixtures/acceptance/balances.csv` with `mixed_rejections_transfers.csv`; write the output files outside the project (depends on T104, T105) [SC-001, SC-005, SC-008; DEC-28, DEC-29, DEC-35]
 
+### Tests for the parts (write first)
+
+- [X] T107 In `spec/application/process_daily_transfer_spec.rb`, add a `describe ProcessDailyTransfer::Parts` block: `ProcessDailyTransfer::Parts` has exactly the members `balances_reader`, `transfers_reader`, `writer`, `repository`, `reporter` and `logger`, in that order; returns each part by its name; raises `ArgumentError` naming a part that is left out and a name it does not know; is frozen [FR-012; DEC-28, DEC-30; P6]
+- [X] T108 Update `spec/application/process_daily_transfer_spec.rb`: the `day` helper builds `ProcessDailyTransfer.new(ProcessDailyTransfer::Parts.new(...), run_time: ...)`; the `.new` example checks that the parts given as keywords raise `ArgumentError` [FR-012; DEC-30; P6]
+- [X] T109 Update `spec/infrastructure/runner_spec.rb`: the stand-in `ProcessDailyTransfer.new` records the `Parts` and the `run_time:` keyword; the examples check that the run time is a `Time`, that the parts are one `ProcessDailyTransfer::Parts`, and that its members are the real readers, writer, repository, reporter and logger [FR-031; DEC-30]
+- [X] T110 Run `bundle exec rspec` and confirm T107 to T109 fail because `ProcessDailyTransfer::Parts` is not defined (`NameError`), and no other example fails for another reason (depends on T107 to T109)
+
+### Implementation of the parts
+
+- [X] T111 In `lib/application/process_daily_transfer.rb`, define `ProcessDailyTransfer::Parts = Data.define(:balances_reader, :transfers_reader, :writer, :repository, :reporter, :logger)`, take `initialize(parts, run_time: Time.now)` and read each part by its name; remove `PARTS` (depends on T110) [FR-012; DEC-30; P6]
+- [X] T112 In `lib/infrastructure/runner.rb`, build the `ProcessDailyTransfer::Parts` with the real parts and pass it with `run_time:` (depends on T111) [FR-031; DEC-30]
+- [X] T113 [P] Bring the documents in line: DEC-30 lists the patterns it still leaves out (no domain events, factories or commands), with P30 in its From list; the constitution (principle I, version 1.0.1), `001`'s FR-030 and plan; page 3 (NFR-05), page 6 (`ProcessDailyTransfer`), page 10 (pick 54, the glossary); in this spec, FR-012, plan P6, the plan's Constitution Check and summary, research R7 and R8, the data model and the contract; the README's design section [DEC-30, DEC-36; P6]
+- [X] T114 Repeat T106's checks: every example passes in random order with 100% line coverage, zero RuboCop offences with the default settings, and the report, output files and log lines unchanged for the same runs (depends on T112, T113) [SC-001, SC-005, SC-008; DEC-28, DEC-35, DEC-36]
+
+**Checkpoint**: `ProcessDailyTransfer` holds no log text of its own (the all-rejected warning's text is `DayResult`'s, shared with the report) and takes its parts as one `ProcessDailyTransfer::Parts`; `LogMessages` gives every log line's text, masking included, except the all-rejected warning; the report, output file, exit status and log lines are unchanged; `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences.
 
 ---
 
@@ -604,6 +619,7 @@ The MVP is the end of Phase 3: `bin/run` on the challenge's sample files gives t
 7. Phase 8: every domain scenario through the runner (US6).
 8. Phases 9 to 11: the design review, the suite checks and the final checks; `003` can start.
 9. Phase 12: the opening balances in the report (DEC-26).
+10. Phase 13: `ProcessDailyTransfer` refactored after the code review; the log text comes from `LogMessages`, the parts come as one `ProcessDailyTransfer::Parts`, and nothing a user sees changes.
 
 ## Notes
 

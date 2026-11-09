@@ -519,21 +519,22 @@ The report is printed on stdout once, at the end of a completed run, after the o
   - `Transfer`: the accounts are different and the amount is above zero;
   - `Account`: no overdraft;
   - the repository: no duplicate on add, unknown account on find ([DEC-31](#dec-31)).
-- Class and file names are plain domain words such as `Account`, `Money` and `Transfer`. There are no base classes, no suffixes such as `AggregateRoot` or `ValueObject`, and no domain events, factories, commands, DTOs or mappers.
+- Class and file names are plain domain words such as `Account`, `Money` and `Transfer`. There are no base classes, no suffixes such as `AggregateRoot` or `ValueObject`, and no domain events, factories or commands.
 - The code is organised in three folders: `domain`, `application` and `infrastructure`. A new folder is added only when it holds several files.
 - The class that runs the day takes the run time as a constructor argument, defaulting to the current time. **[assistant's pick]** `bin/run` passes nothing; tests pass a fixed time so the output file name is known.
 - The runner reads the clock once. When no output path is given, it gets the default path for that time from the output writer ([DEC-27](#dec-27)), checks it at the start, and passes the same run time and output path to the class that runs the day.
+- The class that runs the day takes its six parts (the balances reader, the transfers reader, the output writer, the repository, the report printer and the logger) as one parameter object that names each part.
 - The balances reader, the transfers reader, the output writer, the repository, the report printer and the logger are all passed in to the class that runs the day. The runner builds the real ones; tests pass fakes. The class that runs the day prints the report through the report printer after the output file is written ([DEC-26](#dec-26)).
 - The errors are named for what went wrong:
   - raised by the domain models: `InvalidAccountNumber`, `InvalidAmount`, `SameAccount`, `NegativeBalance`, `UnknownAccount`, `DuplicateAccount` and `InsufficientFunds`;
   - errors that stop the run: `InvalidBalancesFile`, `NoTransfers`, `UnreadableFile`, `TotalChanged` and `OutputNotWritable`.
 - The design reasoning is explained in the README, not in the code.
 
-**Reason:** the rubric asks for domain models that hold their own logic and for separation of concerns. Light DDD keeps the thinking without the ceremony. Passing the time in keeps the tests independent of the clock.
+**Reason:** the rubric asks for domain models that hold their own logic and for separation of concerns. Light DDD keeps the thinking without the ceremony. Passing the time in keeps the tests independent of the clock. A parameter object names each part where it is built and where it is read, and stays within RuboCop's default limit on parameters.
 
-**Rejected:** full DDD terms and structure (heavy for a small program); tests stubbing `Date.today` or `Time.now` (tests would depend on internals); a `RUN_DATE` environment variable (a second setting).
+**Rejected:** full DDD terms and structure (heavy for a small program); tests stubbing `Date.today` or `Time.now` (tests would depend on internals); a `RUN_DATE` environment variable (a second setting); seven keyword parameters (over the default limit); the six parts collected in `**parts` and read through a list of names (the constructor does not name its parts).
 
-**From:** X5, D12, B4, P19.
+**From:** X5, D12, B4, P19, P30.
 
 <a id="dec-31"></a>
 ### DEC-31 In-memory repository

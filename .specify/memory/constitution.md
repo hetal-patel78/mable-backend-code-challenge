@@ -12,7 +12,7 @@ here: they live in [`docs/design-analysis/design-decisions.md`](../../docs/desig
 - Every business rule lives in the model it belongs to: the account number, money, the
   transfer, the account and the repository each guard their own rules (DEC-30, DEC-31).
 - Models use plain domain names. There are no base classes, no pattern suffixes and no extra
-  ceremony such as DTOs, mappers, factories or domain events (DEC-30).
+  ceremony such as factories, commands or domain events (DEC-30).
 - Native Ruby data structures are used where they read clearly; a model is added only when it
   holds a rule.
 
@@ -136,4 +136,4 @@ Only the choices the decisions already fix (DEC-01, DEC-28, DEC-36):
   removing or redefining a principle, MINOR for a new principle or section, PATCH for wording.
 - Runtime guidance for the assistant is in `CLAUDE.md`.
 
-**Version**: 1.0.0 | **Ratified**: 2026-11-07 | **Last Amended**: 2026-11-07
+**Version**: 1.1.0 | **Ratified**: 2026-11-07 | **Last Amended**: 2026-11-09

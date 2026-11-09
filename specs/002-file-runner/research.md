@@ -70,7 +70,7 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
   5. output path: the third argument expanded as in step 2, or `File.expand_path(FinalBalancesCsvWriter.default_path(run_time), PROJECT_ROOT)`;
   6. start checks: `File.exist?` for each input file, `File.file?` for the output (plan P28); every problem printed, with the path shown by `DisplayPath.of`, as an `Error:` line in the order balances, transfers, output, then one `logger.error("Run stopped: start checks failed (<reasons>)")`, return 1;
   7. build `BalancesCsvReader.new`, `TransfersCsvReader.new`, `FinalBalancesCsvWriter.new`, `AccountRepository.new`, `ReportPrinter.new(output: stdout)`;
-  8. `ProcessDailyTransfer.new(run_time:, balances_reader:, transfers_reader:, writer:, repository:, reporter:, logger:).call(DisplayPath.of(balances), DisplayPath.of(transfers), output)`: the input paths in their shown form, the output path in full (plan P11);
+  8. `ProcessDailyTransfer.new(ProcessDailyTransfer::Parts.new(balances_reader:, transfers_reader:, writer:, repository:, reporter:, logger:), run_time:).call(DisplayPath.of(balances), DisplayPath.of(transfers), output)`: the input paths in their shown form, the output path in full (plan P11);
   9. return 0; `rescue *STOPPING_ERRORS => error`: `stderr.puts("Error: #{error.message}")`, `logger.error("Run stopped: #{error.stop_reason}")`, return 1.
   `PROJECT_ROOT` is `File.expand_path('../..', __dir__)`, the folder holding `bin/` and `lib/`.
 - **Rationale**: FR-031's order. The usage check comes before the logger is used, so a wrong-argument run logs nothing (page 10 pick 3). Returning the status rather than calling `exit` keeps every runner behaviour testable in one process (page 6 pick 42).
@@ -78,10 +78,10 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
 
 ## R8. RuboCop limits that shape the code
 
-- **Decision**: methods stay within 10 lines and `Metrics/AbcSize`; classes within 100 lines; `ProcessDailyTransfer` takes its six parts as named keywords collected in `**parts` and checks that exactly the six names are present (plan P6). Spec files follow `001`'s conventions (one expectation per example, examples of at most 5 lines, at most 3 levels of nesting).
+- **Decision**: methods stay within 10 lines and `Metrics/AbcSize`; classes within 100 lines; `ProcessDailyTransfer` takes its six parts as one `ProcessDailyTransfer::Parts` parameter object (`Data.define` with the six names), reads each by its name, and takes the run time as a separate keyword (plan P6). Spec files follow `001`'s conventions (one expectation per example, examples of at most 5 lines, at most 3 levels of nesting).
 - **Research note (RuboCop and spec files)**: `rubocop-rspec`'s own `config/default.yml` sets `Metrics/BlockLength` with `inherit_mode: merge: [Exclude]` and `Exclude: ["**/*_spec.rb", "**/spec/**/*"]`. Once `.rubocop.yml` declares `plugins: [rubocop-rspec]` (`001` plan D15), spec files, including the long `spec/infrastructure/runner_spec.rb` (one `RSpec.describe Runner` holding every page 2 scenario, P18), are not checked by that cop. Zero offences is reachable under DEC-36's default settings: no setting is added, and no DEC-36 amendment or blocker is needed.
-- **Rationale**: DEC-36 keeps RuboCop's defaults. `Metrics/ParameterLists` allows 5 parameters and counts keyword arguments, so seven separate keywords would be an offence; `**parts` counts once and keeps the names at the call site. Splitting `ProcessDailyTransfer` into more classes would add names page 6 does not have.
-- **Alternatives considered**: a `.rubocop.yml` exception (changes the defaults); a parts value class (a DTO, ruled out by DEC-30).
+- **Rationale**: DEC-36 keeps RuboCop's defaults. `Metrics/ParameterLists` allows 5 parameters and counts keyword arguments, so seven separate keywords would be an offence; a `Parts` value counts once and keeps every part named where it is built and where it is read. `Data.define` raises Ruby's own `ArgumentError` for a missing or unknown name and gives a frozen value. Splitting `ProcessDailyTransfer` into more classes would add names page 6 does not have.
+- **Alternatives considered**: a `.rubocop.yml` exception (changes the defaults); seven keyword parameters (an offence under the default `Metrics/ParameterLists`); the six names collected in `**parts` and read through a list of names (keeps the limit, but the constructor does not name its parts, so it is harder to read).
 
 ## R9. Test helpers and fakes
 

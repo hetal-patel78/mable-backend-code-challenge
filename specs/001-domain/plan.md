@@ -34,11 +34,11 @@ Every choice below is already made in `design-decisions.md` or on [page 5](../..
 
 ## Constitution Check
 
-*GATE: checked before Phase 0 and again after Phase 1. Against [`.specify/memory/constitution.md`](../../.specify/memory/constitution.md) v1.0.0.*
+*GATE: checked before Phase 0 and again after Phase 1. Against [`.specify/memory/constitution.md`](../../.specify/memory/constitution.md) v1.1.0.*
 
 | Principle | How this plan meets it | Pre-design | Post-design |
 |---|---|---|---|
-| I. Domain models encapsulate their own rules | 16 digits in `AccountNumber`; money format in `Money`; amount above $0 and different accounts in `Transfer`; no overdraft and opening balance not negative in `Account`; no duplicate and unknown account in `AccountRepository` (FR-028). Plain names from page 6; no base classes, suffixes, factories, DTOs, mappers or events. Native `Hash` in the repository. | PASS | PASS ([data-model.md](data-model.md) lists one home per rule) |
+| I. Domain models encapsulate their own rules | 16 digits in `AccountNumber`; money format in `Money`; amount above $0 and different accounts in `Transfer`; no overdraft and opening balance not negative in `Account`; no duplicate and unknown account in `AccountRepository` (FR-028). Plain names from page 6; no base classes, suffixes, factories, commands or events. Native `Hash` in the repository. | PASS | PASS ([data-model.md](data-model.md) lists one home per rule) |
 | II. Separation of concerns | Only `lib/domain/` is created. The domain takes trimmed text and gives values and errors; it knows no file, clock, terminal, logger or line number (FR-029). Row-shape checks (`malformed_row`, header hint) stay in `002`'s readers; the domain only stores the reason and hint it is given. | PASS | PASS |
 | III. Short, readable methods | RuboCop default settings with `rubocop-rspec`, zero offences, 10 lines per method (FR-031). No design reasoning in comments; each class has a one-line comment saying what it is, which RuboCop's default `Style/Documentation` requires (D16). | PASS | PASS |
 | IV. Tests first (non-negotiable) | Every task phase writes the spec first, runs it and sees it fail, then writes the code; each phase ends with every spec passing in random order and RuboCop clean. One rule tested once, in the spec of the class where it lives (DEC-34). Every edge case in the spec has a planned test, citing its DEC ID. | PASS | PASS |

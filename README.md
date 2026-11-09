@@ -159,7 +159,7 @@ $env:Path = [Environment]::GetEnvironmentVariable('Path','User') + ';' + [Enviro
   - `lib/application` holds the use cases: loading the balances (`LoadBalances`) and running the day (`ProcessDailyTransfer`), with the day's results and the text of its log lines (`LogMessages`, except the all-rejected warning, whose text `DayResult` owns).
   - `lib/infrastructure` holds what touches the outside world: the CSV readers and writer, the report printer and the `Runner` that `bin/run` starts.
 - `AccountRepository` keeps the accounts in memory, with `add`, `include?`, `find` and `all`.
-- `ProcessDailyTransfer` is given its parts (the readers, the writer, the repository, the report printer, the logger and the run time), so the tests pass fakes.
+- `ProcessDailyTransfer` is given its parts as one `ProcessDailyTransfer::Parts` value, each by name (the readers, the writer, the repository, the report printer and the logger), and the run time, so the tests pass fakes.
 - Every check runs before any balance changes, so each transfer is all or nothing.
 - Money is a `Money` value on `BigDecimal`, never floating point, and never rounded.
 

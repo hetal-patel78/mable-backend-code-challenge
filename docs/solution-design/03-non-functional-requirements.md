@@ -110,7 +110,7 @@ These targets follow the rubric's items on domain models, separation of concerns
 **Targets**
 - Each business rule (16 digits, money format, amount above $0, different accounts, no overdraft, no duplicate account, unknown account) must live in exactly one place, inside the domain model it belongs to.
 - The code must be split into three layers with one job each: the domain rules, the steps of a run, and the work with files, the screen and the command line. Domain rules must not read files or print anything.
-- Names must be plain words from the problem (account, money, transfer), with no design-pattern suffixes or ceremony such as base classes, factories or data-transfer objects.
+- Names must be plain words from the problem (account, money, transfer), with no design-pattern suffixes or ceremony such as base classes, factories, commands or domain events.
 - RuboCop, with its default settings and the RSpec extension, must report zero offences. Its defaults include a limit of 10 lines per method, which sets "short methods" as a number.
 - The design reasoning must be explained in the README, not in code comments.
 - The high-level design must match the decisions, not the first handwritten sketch ([DEC-33](../design-analysis/design-decisions.md#dec-33)).

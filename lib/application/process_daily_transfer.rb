@@ -14,16 +14,22 @@ require_relative '../infrastructure/final_balances_csv_writer'
 
 # Runs one day: loads the balances, applies each transfer in file order, writes the output file and reports.
 class ProcessDailyTransfer
-  PARTS = %i[balances_reader transfers_reader writer repository reporter logger].freeze
+  # The six parts the day is run with, each given by name.
+  Parts = Data.define(:balances_reader, :transfers_reader, :writer, :repository, :reporter, :logger)
+
   REJECTIONS = {
     InvalidAccountNumber => :invalid_account_number, InvalidAmount => :invalid_amount,
     SameAccount => :same_account, UnknownAccount => :unknown_account, InsufficientFunds => :insufficient_funds
   }.freeze
 
-  def initialize(run_time: Time.now, **parts)
+  def initialize(parts, run_time: Time.now)
     @run_time = run_time
-    @balances_reader, @transfers_reader, @writer, @repository, @reporter, @logger =
-      PARTS.map { |name| parts.fetch(name) }
+    @balances_reader = parts.balances_reader
+    @transfers_reader = parts.transfers_reader
+    @writer = parts.writer
+    @repository = parts.repository
+    @reporter = parts.reporter
+    @logger = parts.logger
   end
 
   def call(balances_path, transfers_path, output_path = nil)

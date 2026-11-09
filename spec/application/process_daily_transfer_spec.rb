@@ -29,7 +29,7 @@ RSpec.describe ProcessDailyTransfer do
   end
 
   def day(**changed)
-    described_class.new(run_time: Time.new(2026, 11, 7, 14, 30, 5), **parts, **changed)
+    described_class.new(described_class::Parts.new(**parts, **changed), run_time: Time.new(2026, 11, 7, 14, 30, 5))
   end
 
   describe '#call with applied rows only' do
@@ -359,8 +359,35 @@ RSpec.describe ProcessDailyTransfer do
   end
 
   describe '.new' do
-    it 'raises KeyError when a part is left out' do
-      expect { described_class.new(**parts.except(:logger)) }.to raise_error(KeyError)
+    it 'raises ArgumentError when the parts are given as keywords' do
+      expect { described_class.new(**parts) }.to raise_error(ArgumentError)
+    end
+  end
+
+  describe ProcessDailyTransfer::Parts do
+    let(:named) do
+      { balances_reader: :balances_reader, transfers_reader: :transfers_reader, writer: :writer,
+        repository: :repository, reporter: :reporter, logger: :logger }
+    end
+
+    it 'has the six named parts of the day, in order (DEC-28, DEC-30)' do
+      expect(described_class.members).to eq(%i[balances_reader transfers_reader writer repository reporter logger])
+    end
+
+    it 'returns each part by its name' do
+      expect(described_class.new(**named)).to have_attributes(named)
+    end
+
+    it 'raises ArgumentError naming a part that is left out' do
+      expect { described_class.new(**named.except(:logger)) }.to raise_error(ArgumentError, /logger/)
+    end
+
+    it 'raises ArgumentError naming a part it does not know' do
+      expect { described_class.new(**named, clock: :clock) }.to raise_error(ArgumentError, /clock/)
+    end
+
+    it 'cannot be changed once built' do
+      expect(described_class.new(**named)).to be_frozen
     end
   end
 end

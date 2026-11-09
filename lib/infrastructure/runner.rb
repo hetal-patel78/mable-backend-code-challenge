@@ -94,10 +94,11 @@ class Runner
   end
 
   def day(run_time, logger)
-    ProcessDailyTransfer.new(
-      run_time: run_time, balances_reader: BalancesCsvReader.new, transfers_reader: TransfersCsvReader.new,
+    parts = ProcessDailyTransfer::Parts.new(
+      balances_reader: BalancesCsvReader.new, transfers_reader: TransfersCsvReader.new,
       writer: FinalBalancesCsvWriter.new, repository: AccountRepository.new,
       reporter: ReportPrinter.new(output: @stdout), logger: logger
     )
+    ProcessDailyTransfer.new(parts, run_time: run_time)
   end
 end
