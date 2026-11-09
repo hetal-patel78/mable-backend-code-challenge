@@ -65,7 +65,7 @@ Each FR and NFR is owned by exactly one spec. The FRs are on [page 2](../solutio
 ### 4. How the tests are split
 
 - `001` tests each of its FRs by calling the domain directly: the result, the error class and its exact message, and that no balance changes after every failure.
-- `002` runs every FR's [page 2](../solution-design/02-functional-requirements.md) scenario through the runner with real CSV files, with exact standard output, standard error and exit code. This includes the scenarios of the FRs that `001` owns; `002` runs them but does not own them.
+- `002` tests every FR's [page 2](../solution-design/02-functional-requirements.md) scenario once, at the layer that owns its rule ([DEC-34](../design-analysis/design-decisions.md#dec-34)). It runs through the runner, with real CSV files and exact standard output, standard error and exit code, the scenarios that only a run shows, and each reason code and run-stopping error at least once. For the FRs that `001` owns, `002` tests what its own classes add (the reason code, the report line and the log line) but not the rule again.
 - The domain owns the exact message text of every error. The runner never rewrites a message; it only adds what [page 9](../solution-design/09-considerations.md) says it adds (for example the line number).
 - `003` is checked by CI, a Docker run and a Windows run from a clean checkout, and a check of the README against [DEC-37](../design-analysis/design-decisions.md#dec-37), not by new RSpec specs.
 
