@@ -32,7 +32,7 @@ The exact report, messages and log lines are on the [functional requirements pag
 |---|---|---|
 | Standard output | The report: transfers, summary, all-rejected warning, final balances, output path ([DEC-26](../design-analysis/design-decisions.md#dec-26)) | Once, at the end of a completed run, after the output file is written. `ProcessDailyTransfer` prints it through the reporter (`ReportPrinter`) passed in to it. |
 | Standard error, plain text | The full error message, with line numbers and full account numbers ([DEC-28](../design-analysis/design-decisions.md#dec-28)), printed by the `Runner` | Only when the run stops |
-| Standard error, log lines | Timestamped `Logger` lines with masked account numbers ([DEC-29](../design-analysis/design-decisions.md#dec-29)): warn by default, info when `LOG_LEVEL=info` | During the run, only for events at or above the chosen level; a sample run at the default level writes none |
+| Standard error, log lines | Timestamped `Logger` lines with masked account numbers ([DEC-29](../design-analysis/design-decisions.md#dec-29)). At warn, the default: each rejected transfer and the all-rejected warning. At info (`LOG_LEVEL=info`): also the run start, each applied transfer and the run end with the count per reason ([DEC-28](../design-analysis/design-decisions.md#dec-28)). At error: one `Run stopped` line when the run stops | During the run, only for events at or above the chosen level; a sample run at the default level writes none |
 
 | Situation | Found by | Standard error | Exit |
 |---|---|---|---|
@@ -133,12 +133,10 @@ The design targets one company's day, which is small ([DEC-32](../design-analysi
 
 ## Extensibility
 
-How the design takes the changes most likely to come. The [high-level design](05-high-level-design.md) shows where each one fits. Because the `Runner` builds the real readers, writer, repository, reporter and logger and passes them in to `ProcessDailyTransfer`, most changes swap one of these parts and leave `ProcessDailyTransfer` unchanged. Where a change also needs `ProcessDailyTransfer` to change, the table says so.
+How the design takes the changes most likely to come. The [high-level design](05-high-level-design.md) shows where each one fits. Because the `Runner` builds the real readers, writer, repository, reporter and logger and passes them in to `ProcessDailyTransfer`, most changes swap one of these parts and leave `ProcessDailyTransfer` unchanged. Where a change also needs `ProcessDailyTransfer` to change, the table says so. Another input format and another transfer rule are on [page 5](05-high-level-design.md#adding-another-input-format).
 
 | Change | Where it goes | What stays the same |
 |---|---|---|
-| Another input format, such as JSON | A new reader in `infrastructure/` that gives the same rows with line numbers and the same row-shape checks, built by the `Runner` and passed in ([page 5](05-high-level-design.md#adding-another-input-format)) | Domain, `LoadBalances`, `ProcessDailyTransfer`, report and writer |
-| Another transfer rule, such as a maximum amount per transfer | The domain model that owns the data, for example `Transfer` for a rule about one transfer or `Account` for a rule about its balance, plus a new error and reason code. A new rule and code need a new decision first ([DEC-19](../design-analysis/design-decisions.md#dec-19)). | File reading, runner, writer |
 | Stored accounts | A database repository with the same `add`, `find`, `include?` and `all` ([DEC-31](../design-analysis/design-decisions.md#dec-31)), passed in by the `Runner`. `TransferService#apply` changes the `Account` objects that `find` returns, so the repository also needs a way to save the changed accounts, and `ProcessDailyTransfer` wraps each `apply` in a database transaction ([DEC-18](../design-analysis/design-decisions.md#dec-18)). | Domain rules, `TransferService` |
 | Logs to a file or service | A different logger passed in ([DEC-28](../design-analysis/design-decisions.md#dec-28)) | `ProcessDailyTransfer` |
 | Another report layout or destination | A different reporter passed in, reading the same `DayResult` | Everything else |
@@ -168,7 +166,7 @@ The repository root `README.md` is where a reviewer starts. It must give everyth
 - `LOG_LEVEL` and its two values, and what exit statuses 0 and 1 mean;
 - the assumptions, and the design reasoning ([DEC-30](../design-analysis/design-decisions.md#dec-30));
 - the coverage figure from SimpleCov ([DEC-36](../design-analysis/design-decisions.md#dec-36));
-- the production items: very large files, database transactions and sagas, and the storage a rerun-safe version would need, with remembering applied files across runs out of scope ([DEC-03](../design-analysis/design-decisions.md#dec-03), [DEC-18](../design-analysis/design-decisions.md#dec-18), [DEC-32](../design-analysis/design-decisions.md#dec-32)).
+- the production items listed under [Scalability](#scalability), with remembering applied files across runs out of scope ([DEC-03](../design-analysis/design-decisions.md#dec-03), [DEC-18](../design-analysis/design-decisions.md#dec-18), [DEC-32](../design-analysis/design-decisions.md#dec-32)).
 
 The solution is submitted as a link to the GitHub repository, made public or shared with the reviewer at submission time, so the reviewer sees the code, the commit history and the GitHub Actions results in one place ([DEC-38](../design-analysis/design-decisions.md#dec-38)). Before submission, every RuboCop offence is fixed and the Dockerfile is tested from a clean checkout ([DEC-36](../design-analysis/design-decisions.md#dec-36)).
 
