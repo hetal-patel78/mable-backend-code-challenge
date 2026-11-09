@@ -240,3 +240,32 @@ The prompts that shaped them are in [`docs/prompts/`](docs/prompts/).
 ## The challenge
 
 The challenge as received is [`docs/challenge/MABLE_BACK_END_CODE_TEST.md`](docs/challenge/MABLE_BACK_END_CODE_TEST.md), with its two sample files kept unchanged beside it.
+
+### How this meets the rubric
+
+Each item of the challenge's rubric, with where it can be seen. The challenge file itself is left as received.
+
+**Data structure**
+
+- [x] **Uses domain models:** `AccountNumber`, `Money`, `Account`, `Transfer`, `TransferService` and `AccountRepository` in [`lib/domain/`](lib/domain/), each holding its own rules ([DEC-30](docs/design-analysis/design-decisions.md#dec-30)).
+- [x] **Uses native data structures readably:** Ruby `Data` records for the values, a `Hash` keyed by `AccountNumber` for the accounts and `BigDecimal` for money (see [Design](#design)).
+
+**Tests**
+
+- [x] **Uses rspec:** every test is an RSpec spec in [`spec/`](spec/), run with `bundle exec rspec`.
+- [x] **Has some coverage:** each layer has its own specs: [`spec/domain/`](spec/domain/), [`spec/application/`](spec/application/), [`spec/infrastructure/`](spec/infrastructure/) and the full runs in [`spec/acceptance/`](spec/acceptance/).
+- [x] **Has good coverage:** 100% line coverage (see [Test coverage](#test-coverage)), checked on every push by [CI](.github/workflows/ci.yml).
+- [x] **Tests are orthogonal:** each rule is tested once, at the layer that owns it; the full runs check only what a whole run shows, such as the report, the output file, the stop messages and the exit status ([DEC-34](docs/design-analysis/design-decisions.md#dec-34)).
+- [x] **Tests explain the functionality:** each example name is a sentence about behaviour, for example "refuses a withdrawal that would leave the balance one cent below 0.00" in [`account_spec.rb`](spec/domain/account_spec.rb), and most name the decision they check.
+
+**Object orientation**
+
+- [x] **Models encapsulate logic appropriately:** an `Account` refuses a withdrawal that would take it below $0 ([`account.rb`](lib/domain/account.rb)), `AccountNumber` and `Money` refuse invalid text, and `AccountRepository` refuses a duplicate or unknown account.
+- [x] **Respects separation of concerns:** three layers: the domain knows nothing about files or the screen, the application uses only the domain and the parts it is given, and only the infrastructure reads and writes files; the `Runner` builds the parts (see [Design](#design)).
+- [x] **Short methods:** RuboCop's default method-length and complexity checks pass with no exceptions ([DEC-36](docs/design-analysis/design-decisions.md#dec-36)).
+- [x] **Readable methods:** methods are named for what they do in the business, such as `withdraw`, `deposit`, `check_opening_balance` and `close_day`, and comments explain why, not what.
+
+**General**
+
+- [x] **Runs and provides feedback:** `ruby bin/run` prints a line for every transfer, applied or rejected with its reason, then the final balances and the output file; problems that stop the run are explained on standard error, with exit status 1 (see [Log level and exit status](#log-level-and-exit-status)).
+- [x] **Calculates the test files accurately:** the sample files give the report and final balances shown under [Build, test and run](#build-test-and-run), which match the expected results set out in [DEC-35](docs/design-analysis/design-decisions.md#dec-35) and checked exactly by [`runner_run_sample_files_spec.rb`](spec/acceptance/runner_run_sample_files_spec.rb).

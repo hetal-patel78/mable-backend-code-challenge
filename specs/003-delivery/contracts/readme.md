@@ -93,6 +93,8 @@ A table of the finished repository's paths and what each holds: [`bin/run`](../.
 
 A link to [`docs/challenge/MABLE_BACK_END_CODE_TEST.md`](../../../docs/challenge/MABLE_BACK_END_CODE_TEST.md), with the two sample files kept unchanged beside it.
 
+Then `### How this meets the rubric`: each of the challenge's 13 rubric items (Data structure, Tests, Object orientation, General) ticked, each with one line of evidence linking to where it can be seen. The challenge file itself is not changed.
+
 ## The README check (C-31)
 
 Read the finished README against each item; every item must be "present". The section order is part of [R-01](#r-01).
@@ -112,4 +114,4 @@ Read the finished README against each item; every item must be "present". The se
 | <a id="r-11"></a>R-11 | Storage, production items, known limitations | [FR-011](../spec.md#fr-011) | (a), (b) and the nine limitations present |
 | <a id="r-12"></a>R-12 | Coverage line, `coverage/index.html`, no minimum | [FR-012](../spec.md#fr-012) | Present; figure equals [C-33](../quickstart.md#c-33) |
 | <a id="r-13"></a>R-13 | "How this was built": AI assistant, six steps, the first four with links, [`docs/prompts/`](../../../docs/prompts/) | [FR-013](../spec.md#fr-013) | Present; links resolve |
-| <a id="r-14"></a>R-14 | Layout table, challenge link, no "Status" or "To be added", no company whose balances are processed | [FR-014](../spec.md#fr-014) | Present; `grep -n -e 'To be added' -e '## Status' README.md` finds nothing |
+| <a id="r-14"></a>R-14 | Layout table, challenge link, the rubric ticked with evidence, no "Status" or "To be added", no company whose balances are processed | [FR-014](../spec.md#fr-014) | Present; 13 of 13 rubric items ticked, each link resolves; `grep -n -e 'To be added' -e '## Status' README.md` finds nothing |

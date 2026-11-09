@@ -658,7 +658,8 @@ The README gives:
 - what a version with persistent storage would need to stay idempotent, and that remembering applied files across runs is out of scope ([DEC-03](#dec-03));
 - production items: handling very large files ([DEC-32](#dec-32)), and database transactions and sagas ([DEC-18](#dec-18));
 - the prerequisites: the tools needed, with the versions and how to check them, and how to install Ruby 3.4 on macOS, Linux and Windows;
-- a troubleshooting section for the problems a reviewer is likely to hit when installing and running the program, mostly on Windows.
+- a troubleshooting section for the problems a reviewer is likely to hit when installing and running the program, mostly on Windows;
+- with the link to the challenge, each item of the challenge's rubric ticked, with where it can be seen; the challenge file itself is never changed.
 
 **Reason:** the README is where a reviewer looks first, and these are the questions they are most likely to ask.
 
