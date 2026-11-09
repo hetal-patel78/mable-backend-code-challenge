@@ -49,8 +49,8 @@ The design and code are generated with an AI assistant, so the prompts that shap
   - Initial analysis and setup (project instructions, analysis inputs): `prompts-initial-analysis-and-setup-phase.md`.
   - Design phase (design analysis and solution design): `prompts-design-phase.md`.
   - Spec creation phase (Spec Kit specification): `prompts-spec-creation-phase.md`.
-  - Implementation phase: `prompts-implementation-phase.md`. This is the current log.
-  - Review and refactor phase (the developer's review after implementation): `prompts-refactor-phase.md`. Planned.
+  - Implementation phase: `prompts-implementation-phase.md`. Complete; no longer the current log.
+  - Review and refactor phase (the developer's review after implementation): `prompts-refactor-phase.md`. This is the current log.
 - Log a prompt when the developer makes a decision or gives an instruction about the solution, its design or how it is built. Quote it exactly as typed, typos included, and note its outcome.
 - Numbering runs across all the logs: number a new prompt after the last one in any log.
 
