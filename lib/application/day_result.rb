@@ -17,6 +17,7 @@ DayResult = Data.define(:results, :total_before, :total_after, :opening_balances
     results.count(&:rejected?)
   end
 
+  # The count for each reason code, in REASON_CODES order, leaving out codes with no rejected row.
   def rejected_counts
     tally = results.select(&:rejected?).map(&:reason).tally
     TransferResult::REASON_CODES.select { |code| tally.key?(code) }.to_h { |code| [code, tally[code]] }
@@ -27,4 +28,5 @@ DayResult = Data.define(:results, :total_before, :total_after, :opening_balances
   end
 end
 
+# Set here, not in the block: a constant written inside a Data.define block belongs to the enclosing scope.
 DayResult::ALL_REJECTED_WARNING = 'All transfers were rejected; check this is the right file.'

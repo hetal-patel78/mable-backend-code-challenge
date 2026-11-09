@@ -22,6 +22,7 @@ class AccountRepository
     @accounts.fetch(account_number) { raise UnknownAccount, account_number }
   end
 
+  # A Hash keeps its keys in insertion order, so this is load order.
   def all
     @accounts.values
   end

@@ -5,6 +5,7 @@ require_relative 'errors'
 
 # Writes the final balances to a new CSV file, one "<account number>,<balance>" line per account, LF only.
 class FinalBalancesCsvWriter
+  # EXCL makes the open fail when the file already exists; BINARY writes each "\n" as is, never as CRLF.
   NEW_FILE = File::WRONLY | File::CREAT | File::EXCL | File::BINARY
 
   def self.default_path(run_time)

@@ -37,6 +37,7 @@ class Money
     @written || to_s
   end
 
+  # to_s('F') writes plain digits, not BigDecimal's default form such as 0.1e2; the sign is added once, in front.
   def to_s
     units, fraction = value.abs.to_s('F').split('.')
     "#{'-' if value.negative?}#{units}.#{fraction.ljust(2, '0')}"
@@ -71,5 +72,6 @@ class Money
 
   protected
 
+  # Protected: another Money can read the value, but code outside Money cannot.
   attr_reader :value
 end

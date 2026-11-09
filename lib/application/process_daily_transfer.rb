@@ -62,6 +62,7 @@ class ProcessDailyTransfer
     from, to, amount = row.fields
     service.apply(Transfer.new(from: AccountNumber.new(from), to: AccountNumber.new(to), amount: Money.amount(amount)))
     TransferResult.applied(line_number: row.line_number, fields: row.fields)
+  # The splat rescues every error class that REJECTIONS lists.
   rescue *REJECTIONS.keys => e
     rejected(row, REJECTIONS.fetch(e.class))
   end
@@ -80,6 +81,7 @@ class ProcessDailyTransfer
     result
   end
 
+  # Money is frozen and the accounts replace their balances, so these values stay as they were before the transfers.
   def take_opening_balances
     @repository.all.to_h { |account| [account.number, account.balance] }
   end

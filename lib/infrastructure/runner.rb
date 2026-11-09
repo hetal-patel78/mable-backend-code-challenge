@@ -48,6 +48,7 @@ class Runner
     1
   end
 
+  # An unset LOG_LEVEL is nil, and nil.to_s is "", so anything but info, in any case, gives warn.
   def log_level
     @env['LOG_LEVEL'].to_s.casecmp?('info') ? Logger::INFO : Logger::WARN
   end
@@ -60,6 +61,7 @@ class Runner
     problems = [balances, transfers].reject { |path| File.exist?(path) }.map do |path|
       ["file not found: #{DisplayPath.of(path)}", 'file not found']
     end
+    # Only an existing file is refused here; a folder at the output path fails when the writer opens it.
     problems << output_exists(output) if File.file?(output)
     problems
   end
@@ -81,6 +83,7 @@ class Runner
     1
   end
 
+  # The sample files are found from the project root; given paths are taken from the current folder.
   def input_paths(arguments)
     return DEFAULT_INPUTS.map { |path| File.expand_path(path, PROJECT_ROOT) } if arguments.empty?
 

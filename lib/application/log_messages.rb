@@ -15,6 +15,7 @@ class LogMessages
 
   def self.rejected(result)
     from, to, amount = result.fields
+    # A short row leaves the missing fields nil, and compact drops them; an empty amount shows as "".
     shown = [from && mask(from), to && "-> #{mask(to)}", amount && (amount.empty? ? '""' : amount)].compact
     "Line #{result.line_number} rejected: #{[*shown, result.reason].join(' ')}"
   end
@@ -26,6 +27,7 @@ class LogMessages
     counts.empty? ? text : "#{text} (#{counts.join(', ')})"
   end
 
+  # Shows only the last 4 characters; a value of 4 characters or fewer is shown as **** alone.
   def self.mask(value)
     value.length <= 4 ? '****' : ('*' * (value.length - 4)) + value[-4..]
   end

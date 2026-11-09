@@ -11,6 +11,7 @@ class InvalidBalancesFile < StandardError
 
   def initialize(problems, message: nil)
     @problems = problems
+    # Without a message: a heading line, then each problem on its own line, indented by two spaces.
     super(message || (["the balances file is invalid (#{count}):"] + problems).join("\n  "))
   end
 

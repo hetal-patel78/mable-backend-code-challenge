@@ -29,6 +29,7 @@ class LoadBalances
   def read(path)
     @reader.each_row(path) { |row| load_row(row) }
   rescue UnreadableFile => e
+    # An error with no line number is about the whole file and stops the load; one with a line becomes a problem.
     raise unless e.line_number
 
     @problems << at_line(e.line_number, e.line_problem)
@@ -46,6 +47,7 @@ class LoadBalances
   def parse(row)
     number_text, balance_text = row.fields
     problems = []
+    # Both fields are checked, even when the first is invalid, so one row can give two problems.
     number = account_number(row, number_text, problems)
     balance = opening_balance(balance_text, problems)
     add(number, balance, row.line_number) if problems.empty?

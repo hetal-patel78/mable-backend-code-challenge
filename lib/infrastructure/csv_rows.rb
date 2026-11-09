@@ -81,6 +81,7 @@ class CsvRows
     Row.new(line_number: line_number, fields: values, expected_size: @expected_size, header_hint: hint)
   end
 
+  # Only the first row can look like a header: its first field is not empty and has no digit.
   def header_like?(first_field)
     !@first_row_given && !first_field.empty? && !first_field.match?(DIGIT)
   end

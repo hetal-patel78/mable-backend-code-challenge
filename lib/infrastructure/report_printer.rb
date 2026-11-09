@@ -5,7 +5,7 @@ require_relative '../application/day_result'
 require_relative 'display_path'
 require_relative 'transfers_csv_reader'
 
-# Prints the report of a completed day: the transfers, the summary, the opening and final balances and the output file.
+# Prints the report of a completed day: the transfers, the summary, any warning, the balances and the output file.
 class ReportPrinter
   BALANCE_HEADINGS = %w[Account Opening Closing].freeze
 
@@ -16,7 +16,7 @@ class ReportPrinter
 
   def print(day_result)
     sections = [transfers(day_result), summary(day_result), warning(day_result), final_balances(day_result),
-                output_line(day_result)].compact
+                output_line(day_result)].compact # warning is nil when there is none
     @output.puts(sections.map { |lines| lines.join("\n") }.join("\n\n"))
     nil
   end
@@ -68,6 +68,7 @@ class ReportPrinter
     ['Final balances', *table([BALANCE_HEADINGS, *rows])]
   end
 
+  # transpose turns the rows into columns, so each column is as wide as its longest text.
   def table(rows)
     widths = rows.transpose.map { |column| column.map(&:length).max }
     rows.map do |number, opening, closing|

@@ -8,6 +8,7 @@ Transfer = Data.define(:from, :to, :amount) do
     raise InvalidAmount, %(amount "#{amount.text}" must be greater than 0.00) unless amount.positive?
     raise SameAccount, from if from == to
 
+    # Bare super passes the same keywords on to Data, which sets the members.
     super
   end
 end
