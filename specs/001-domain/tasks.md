@@ -26,30 +26,33 @@
 
 ---
 
+<a id="phase-1"></a>
 ## Phase 1: Setup (project skeleton; delivers User Story 7)
 
 **Purpose**: the frame every later test runs in (NFR-05; DEC-01, DEC-27, DEC-30, DEC-34, DEC-36). Nothing here has behaviour of its own to test with RSpec; the checkpoint runs the tools.
 
-- [X] T001 Create `.ruby-version` containing `3.4.12` and a final newline [FR-036; DEC-01; D1; research R1]
-- [X] T002 Create `Gemfile`: `# frozen_string_literal: true`, `source 'https://rubygems.org'`, then `gem 'bigdecimal'`, `gem 'csv'`, `gem 'logger'` at top level, then `group :development, :test do` with `gem 'rspec'`, `gem 'rubocop'`, `gem 'rubocop-rspec'`, `gem 'simplecov'`; no version constraints and no `ruby` line [FR-037; DEC-01, DEC-36; D14; research R2]
-- [X] T003 Run `bundle install`, then `bundle lock --add-platform x86_64-linux x64-mingw-ucrt`, and keep the resulting `Gemfile.lock` for commit; `003` later completes its `PLATFORMS` list, so do not add more here [FR-037; DEC-01; D14; research R2]
-- [X] T004 [P] Create `.rspec` with the two lines `--require spec_helper` and `--format documentation` [FR-039; DEC-34; D13; research R11]
-- [X] T005 [P] Create `.rubocop.yml` containing only `plugins:` with the one item `- rubocop-rspec` [FR-031; DEC-36; D15; research R3]
-- [X] T006 [P] Create `.gitignore` with the lines `coverage/` and `output/` [FR-041; DEC-27, DEC-36]
-- [X] T007 [P] Create `spec/support/builders.rb`: `# frozen_string_literal: true`, a one-line comment saying it holds the test builders, and an empty `module Builders` that later phases fill [FR-038; DEC-34; D16; research R10]
-- [X] T008 Create `spec/spec_helper.rb`, in this order: `require 'simplecov'` and `SimpleCov.start { add_filter '/spec/' }`; `$LOAD_PATH.unshift(File.expand_path('../lib', __dir__))`; require every file in `spec/support/` (sorted); `RSpec.configure` with `expect_with` using the `expect` syntax only, `disable_monkey_patching!`, `order = :random`, `Kernel.srand config.seed`, and `include Builders` (depends on T007) [FR-039, FR-040; DEC-34, DEC-36; D13, D20; research R11]
-- [X] T009 Run `bundle exec rspec` (0 examples, `Randomized with seed <n>` printed, `coverage/` written) and `bundle exec rubocop` (`no offenses detected`) to confirm `.rspec`, `spec/spec_helper.rb`, `spec/support/builders.rb` and `.rubocop.yml` work together; `lib/domain/` and `spec/domain/` are created by the first tasks that write into them (T010, T016), and nothing is created under `lib/application/` or `lib/infrastructure/` in this spec (depends on T001 to T008) [US7 scenarios 2, 3; FR-031, FR-038 to FR-040; DEC-30, DEC-34, DEC-36]
+- [X] <a id="t001"></a>T001 Create `.ruby-version` containing `3.4.12` and a final newline [FR-036; DEC-01; D1; research R1]
+- [X] <a id="t002"></a>T002 Create `Gemfile`: `# frozen_string_literal: true`, `source 'https://rubygems.org'`, then `gem 'bigdecimal'`, `gem 'csv'`, `gem 'logger'` at top level, then `group :development, :test do` with `gem 'rspec'`, `gem 'rubocop'`, `gem 'rubocop-rspec'`, `gem 'simplecov'`; no version constraints and no `ruby` line [FR-037; DEC-01, DEC-36; D14; research R2]
+- [X] <a id="t003"></a>T003 Run `bundle install`, then `bundle lock --add-platform x86_64-linux x64-mingw-ucrt`, and keep the resulting `Gemfile.lock` for commit; `003` later completes its `PLATFORMS` list, so do not add more here [FR-037; DEC-01; D14; research R2]
+- [X] <a id="t004"></a>T004 [P] Create `.rspec` with the two lines `--require spec_helper` and `--format documentation` [FR-039; DEC-34; D13; research R11]
+- [X] <a id="t005"></a>T005 [P] Create `.rubocop.yml` containing only `plugins:` with the one item `- rubocop-rspec` [FR-031; DEC-36; D15; research R3]
+- [X] <a id="t006"></a>T006 [P] Create `.gitignore` with the lines `coverage/` and `output/` [FR-041; DEC-27, DEC-36]
+- [X] <a id="t007"></a>T007 [P] Create `spec/support/builders.rb`: `# frozen_string_literal: true`, a one-line comment saying it holds the test builders, and an empty `module Builders` that later phases fill [FR-038; DEC-34; D16; research R10]
+- [X] <a id="t008"></a>T008 Create `spec/spec_helper.rb`, in this order: `require 'simplecov'` and `SimpleCov.start { add_filter '/spec/' }`; `$LOAD_PATH.unshift(File.expand_path('../lib', __dir__))`; require every file in `spec/support/` (sorted); `RSpec.configure` with `expect_with` using the `expect` syntax only, `disable_monkey_patching!`, `order = :random`, `Kernel.srand config.seed`, and `include Builders` (depends on T007) [FR-039, FR-040; DEC-34, DEC-36; D13, D20; research R11]
+- [X] <a id="t009"></a>T009 Run `bundle exec rspec` (0 examples, `Randomized with seed <n>` printed, `coverage/` written) and `bundle exec rubocop` (`no offenses detected`) to confirm `.rspec`, `spec/spec_helper.rb`, `spec/support/builders.rb` and `.rubocop.yml` work together; `lib/domain/` and `spec/domain/` are created by the first tasks that write into them (T010, T016), and nothing is created under `lib/application/` or `lib/infrastructure/` in this spec (depends on T001 to T008) [US7 scenarios 2, 3; FR-031, FR-038 to FR-040; DEC-30, DEC-34, DEC-36]
 
 **Checkpoint (US7 scenarios 1 to 4)**: `bundle install` uses the committed lock and leaves it unchanged; `bundle exec rspec` runs (0 examples, `Randomized with seed <n>` printed) and writes `coverage/`; `bundle exec rubocop` reports `no offenses detected`; `git status --short` lists nothing under `coverage/`.
 
 ---
 
+<a id="phase-2"></a>
 ## Phase 2: Foundational
 
 No shared code blocks the stories beyond Phase 1. Each domain error is added to `lib/domain/errors.rb` in the phase whose test first raises it, and each builder in the phase that first uses it, so that no code is written before its test.
 
 ---
 
+<a id="phase-3"></a>
 ## Phase 3: User Story 4 - Only valid account numbers and exact money values are accepted (Priority: P1)
 
 **Goal**: `AccountNumber`, the `Money` format and written form, the `Transfer` checks and the opening-balance check (FR-06; DEC-08, DEC-09, DEC-10, DEC-11, DEC-19).
@@ -58,14 +61,14 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 ### Tests for User Story 4 (write first)
 
-- [X] T010 [P] [US4] Write `spec/domain/account_number_spec.rb` [FR-001, FR-002; AC-06.1; DEC-08; research R4]:
+- [X] <a id="t010"></a>T010 [P] [US4] Write `spec/domain/account_number_spec.rb` [FR-001, FR-002; AC-06.1; DEC-08; research R4]:
   - valid: `1111234522226789` gives `to_s` `1111234522226789`;
   - leading zeros kept: `0000123412341234` gives `to_s` `0000123412341234` (DEC-08);
   - equal to another `AccountNumber` built from the same text, and not equal to one built from other text;
   - usable as the same `Hash` key: a `Hash` keyed by `AccountNumber.new('0000123412341234')` finds the value with a second `AccountNumber.new('0000123412341234')` (`eql?` and `hash`);
   - no check digit: each of the five sample numbers `1111234522226789`, `1111234522221234`, `2222123433331212`, `1212343433335665`, `3212343433335755` is valid (DEC-08);
   - invalid, each raising `InvalidAccountNumber` with `account number "<text>" must be exactly 16 digits`: `111123452222678` (15 digits), `11112345222267890` (17 digits), `1111O34522226789` (letter O), `1111-2345-2222-6789` (dashes), `12345`, and the empty text, giving `account number "" must be exactly 16 digits` (DEC-08).
-- [X] T011 [P] [US4] Write `spec/domain/money_spec.rb`, parsing, writing, equality and comparison [FR-003 to FR-007; AC-06.2, AC-06.3; DEC-09, DEC-10; D4, D5; research R5 to R7]:
+- [X] <a id="t011"></a>T011 [P] [US4] Write `spec/domain/money_spec.rb`, parsing, writing, equality and comparison [FR-003 to FR-007; AC-06.2, AC-06.3; DEC-09, DEC-10; D4, D5; research R5 to R7]:
   - valid and written with 2 decimals by `to_s`: `Money.amount('10')` `10.00`, `'10.5'` `10.50`, `'10.50'` `10.50`, `'007.50'` `7.50` (DEC-09), `'550'` `550.00`, `'5000.00'` `5000.00`, `'0'` `0.00`, `'0.00'` `0.00`;
   - `text` returns the text as written: `Money.amount('007.50').text` is `007.50`; for a computed value it is the same as `to_s` (see T021);
   - not negative: `0`, `0.00`, `10.00`; negative: `-5.00`, `-0`, `-0.00` (`negative?`; DEC-09);
@@ -77,33 +80,34 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
   - not a valid amount, each raising `amount "<text>" is not a valid amount`: `abc`, `10.`, `.50`, `+10`, `1e3`, `$10`, `1 0`, `1,000.00` (DEC-09);
   - DEC-09's own examples: `100`, `100.5` and `100.50` are valid and written `100.00`, `100.50`, `100.50`; `100.`, `+100` and `$100` are not a valid amount;
   - the `balance` word: `Money.balance('1.234')` raises `balance "1.234" has more than 2 decimal places`; `Money.balance('abc')` raises `balance "abc" is not a valid amount`; `Money.balance('')` raises `balance is empty` (spec item 2; AC-06.3).
-- [X] T012 [P] [US4] Write `spec/domain/transfer_spec.rb` [FR-008, FR-009; AC-03.3, AC-06.2; DEC-10, DEC-13, DEC-19; D8]:
+- [X] <a id="t012"></a>T012 [P] [US4] Write `spec/domain/transfer_spec.rb` [FR-008, FR-009; AC-03.3, AC-06.2; DEC-10, DEC-13, DEC-19; D8]:
   - a valid transfer from `1111234522226789` to `1212343433335665` of `30.00` returns those values from `from`, `to` and `amount`;
   - `0.01` is accepted (DEC-10);
   - an amount of $0 or less, each raising `InvalidAmount` with `amount "<text>" must be greater than 0.00`: `0`, `0.00`, `-5.00`, `-0`, `-0.00` (DEC-10; `-0` and `-0.00` per DEC-09);
   - the same account: from and to `9999888877776666`, amount `5.00`, raises `SameAccount`, `account 9999888877776666 cannot transfer to itself`, with no repository involved, so an account that is not loaded still gets `SameAccount` (DEC-19 edge case);
   - check order: from and to `1111234522226789`, amount `0`, raises `InvalidAmount` with `amount "0" must be greater than 0.00`, not `SameAccount` (DEC-19 edge case).
-- [X] T013 [P] [US4] Write `spec/domain/account_spec.rb`, the opening balance only [FR-013; AC-06.3; DEC-10, DEC-11; D6, D7]:
+- [X] <a id="t013"></a>T013 [P] [US4] Write `spec/domain/account_spec.rb`, the opening balance only [FR-013; AC-06.3; DEC-10, DEC-11; D6, D7]:
   - `Account.check_opening_balance` accepts `Money.balance('0')`, `'0.00'`, `'5000.00'` and `'550'` without raising (DEC-10);
   - it raises `NegativeBalance` for `-5.00`, `-0` and `-0.00`, with `balance "-5.00" must not be negative`, `balance "-0" must not be negative` and `balance "-0.00" must not be negative` (DEC-09, DEC-11);
   - it needs only the `Money`: it is called with no `AccountNumber` at all (page 6 `Account`);
   - `Account.new(account_number('1111234522226789'), Money.balance('-5.00'))` raises the same `NegativeBalance`;
   - `Account.new` with `100.00` gives `number.to_s` `1111234522226789` and `balance.to_s` `100.00`.
-- [X] T014 [P] [US4] Add to `spec/support/builders.rb` the builders `account_number(text = '1111234522226789')`, `amount(text = '10.00')` (`Money.amount`) and `balance(text = '100.00')` (`Money.balance`), each requiring the class it builds [DEC-34; research R10]
-- [X] T015 [US4] Run `bundle exec rspec` and confirm every example from T010 to T013 fails because the classes do not exist yet (depends on T010 to T014)
+- [X] <a id="t014"></a>T014 [P] [US4] Add to `spec/support/builders.rb` the builders `account_number(text = '1111234522226789')`, `amount(text = '10.00')` (`Money.amount`) and `balance(text = '100.00')` (`Money.balance`), each requiring the class it builds [DEC-34; research R10]
+- [X] <a id="t015"></a>T015 [US4] Run `bundle exec rspec` and confirm every example from T010 to T013 fails because the classes do not exist yet (depends on T010 to T014)
 
 ### Implementation for User Story 4
 
-- [X] T016 [US4] Create `lib/domain/errors.rb` with a one-line comment per class and `InvalidAccountNumber` (built with `new(text)`, message `account number "<text>" must be exactly 16 digits`), `InvalidAmount` (raised with its full message), `SameAccount` (built with `new(account_number)`, message `account <number> cannot transfer to itself`) and `NegativeBalance` (built with `new(balance)`, message `balance "<balance.text>" must not be negative`), each a direct subclass of `StandardError` [FR-026, FR-027; DEC-30; D3, D21]
-- [X] T017 [P] [US4] Create `lib/domain/account_number.rb`: `AccountNumber.new(text)` raises `InvalidAccountNumber` unless `text` matches `/\A[0-9]{16}\z/`; `to_s`, `==`, `eql?` and `hash` by text; frozen [FR-001, FR-002; DEC-08; D19; research R4]
-- [X] T018 [P] [US4] Create `lib/domain/money.rb`: `Money.amount(text)` and `Money.balance(text)` classify the text in the order of research R5 (empty; `/\A-?[0-9]+\.[0-9]{3,}\z/`; not `/\A-?[0-9]+(\.[0-9]{1,2})?\z/`) and raise `InvalidAmount` with the label `amount` or `balance`, else build `Money.new(BigDecimal(text), text)`; `text` (the written text when one was given, `to_s` otherwise), `to_s` (research R6, no `Float`, no rounding), `negative?` (a written `-`, checked only when there is written text, or value below 0), `positive?`, `Comparable` with `<=>`, `==`, `eql?` and `hash` by value, with `hash` defined as `value.zero? ? BigDecimal('0').hash : value.hash` so that `-0` and `0` hash alike; frozen [FR-003 to FR-007; DEC-09; D4, D5, D19; research R5 to R7]
-- [X] T019 [US4] Create `lib/domain/transfer.rb`: `Transfer.new(from:, to:, amount:)` raises `InvalidAmount` with `amount "<amount.text>" must be greater than 0.00` unless `amount.positive?`, then `SameAccount.new(from)` when `from == to`; readers `from`, `to`, `amount`; frozen (depends on T016 to T018) [FR-008, FR-009; DEC-10, DEC-13, DEC-19; D8, D19]
-- [X] T020 [US4] Create `lib/domain/account.rb` with `Account.check_opening_balance(balance)` (raises `NegativeBalance.new(balance)` when `balance.negative?`), `Account.new(number, balance)` calling it, and the readers `number` and `balance` (depends on T016, T018) [FR-010, FR-013; DEC-10, DEC-11; D6, D7]
+- [X] <a id="t016"></a>T016 [US4] Create `lib/domain/errors.rb` with a one-line comment per class and `InvalidAccountNumber` (built with `new(text)`, message `account number "<text>" must be exactly 16 digits`), `InvalidAmount` (raised with its full message), `SameAccount` (built with `new(account_number)`, message `account <number> cannot transfer to itself`) and `NegativeBalance` (built with `new(balance)`, message `balance "<balance.text>" must not be negative`), each a direct subclass of `StandardError` [FR-026, FR-027; DEC-30; D3, D21]
+- [X] <a id="t017"></a>T017 [P] [US4] Create `lib/domain/account_number.rb`: `AccountNumber.new(text)` raises `InvalidAccountNumber` unless `text` matches `/\A[0-9]{16}\z/`; `to_s`, `==`, `eql?` and `hash` by text; frozen [FR-001, FR-002; DEC-08; D19; research R4]
+- [X] <a id="t018"></a>T018 [P] [US4] Create `lib/domain/money.rb`: `Money.amount(text)` and `Money.balance(text)` classify the text in the order of research R5 (empty; `/\A-?[0-9]+\.[0-9]{3,}\z/`; not `/\A-?[0-9]+(\.[0-9]{1,2})?\z/`) and raise `InvalidAmount` with the label `amount` or `balance`, else build `Money.new(BigDecimal(text), text)`; `text` (the written text when one was given, `to_s` otherwise), `to_s` (research R6, no `Float`, no rounding), `negative?` (a written `-`, checked only when there is written text, or value below 0), `positive?`, `Comparable` with `<=>`, `==`, `eql?` and `hash` by value, with `hash` defined as `value.zero? ? BigDecimal('0').hash : value.hash` so that `-0` and `0` hash alike; frozen [FR-003 to FR-007; DEC-09; D4, D5, D19; research R5 to R7]
+- [X] <a id="t019"></a>T019 [US4] Create `lib/domain/transfer.rb`: `Transfer.new(from:, to:, amount:)` raises `InvalidAmount` with `amount "<amount.text>" must be greater than 0.00` unless `amount.positive?`, then `SameAccount.new(from)` when `from == to`; readers `from`, `to`, `amount`; frozen (depends on T016 to T018) [FR-008, FR-009; DEC-10, DEC-13, DEC-19; D8, D19]
+- [X] <a id="t020"></a>T020 [US4] Create `lib/domain/account.rb` with `Account.check_opening_balance(balance)` (raises `NegativeBalance.new(balance)` when `balance.negative?`), `Account.new(number, balance)` calling it, and the readers `number` and `balance` (depends on T016, T018) [FR-010, FR-013; DEC-10, DEC-11; D6, D7]
 
 **Checkpoint**: `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences. Every row of AC-06.1, AC-06.2 (domain outcomes) and AC-06.3 is green.
 
 ---
 
+<a id="phase-4"></a>
 ## Phase 4: User Story 6 - Money stays exact to the cent (Priority: P2)
 
 **Goal**: exact adding, taking away and comparing of `Money`, with no upper limit (NFR-01; DEC-09). Needed by `Account#withdraw` and `#deposit` in Phase 5.
@@ -112,7 +116,7 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 ### Tests for User Story 6 (write first)
 
-- [X] T021 [US6] Add to `spec/domain/money_spec.rb` a `describe` for arithmetic [FR-006; US6 scenarios 1 to 3; NFR-01; DEC-09; research R7]:
+- [X] <a id="t021"></a>T021 [US6] Add to `spec/domain/money_spec.rb` a `describe` for arithmetic [FR-006; US6 scenarios 1 to 3; NFR-01; DEC-09; research R7]:
   - `0.10` plus `0.20` is exactly `0.30` (`to_s`);
   - from `0.00`, adding `25.60` 1,000 times gives exactly `25600.00` (page 10 pick 21);
   - from `0.00`, adding `25.60` 1,000 times and then taking it away 1,000 times gives exactly `0.00`;
@@ -120,16 +124,17 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
   - `5.00` minus `5.00` is `0.00` and not `negative?` (spec clarification 2);
   - `5.00` minus `5.01` is `negative?` and written `-0.01`;
   - a computed value has `text` equal to `to_s`: `(Money.amount('5.00') + Money.amount('2.50')).text` is `7.50`.
-- [X] T022 [US6] Run `bundle exec rspec spec/domain/money_spec.rb` and confirm the new examples fail (no `+` or `-` yet) (depends on T021)
+- [X] <a id="t022"></a>T022 [US6] Run `bundle exec rspec spec/domain/money_spec.rb` and confirm the new examples fail (no `+` or `-` yet) (depends on T021)
 
 ### Implementation for User Story 6
 
-- [X] T023 [US6] Add `+` and `-` to `lib/domain/money.rb`, each returning `Money.new(value ± other.value)` with no written text (its `text` is then `to_s`), so the result is negative only below 0 (depends on T022) [FR-006; NFR-01; DEC-09; D5]
+- [X] <a id="t023"></a>T023 [US6] Add `+` and `-` to `lib/domain/money.rb`, each returning `Money.new(value ± other.value)` with no written text (its `text` is then `to_s`), so the result is negative only below 0 (depends on T022) [FR-006; NFR-01; DEC-09; D5]
 
 **Checkpoint**: `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences.
 
 ---
 
+<a id="phase-5"></a>
 ## Phase 5: User Story 2 - No balance ever goes below $0, and exactly $0 is allowed (Priority: P1)
 
 **Goal**: `Account#withdraw` and `Account#deposit` (FR-04; DEC-10, DEC-13, DEC-18). The same scenarios through `TransferService` are tested in Phase 8, where the service is built.
@@ -138,8 +143,8 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 ### Tests for User Story 2 (write first)
 
-- [X] T024 [US2] Add `attempt(error_class)` to `spec/support/builders.rb`: it yields, rescues only `error_class` and returns nil [D17; research R10]
-- [X] T025 [US2] Add to `spec/domain/account_spec.rb` a `describe '#withdraw'` and a `describe '#deposit'` [FR-010 to FR-012; AC-04.1 to AC-04.3; DEC-10, DEC-13, DEC-18; D17]:
+- [X] <a id="t024"></a>T024 [US2] Add `attempt(error_class)` to `spec/support/builders.rb`: it yields, rescues only `error_class` and returns nil [D17; research R10]
+- [X] <a id="t025"></a>T025 [US2] Add to `spec/domain/account_spec.rb` a `describe '#withdraw'` and a `describe '#deposit'` [FR-010 to FR-012; AC-04.1 to AC-04.3; DEC-10, DEC-13, DEC-18; D17]:
   - an account `1111234522226789` holding `100.00`: `withdraw(amount('30.00'))` leaves `70.00`;
   - exactly $0: `withdraw(amount('100.00'))` leaves `0.00` and raises nothing (DEC-13 edge case; AC-04.2);
   - one cent below $0: `withdraw(amount('100.01'))` raises `InsufficientFunds`, `account 1111234522226789 cannot pay 100.01 from a balance of 100.00` (DEC-13 edge case; AC-04.1);
@@ -147,18 +152,19 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
   - an account `0000123412341234` holding `0.00`: `withdraw(amount('0.01'))` raises `InsufficientFunds`, `account 0000123412341234 cannot pay 0.01 from a balance of 0.00` (DEC-10; AC-04.3);
   - the message writes both values with 2 decimals: an account holding `5` refusing `007.50` gives `account 1111234522226789 cannot pay 7.50 from a balance of 5.00`;
   - `deposit(amount('30.00'))` on `0.00` leaves `30.00`.
-- [X] T026 [US2] Add the builder `account(number = '1111234522226789', opening = '100.00')` to `spec/support/builders.rb`, building `Account.new(account_number(number), balance(opening))` [DEC-34; research R10]
-- [X] T027 [US2] Run `bundle exec rspec spec/domain/account_spec.rb` and confirm the new examples fail (depends on T024 to T026)
+- [X] <a id="t026"></a>T026 [US2] Add the builder `account(number = '1111234522226789', opening = '100.00')` to `spec/support/builders.rb`, building `Account.new(account_number(number), balance(opening))` [DEC-34; research R10]
+- [X] <a id="t027"></a>T027 [US2] Run `bundle exec rspec spec/domain/account_spec.rb` and confirm the new examples fail (depends on T024 to T026)
 
 ### Implementation for User Story 2
 
-- [X] T028 [US2] Add `InsufficientFunds` to `lib/domain/errors.rb`, built with `new(account_number, amount, balance)` and the message `account <number> cannot pay <amount.to_s> from a balance of <balance.to_s>` [FR-011, FR-027; DEC-13; D21]
-- [X] T029 [US2] Add `withdraw(money)` to `lib/domain/account.rb`: raise `InsufficientFunds` when `(balance - money).negative?`, before changing anything; otherwise set the balance to `balance - money`. Add `deposit(money)`: set the balance to `balance + money`. Neither checks that the amount is above $0 (depends on T028) [FR-010 to FR-012; DEC-13, DEC-18; spec clarification 3]
+- [X] <a id="t028"></a>T028 [US2] Add `InsufficientFunds` to `lib/domain/errors.rb`, built with `new(account_number, amount, balance)` and the message `account <number> cannot pay <amount.to_s> from a balance of <balance.to_s>` [FR-011, FR-027; DEC-13; D21]
+- [X] <a id="t029"></a>T029 [US2] Add `withdraw(money)` to `lib/domain/account.rb`: raise `InsufficientFunds` when `(balance - money).negative?`, before changing anything; otherwise set the balance to `balance - money`. Add `deposit(money)`: set the balance to `balance + money`. Neither checks that the amount is above $0 (depends on T028) [FR-010 to FR-012; DEC-13, DEC-18; spec clarification 3]
 
 **Checkpoint**: `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences.
 
 ---
 
+<a id="phase-6"></a>
 ## Phase 6: User Story 5 - The repository keeps the accounts, one per number, in load order (Priority: P2)
 
 **Goal**: `AccountRepository#add`, `#include?`, `#find` for a held number, and `#all` (supports FR-01; NFR-02; DEC-11, DEC-12, DEC-31).
@@ -167,7 +173,7 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 ### Tests for User Story 5 (write first)
 
-- [X] T030 [US5] Write `spec/domain/account_repository_spec.rb` [FR-014, FR-015, FR-017, FR-018; US5 scenarios 1 to 4; DEC-11, DEC-12, DEC-31]:
+- [X] <a id="t030"></a>T030 [US5] Write `spec/domain/account_repository_spec.rb` [FR-014, FR-015, FR-017, FR-018; US5 scenarios 1 to 4; DEC-11, DEC-12, DEC-31]:
   - a new repository's `all` is empty;
   - accounts `1111234522226789`, `1212343433335665` and `0000123412341234` added in that order come back from `all` in that order (DEC-31);
   - `include?(account_number('1111234522226789'))` is true when that account is held; `include?(account_number('9999888877776666'))` is false (DEC-12);
@@ -177,18 +183,19 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
   - after the refused duplicate (`attempt(DuplicateAccount)`), `all` holds one account with the first balance, `100.00` (DEC-31);
   - `find(account_number('1111234522226789'))` returns the same `Account` object that was added (`equal?`);
   - a withdrawal made on the account returned by `find` is seen in `all` (`find(...).withdraw(amount('30.00'))`, then the balance in `all` is `70.00`).
-- [X] T031 [US5] Add the builder `repository_with(*accounts)` to `spec/support/builders.rb`, returning an `AccountRepository` with each account added in order [DEC-34; research R10]
-- [X] T032 [US5] Run `bundle exec rspec spec/domain/account_repository_spec.rb` and confirm the examples fail (depends on T030, T031)
+- [X] <a id="t031"></a>T031 [US5] Add the builder `repository_with(*accounts)` to `spec/support/builders.rb`, returning an `AccountRepository` with each account added in order [DEC-34; research R10]
+- [X] <a id="t032"></a>T032 [US5] Run `bundle exec rspec spec/domain/account_repository_spec.rb` and confirm the examples fail (depends on T030, T031)
 
 ### Implementation for User Story 5
 
-- [X] T033 [US5] Add `DuplicateAccount` to `lib/domain/errors.rb`, built with `new(account_number)` and the message `account <number> appears more than once` [FR-014, FR-027; DEC-31; D21]
-- [X] T034 [US5] Create `lib/domain/account_repository.rb`: one `Hash` keyed by `account.number.to_s`; `add(account)` raises `DuplicateAccount.new(account.number)` when the key is held, else stores the account; `include?(account_number)` is `key?(account_number.to_s)`; `find(account_number)` returns the held account; `all` returns the `Hash`'s values (depends on T033) [FR-014 to FR-018, FR-033, FR-035; NFR-02; DEC-31; research R8]
+- [X] <a id="t033"></a>T033 [US5] Add `DuplicateAccount` to `lib/domain/errors.rb`, built with `new(account_number)` and the message `account <number> appears more than once` [FR-014, FR-027; DEC-31; D21]
+- [X] <a id="t034"></a>T034 [US5] Create `lib/domain/account_repository.rb`: one `Hash` keyed by `account.number.to_s`; `add(account)` raises `DuplicateAccount.new(account.number)` when the key is held, else stores the account; `include?(account_number)` is `key?(account_number.to_s)`; `find(account_number)` returns the held account; `all` returns the `Hash`'s values (depends on T033) [FR-014 to FR-018, FR-033, FR-035; NFR-02; DEC-31; research R8]
 
 **Checkpoint**: `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences.
 
 ---
 
+<a id="phase-7"></a>
 ## Phase 7: User Story 3 - A transfer naming an account that is not loaded is refused (Priority: P2)
 
 **Goal**: `AccountRepository#find` raises `UnknownAccount` for a number it does not hold and never creates an account (FR-05; DEC-17, DEC-31). The scenarios through `TransferService` (AC-05.1, AC-05.2, both unknown) are tested in Phase 8.
@@ -197,21 +204,22 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 ### Tests for User Story 3 (write first)
 
-- [X] T035 [US3] Add to `spec/domain/account_repository_spec.rb` a `describe '#find'` context for a number not held [FR-016; US3 scenario 4; DEC-17, DEC-31]:
+- [X] <a id="t035"></a>T035 [US3] Add to `spec/domain/account_repository_spec.rb` a `describe '#find'` context for a number not held [FR-016; US3 scenario 4; DEC-17, DEC-31]:
   - on a repository holding the three accounts, `find(account_number('9999888877776666'))` raises `UnknownAccount`, `account 9999888877776666 is not loaded` (DEC-17);
   - on an empty repository, after the refused `find` (`attempt(UnknownAccount)`), `include?` for `9999888877776666` is false (DEC-17 edge case: never creates);
   - on an empty repository, after the refused `find`, `all` is empty (DEC-31).
-- [X] T036 [US3] Run `bundle exec rspec spec/domain/account_repository_spec.rb` and confirm the new examples fail (depends on T035)
+- [X] <a id="t036"></a>T036 [US3] Run `bundle exec rspec spec/domain/account_repository_spec.rb` and confirm the new examples fail (depends on T035)
 
 ### Implementation for User Story 3
 
-- [X] T037 [US3] Add `UnknownAccount` to `lib/domain/errors.rb`, built with `new(account_number)` and the message `account <number> is not loaded` [FR-016, FR-027; DEC-17; D21]
-- [X] T038 [US3] Change `find` in `lib/domain/account_repository.rb` to `fetch` with a block that raises `UnknownAccount.new(account_number)` (depends on T037) [FR-016; DEC-17, DEC-31; research R8]
+- [X] <a id="t037"></a>T037 [US3] Add `UnknownAccount` to `lib/domain/errors.rb`, built with `new(account_number)` and the message `account <number> is not loaded` [FR-016, FR-027; DEC-17; D21]
+- [X] <a id="t038"></a>T038 [US3] Change `find` in `lib/domain/account_repository.rb` to `fetch` with a block that raises `UnknownAccount.new(account_number)` (depends on T037) [FR-016; DEC-17, DEC-31; research R8]
 
 **Checkpoint**: `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences.
 
 ---
 
+<a id="phase-8"></a>
 ## Phase 8: User Story 1 - A valid transfer moves the money, all or nothing (Priority: P1) MVP
 
 **Goal**: `TransferService` and `TransferResult` (FR-03; DEC-13, DEC-14, DEC-16, DEC-18, DEC-19). With this phase every domain outcome in the spec is covered, including the service-level views of AC-04.1 to AC-04.3, AC-05.1, AC-05.2, US3 scenario 3 and US6 scenario 4, which need the service.
@@ -220,8 +228,8 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 ### Tests for User Story 1 (write first)
 
-- [X] T039 [P] [US1] Add the builder `transfer(from: '1111234522226789', to: '1212343433335665', amount: '30.00')` to `spec/support/builders.rb`, taking text and building `Transfer.new` with `account_number` and `amount`; and the helper `three_accounts`, returning `repository_with` the three accounts of the spec's `balances.csv` [DEC-34; research R10]
-- [X] T040 [P] [US1] Write `spec/domain/transfer_service_spec.rb`, every example on `three_accounts` unless it says otherwise, comparing the balances of `all` as one array [FR-019 to FR-021, FR-034; AC-03.1 to AC-03.3, AC-04.1 to AC-04.3, AC-05.1, AC-05.2, US3 scenario 3, US1 scenario 4, US6 scenario 4; SC-002]:
+- [X] <a id="t039"></a>T039 [P] [US1] Add the builder `transfer(from: '1111234522226789', to: '1212343433335665', amount: '30.00')` to `spec/support/builders.rb`, taking text and building `Transfer.new` with `account_number` and `amount`; and the helper `three_accounts`, returning `repository_with` the three accounts of the spec's `balances.csv` [DEC-34; research R10]
+- [X] <a id="t040"></a>T040 [P] [US1] Write `spec/domain/transfer_service_spec.rb`, every example on `three_accounts` unless it says otherwise, comparing the balances of `all` as one array [FR-019 to FR-021, FR-034; AC-03.1 to AC-03.3, AC-04.1 to AC-04.3, AC-05.1, AC-05.2, US3 scenario 3, US1 scenario 4, US6 scenario 4; SC-002]:
   - applied: `1111234522226789` to `1212343433335665` `30.00` gives `70.00 80.00 0.00` (AC-03.1; DEC-13);
   - `apply` returns nil (D12);
   - exactly $0: `1111234522226789` to `1212343433335665` `100.00` gives `0.00 150.00 0.00` (AC-04.2; DEC-13 edge case);
@@ -240,7 +248,7 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
   - two equal transfers are both applied: `1111234522226789` to `0000123412341234` `20.00` twice gives `60.00 50.00 40.00` (US1 scenario 4; DEC-16 edge case);
   - the sample transfers on the five sample accounts (`1111234522226789` 5000.00, `1111234522221234` 10000.00, `2222123433331212` 550.00, `1212343433335665` 1200.00, `3212343433335755` 50000.00), applied in order (`1111234522226789` to `1212343433335665` `500.00`; `3212343433335755` to `2222123433331212` `1000.00`; `3212343433335755` to `1111234522226789` `320.50`; `1111234522221234` to `1212343433335665` `25.60`) give exactly `4820.50 9974.40 1550.00 1725.60 48679.50` (US6 scenario 4; DEC-35; NFR-01);
   - the same sample run keeps the total at `66750.00` (US6 scenario 4; DEC-35; SC-003).
-- [X] T041 [P] [US1] Write `spec/domain/transfer_result_spec.rb` [FR-022 to FR-025; US1 scenario 5; DEC-06, DEC-19; D9 to D11]:
+- [X] <a id="t041"></a>T041 [P] [US1] Write `spec/domain/transfer_result_spec.rb` [FR-022 to FR-025; US1 scenario 5; DEC-06, DEC-19; D9 to D11]:
   - `REASON_CODES` is `%i[malformed_row invalid_account_number invalid_amount same_account unknown_account insufficient_funds]`, in that order (DEC-19; spec item 11);
   - `applied(line_number: 1, fields: %w[1111234522226789 1212343433335665 30.00])` is `applied?`, not `rejected?`, and has no `reason` and no `header_hint`;
   - it returns `line_number` `1` and the three `fields` unchanged, in order;
@@ -253,31 +261,33 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
   - `malformed_row` keeps more than 3 fields: a row of 4 fields returns all 4 (DEC-19 edge case);
   - the fields cannot be changed through the result: `fields` is frozen (D19);
   - values are kept as written: an empty amount `''` and `10.` are returned as `''` and `10.` (FR-022).
-- [X] T042 [US1] Run `bundle exec rspec spec/domain/transfer_service_spec.rb spec/domain/transfer_result_spec.rb` and confirm the examples fail (depends on T039 to T041)
+- [X] <a id="t042"></a>T042 [US1] Run `bundle exec rspec spec/domain/transfer_service_spec.rb spec/domain/transfer_result_spec.rb` and confirm the examples fail (depends on T039 to T041)
 
 ### Implementation for User Story 1
 
-- [X] T043 [P] [US1] Create `lib/domain/transfer_result.rb`: `REASON_CODES` (frozen, symbols, DEC-19 order); `TransferResult.applied(line_number:, fields:)`; `TransferResult.rejected(line_number:, fields:, reason:, header_hint: nil)` raising `ArgumentError` for a reason not in `REASON_CODES`; readers `line_number`, `fields` (a frozen copy), `reason`, `header_hint`; `applied?` and `rejected?`; frozen; no formatting method [FR-022 to FR-025; DEC-19; D9 to D11, D19]
-- [X] T044 [P] [US1] Create `lib/domain/transfer_service.rb`: `TransferService.new(repository)`; `apply(transfer)` finds the from account, then the to account, then calls `withdraw(transfer.amount)` on the from account and `deposit(transfer.amount)` on the to account, and returns nil; no rescue, no logging, no undo [FR-019 to FR-021, FR-034; DEC-13, DEC-17, DEC-18; D12; research R9]
+- [X] <a id="t043"></a>T043 [P] [US1] Create `lib/domain/transfer_result.rb`: `REASON_CODES` (frozen, symbols, DEC-19 order); `TransferResult.applied(line_number:, fields:)`; `TransferResult.rejected(line_number:, fields:, reason:, header_hint: nil)` raising `ArgumentError` for a reason not in `REASON_CODES`; readers `line_number`, `fields` (a frozen copy), `reason`, `header_hint`; `applied?` and `rejected?`; frozen; no formatting method [FR-022 to FR-025; DEC-19; D9 to D11, D19]
+- [X] <a id="t044"></a>T044 [P] [US1] Create `lib/domain/transfer_service.rb`: `TransferService.new(repository)`; `apply(transfer)` finds the from account, then the to account, then calls `withdraw(transfer.amount)` on the from account and `deposit(transfer.amount)` on the to account, and returns nil; no rescue, no logging, no undo [FR-019 to FR-021, FR-034; DEC-13, DEC-17, DEC-18; D12; research R9]
 
 **Checkpoint**: `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences. Every domain outcome in the spec's acceptance scenarios now has a passing test (SC-001).
 
 ---
 
+<a id="phase-9"></a>
 ## Phase 9: Polish and cross-cutting checks
 
 **Purpose**: prove the measurable outcomes and the design review targets (NFR-02, NFR-05; SC-001 to SC-008).
 
-- [X] T045 Run `bundle exec rspec` three times and confirm it passes with three different seeds; rerun one with `--seed <n>` (SC-008; DEC-34)
-- [X] T046 Run `bundle exec rubocop` and confirm `no offenses detected`; confirm no method in `lib/domain/` is longer than 10 lines (SC-005; NFR-05; DEC-36)
-- [X] T047 Check every expected message in `spec/domain/` against the [spec's message table](spec.md#domain-error-messages), 10 of 10 rows, character for character (SC-004; FR-027)
-- [X] T048 Design review of `lib/domain/` against [data-model.md](data-model.md#one-home-per-rule-fr-028-nfr-05): each of the 8 rules is in exactly one class; no file reads a file, prints, logs, reads the clock or mentions a line number; no comment explains the design; no base class, suffix, factory, DTO or mapper (SC-006; FR-028 to FR-030, FR-032; DEC-30)
-- [X] T049 Design review of cost against the [time and space table](../../docs/solution-design/09-considerations.md#time-and-space): `add`, `include?` and `find` use only `Hash` key operations; `all` returns the values once; `apply` makes two lookups and two balance changes (SC-007; FR-033 to FR-035; NFR-02)
-- [X] T050 Run every step of [quickstart.md](quickstart.md) and confirm each expected outcome, including `git status --short` showing no `coverage/` and `git ls-files lib spec` listing only the files in the plan (US7 scenarios 1 to 4; FR-036 to FR-042)
-- [X] T051 Confirm no file was created under `lib/application/`, `lib/infrastructure/`, `bin/`, `data/`, `spec/application/`, `spec/infrastructure/`, `spec/acceptance/` or `spec/fixtures/`; those belong to `002` (FR-038; brief rule 3)
+- [X] <a id="t045"></a>T045 Run `bundle exec rspec` three times and confirm it passes with three different seeds; rerun one with `--seed <n>` (SC-008; DEC-34)
+- [X] <a id="t046"></a>T046 Run `bundle exec rubocop` and confirm `no offenses detected`; confirm no method in `lib/domain/` is longer than 10 lines (SC-005; NFR-05; DEC-36)
+- [X] <a id="t047"></a>T047 Check every expected message in `spec/domain/` against the [spec's message table](spec.md#domain-error-messages), 10 of 10 rows, character for character (SC-004; FR-027)
+- [X] <a id="t048"></a>T048 Design review of `lib/domain/` against [data-model.md](data-model.md#one-home-per-rule-fr-028-nfr-05): each of the 8 rules is in exactly one class; no file reads a file, prints, logs, reads the clock or mentions a line number; no comment explains the design; no base class, suffix, factory, DTO or mapper (SC-006; FR-028 to FR-030, FR-032; DEC-30)
+- [X] <a id="t049"></a>T049 Design review of cost against the [time and space table](../../docs/solution-design/09-considerations.md#time-and-space): `add`, `include?` and `find` use only `Hash` key operations; `all` returns the values once; `apply` makes two lookups and two balance changes (SC-007; FR-033 to FR-035; NFR-02)
+- [X] <a id="t050"></a>T050 Run every step of [quickstart.md](quickstart.md) and confirm each expected outcome, including `git status --short` showing no `coverage/` and `git ls-files lib spec` listing only the files in the plan (US7 scenarios 1 to 4; FR-036 to FR-042)
+- [X] <a id="t051"></a>T051 Confirm no file was created under `lib/application/`, `lib/infrastructure/`, `bin/`, `data/`, `spec/application/`, `spec/infrastructure/`, `spec/acceptance/` or `spec/fixtures/`; those belong to `002` (FR-038; brief rule 3)
 
 ---
 
+<a id="phase-10"></a>
 ## Phase 10: Domain refactor (code review)
 
 **Goal**: the developer's code review of the domain, with no change in any transfer outcome, message or balance. `Account#withdraw` and `#deposit` raise `ArgumentError` for an amount of $0 or less, a guard against programming errors, and `withdraw` works out the new balance once (P33). `AccountNumber` and `Transfer` become `Data` records, and `AccountRepository` keys its `Hash` by the `AccountNumber` itself (P34). `TransferService` loads nothing it does not use, and each domain spec requires what it names (P36). `TransferResult` moves to `lib/application/` in `002` Phase 14 (P35), so it is not touched here.
@@ -286,29 +296,30 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 ### Tests (write first)
 
-- [X] T052 [P] Add to `spec/domain/account_spec.rb`: `withdraw` and `deposit` each raise `ArgumentError` with `amount <amount> must be greater than 0.00` for an amount of `0.00` and of `-5.00`, described as a programming error; after `attempt(ArgumentError)` with `-5.00` the balance is unchanged (`100.00` for `withdraw`, `0.00` for `deposit`) [FR-010 to FR-012; DEC-18, DEC-30; P33; plan D24]
-- [X] T053 [P] Add to `spec/domain/account_number_spec.rb` a `describe 'as a Data record'`: `members` is `%i[text]`; `AccountNumber.new(text: '12345')` raises `InvalidAccountNumber` with the same message as the positional form; it is frozen. The `==` and `hash` examples stay unchanged [FR-001, FR-002; DEC-08, DEC-30; P34; plan D19, D23]
-- [X] T054 [P] Add to `spec/domain/transfer_spec.rb` a `describe 'as a Data record'`: `members` is `%i[from to amount]`; a transfer is equal to one built from equal values (`30.00` and `30.0`); it is frozen [FR-008, FR-009; DEC-30; P34; plan D19]
-- [X] T055 [P] Add to `spec/domain/account_repository_spec.rb`, in `describe '#include?'`: false for the text `'1111234522226789'` of a number it holds, because the key is the `AccountNumber` [FR-015, FR-033; DEC-31; research R8; P34]
-- [X] T056 Add `require 'domain/errors'` to every spec file of `spec/domain/` that names a domain error (`account_number`, `account_repository`, `account`, `money`, `transfer`, `transfer_service`), so each loads what it names without relying on another file's requires (depends on T052 to T055, which edit four of the same files) [DEC-34; P36; plan D13]
-- [X] T057 Run `bundle exec rspec spec/domain` and confirm the new examples of T052 to T055 fail (no `ArgumentError`; no `members`; a transfer equal only to itself; `include?` true for the text) and no other example fails (depends on T056)
+- [X] <a id="t052"></a>T052 [P] Add to `spec/domain/account_spec.rb`: `withdraw` and `deposit` each raise `ArgumentError` with `amount <amount> must be greater than 0.00` for an amount of `0.00` and of `-5.00`, described as a programming error; after `attempt(ArgumentError)` with `-5.00` the balance is unchanged (`100.00` for `withdraw`, `0.00` for `deposit`) [FR-010 to FR-012; DEC-18, DEC-30; P33; plan D24]
+- [X] <a id="t053"></a>T053 [P] Add to `spec/domain/account_number_spec.rb` a `describe 'as a Data record'`: `members` is `%i[text]`; `AccountNumber.new(text: '12345')` raises `InvalidAccountNumber` with the same message as the positional form; it is frozen. The `==` and `hash` examples stay unchanged [FR-001, FR-002; DEC-08, DEC-30; P34; plan D19, D23]
+- [X] <a id="t054"></a>T054 [P] Add to `spec/domain/transfer_spec.rb` a `describe 'as a Data record'`: `members` is `%i[from to amount]`; a transfer is equal to one built from equal values (`30.00` and `30.0`); it is frozen [FR-008, FR-009; DEC-30; P34; plan D19]
+- [X] <a id="t055"></a>T055 [P] Add to `spec/domain/account_repository_spec.rb`, in `describe '#include?'`: false for the text `'1111234522226789'` of a number it holds, because the key is the `AccountNumber` [FR-015, FR-033; DEC-31; research R8; P34]
+- [X] <a id="t056"></a>T056 Add `require 'domain/errors'` to every spec file of `spec/domain/` that names a domain error (`account_number`, `account_repository`, `account`, `money`, `transfer`, `transfer_service`), so each loads what it names without relying on another file's requires (depends on T052 to T055, which edit four of the same files) [DEC-34; P36; plan D13]
+- [X] <a id="t057"></a>T057 Run `bundle exec rspec spec/domain` and confirm the new examples of T052 to T055 fail (no `ArgumentError`; no `members`; a transfer equal only to itself; `include?` true for the text) and no other example fails (depends on T056)
 
 ### Implementation
 
-- [X] T058 In `lib/domain/account.rb`, add a private `check_amount(money)` raising `ArgumentError, "amount #{money} must be greater than 0.00"` unless `money.positive?`, called first by `withdraw` and `deposit`; in `withdraw`, work out `balance - money` once into a local and use it for the check and the new balance (depends on T057) [FR-010 to FR-012; DEC-13, DEC-18, DEC-30; P33; plan D24]
-- [X] T059 [P] Rewrite `lib/domain/account_number.rb` as `AccountNumber = Data.define(:text)`, with `initialize(text:)` raising `InvalidAccountNumber` unless the text matches `AccountNumber::PATTERN`, then `super`; `to_s` returns `text`; `AccountNumber::PATTERN` set after the block; no hand-written `==`, `eql?`, `hash` or `freeze`; `AccountNumber.new('...')` still works positionally (depends on T057) [FR-001, FR-002; DEC-08, DEC-30; P34; plan D19, D23, D25]
-- [X] T060 [P] Rewrite `lib/domain/transfer.rb` as `Transfer = Data.define(:from, :to, :amount)`, with `initialize(from:, to:, amount:)` raising `InvalidAmount` and then `SameAccount` as before, then `super` (depends on T057) [FR-008, FR-009; DEC-10, DEC-19, DEC-30; P34; plan D8, D19, D25]
-- [X] T061 In `lib/domain/account_repository.rb`, key the `Hash` by `account.number` and look up by the `AccountNumber` given, with no `to_s` (depends on T059) [FR-014 to FR-016, FR-033; DEC-31; research R8; P34]
-- [X] T062 [P] In `lib/domain/transfer_service.rb`, remove `require_relative 'account_repository'` and `require_relative 'transfer'`: it only calls methods on the objects it is given. Check every file in `lib/domain/` requires only what it names. Run each changed spec file of `spec/domain/` on its own with `bundle exec rspec <file>` (depends on T056) [DEC-34; P36; plan D13]
-- [X] T063 [P] Bring the documents in line: DEC-18 (the guard is for programming errors; a valid transfer's deposit cannot fail), DEC-30 (the `Account` guard, `Data` records, P33 and P34 in its From list); page 5 (model table), page 6 (`AccountNumber`, `Account`, `Transfer`, `AccountRepository`, the value term), page 7.1 and 7.3, page 9 (repository key), page 10 (picks 49, 56, 57, the glossary); in this spec, FR-012, the key entities, the clarification of 2026-11-09 and item 17; the plan (design overview, D13, D19, D23 to D25), research R8 and R9, the data model and the contract; the README's design section [DEC-18, DEC-30; P33, P34, P36]
-- [X] T064 Run `bundle exec rspec` until every example passes in random order with 100% line coverage, and `bundle exec rubocop` reports zero offences with `.rubocop.yml` unchanged (depends on T058 to T063) [SC-005, SC-008; DEC-36]
-- [X] T065 Add to `spec/domain/account_number_spec.rb`, in `describe 'as a Data record'`, an example that `AccountNumber.new(+'1111222233334444')` has a frozen `text` and that changing the original string afterwards does not change the account number, and confirm it fails before T066 (depends on T059) [FR-001; DEC-08, DEC-30; P34]
-- [X] T066 In `lib/domain/account_number.rb`, after the pattern check, store a frozen copy of the text with `super(text: text.dup.freeze)`, so the `Hash` key in `AccountRepository` cannot change under the repository (depends on T065) [FR-001; DEC-08, DEC-30; P34]
+- [X] <a id="t058"></a>T058 In `lib/domain/account.rb`, add a private `check_amount(money)` raising `ArgumentError, "amount #{money} must be greater than 0.00"` unless `money.positive?`, called first by `withdraw` and `deposit`; in `withdraw`, work out `balance - money` once into a local and use it for the check and the new balance (depends on T057) [FR-010 to FR-012; DEC-13, DEC-18, DEC-30; P33; plan D24]
+- [X] <a id="t059"></a>T059 [P] Rewrite `lib/domain/account_number.rb` as `AccountNumber = Data.define(:text)`, with `initialize(text:)` raising `InvalidAccountNumber` unless the text matches `AccountNumber::PATTERN`, then `super`; `to_s` returns `text`; `AccountNumber::PATTERN` set after the block; no hand-written `==`, `eql?`, `hash` or `freeze`; `AccountNumber.new('...')` still works positionally (depends on T057) [FR-001, FR-002; DEC-08, DEC-30; P34; plan D19, D23, D25]
+- [X] <a id="t060"></a>T060 [P] Rewrite `lib/domain/transfer.rb` as `Transfer = Data.define(:from, :to, :amount)`, with `initialize(from:, to:, amount:)` raising `InvalidAmount` and then `SameAccount` as before, then `super` (depends on T057) [FR-008, FR-009; DEC-10, DEC-19, DEC-30; P34; plan D8, D19, D25]
+- [X] <a id="t061"></a>T061 In `lib/domain/account_repository.rb`, key the `Hash` by `account.number` and look up by the `AccountNumber` given, with no `to_s` (depends on T059) [FR-014 to FR-016, FR-033; DEC-31; research R8; P34]
+- [X] <a id="t062"></a>T062 [P] In `lib/domain/transfer_service.rb`, remove `require_relative 'account_repository'` and `require_relative 'transfer'`: it only calls methods on the objects it is given. Check every file in `lib/domain/` requires only what it names. Run each changed spec file of `spec/domain/` on its own with `bundle exec rspec <file>` (depends on T056) [DEC-34; P36; plan D13]
+- [X] <a id="t063"></a>T063 [P] Bring the documents in line: DEC-18 (the guard is for programming errors; a valid transfer's deposit cannot fail), DEC-30 (the `Account` guard, `Data` records, P33 and P34 in its From list); page 5 (model table), page 6 (`AccountNumber`, `Account`, `Transfer`, `AccountRepository`, the value term), page 7.1 and 7.3, page 9 (repository key), page 10 (picks 49, 56, 57, the glossary); in this spec, FR-012, the key entities, the clarification of 2026-11-09 and item 17; the plan (design overview, D13, D19, D23 to D25), research R8 and R9, the data model and the contract; the README's design section [DEC-18, DEC-30; P33, P34, P36]
+- [X] <a id="t064"></a>T064 Run `bundle exec rspec` until every example passes in random order with 100% line coverage, and `bundle exec rubocop` reports zero offences with `.rubocop.yml` unchanged (depends on T058 to T063) [SC-005, SC-008; DEC-36]
+- [X] <a id="t065"></a>T065 Add to `spec/domain/account_number_spec.rb`, in `describe 'as a Data record'`, an example that `AccountNumber.new(+'1111222233334444')` has a frozen `text` and that changing the original string afterwards does not change the account number, and confirm it fails before T066 (depends on T059) [FR-001; DEC-08, DEC-30; P34]
+- [X] <a id="t066"></a>T066 In `lib/domain/account_number.rb`, after the pattern check, store a frozen copy of the text with `super(text: text.dup.freeze)`, so the `Hash` key in `AccountRepository` cannot change under the repository (depends on T065) [FR-001; DEC-08, DEC-30; P34]
 
 **Checkpoint**: `Account` refuses an amount of $0 or less with `ArgumentError`, which no transfer reaches; `AccountNumber` and `Transfer` are `Data` records; the repository is keyed by `AccountNumber`; every domain message and balance is unchanged; `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences.
 
 ---
 
+<a id="phase-11"></a>
 ## Phase 11: Money review (code review)
 
 **Goal**: the developer's code review of `Money`, with no change in any transfer outcome, message or balance. Short comments say what `negative?` and `hash` rely on: `BigDecimal` treats `-0.00` as not below zero, and `0.00` and `-0.00` are equal. `Money.new` raises `ArgumentError` for a value that is not a `BigDecimal`, a guard against programming errors. `Money` no longer includes `Comparable` or defines `<=>`, as no rule compares two amounts. Code in `lib/domain/` that is not obvious from reading it gets a short comment saying what it does or the Ruby fact it relies on (P39).
@@ -317,18 +328,18 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 ### Tests (write first)
 
-- [X] T067 Add to `spec/domain/money_spec.rb` a `describe '.new'`: a `Float` (`10.5`) and a `String` (`'10.50'`) each raise `ArgumentError` with `Money needs a BigDecimal, got <class>`; the examples for `.amount`, `.balance`, `+` and `-` stay unchanged [FR-003 to FR-006; DEC-09; P39; plan D5]
-- [X] T068 Run `bundle exec rspec spec/domain/money_spec.rb` and confirm the two new examples fail (nothing raised) and no other example fails (depends on T067)
-- [X] T069 Remove the `describe '#<=>'` examples from `spec/domain/money_spec.rb`; confirm no file in `lib/` or `spec/` uses `<`, `>`, `<=`, `>=`, `<=>`, `sort`, `min`, `max`, `between?` or `clamp` on a `Money` (depends on T068, which runs the same file) [FR-006; P39; plan D5]
+- [X] <a id="t067"></a>T067 Add to `spec/domain/money_spec.rb` a `describe '.new'`: a `Float` (`10.5`) and a `String` (`'10.50'`) each raise `ArgumentError` with `Money needs a BigDecimal, got <class>`; the examples for `.amount`, `.balance`, `+` and `-` stay unchanged [FR-003 to FR-006; DEC-09; P39; plan D5]
+- [X] <a id="t068"></a>T068 Run `bundle exec rspec spec/domain/money_spec.rb` and confirm the two new examples fail (nothing raised) and no other example fails (depends on T067)
+- [X] <a id="t069"></a>T069 Remove the `describe '#<=>'` examples from `spec/domain/money_spec.rb`; confirm no file in `lib/` or `spec/` uses `<`, `>`, `<=`, `>=`, `<=>`, `sort`, `min`, `max`, `between?` or `clamp` on a `Money` (depends on T068, which runs the same file) [FR-006; P39; plan D5]
 
 ### Implementation
 
-- [X] T070 In `lib/domain/money.rb`, add to `initialize` a first line `raise ArgumentError, "Money needs a BigDecimal, got #{value.class}" unless value.is_a?(BigDecimal)` (depends on T068) [FR-003 to FR-006; DEC-09; P39; plan D5]
-- [X] T071 In `lib/domain/money.rb`, remove `include Comparable` and `<=>`; `==`, `eql?` and `hash` stay as they are (depends on T069, T070) [FR-006; P39; plan D5]
-- [X] T072 In `lib/domain/money.rb`, add a one-line comment above `negative?` (a written minus sign counts too, because `BigDecimal` treats `-0.00` as not below zero) and above `hash` (`0.00` and `-0.00` are equal, so they share a hash) (depends on T071) [FR-032; DEC-09; P39; research R7]
-- [X] T073 Add a short comment to the code in `lib/domain/` that is not obvious from reading it, saying what it does or the Ruby fact it relies on, never the design reasoning: the frozen copy in `AccountNumber`, the constants set after a `Data.define` block, bare `super` in `Transfer`, the insertion order of `AccountRepository#all`, `to_s('F')` and the protected reader in `Money`, and the order of `TransferService#apply`; check every class comment is accurate (depends on T072) [FR-032; DEC-30; P39]
-- [X] T074 [P] Bring the documents in line: page 6 (`Money`); in this spec, FR-006, the clarification on `-0` and item 16; the plan (design overview, D5, with `Comparable` as a rejected option), research R7, the data model and the contract (depends on T071) [FR-006; DEC-09; P39; plan D5]
-- [X] T075 Run `bundle exec rspec` until every example passes in random order with 100% line coverage, `bundle exec rubocop` reports zero offences with `.rubocop.yml` unchanged, and `ruby bin/run` on the sample files gives exit status 0 and the DEC-35 balances (depends on T070 to T074) [SC-005, SC-008; DEC-35, DEC-36]
+- [X] <a id="t070"></a>T070 In `lib/domain/money.rb`, add to `initialize` a first line `raise ArgumentError, "Money needs a BigDecimal, got #{value.class}" unless value.is_a?(BigDecimal)` (depends on T068) [FR-003 to FR-006; DEC-09; P39; plan D5]
+- [X] <a id="t071"></a>T071 In `lib/domain/money.rb`, remove `include Comparable` and `<=>`; `==`, `eql?` and `hash` stay as they are (depends on T069, T070) [FR-006; P39; plan D5]
+- [X] <a id="t072"></a>T072 In `lib/domain/money.rb`, add a one-line comment above `negative?` (a written minus sign counts too, because `BigDecimal` treats `-0.00` as not below zero) and above `hash` (`0.00` and `-0.00` are equal, so they share a hash) (depends on T071) [FR-032; DEC-09; P39; research R7]
+- [X] <a id="t073"></a>T073 Add a short comment to the code in `lib/domain/` that is not obvious from reading it, saying what it does or the Ruby fact it relies on, never the design reasoning: the frozen copy in `AccountNumber`, the constants set after a `Data.define` block, bare `super` in `Transfer`, the insertion order of `AccountRepository#all`, `to_s('F')` and the protected reader in `Money`, and the order of `TransferService#apply`; check every class comment is accurate (depends on T072) [FR-032; DEC-30; P39]
+- [X] <a id="t074"></a>T074 [P] Bring the documents in line: page 6 (`Money`); in this spec, FR-006, the clarification on `-0` and item 16; the plan (design overview, D5, with `Comparable` as a rejected option), research R7, the data model and the contract (depends on T071) [FR-006; DEC-09; P39; plan D5]
+- [X] <a id="t075"></a>T075 Run `bundle exec rspec` until every example passes in random order with 100% line coverage, `bundle exec rubocop` reports zero offences with `.rubocop.yml` unchanged, and `ruby bin/run` on the sample files gives exit status 0 and the DEC-35 balances (depends on T070 to T074) [SC-005, SC-008; DEC-35, DEC-36]
 
 **Checkpoint**: `Money.new` refuses any value that is not a `BigDecimal`; `Money` has no ordering; the code that is not obvious from reading it is commented; every domain message and balance is unchanged; `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences.
 

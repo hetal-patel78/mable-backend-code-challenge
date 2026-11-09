@@ -2,6 +2,7 @@
 
 Phase 0 of the [plan](plan.md). The Technical Context had no open item: the language, tools and layout are fixed by [`design-decisions.md`](../../docs/design-analysis/design-decisions.md), [page 5](../../docs/solution-design/05-high-level-design.md) and `001`'s [research](../001-domain/research.md). This page records how each fixed choice is applied where Ruby, its standard library or the tools need a specific technique. Each entry gives the decision, the rationale and the alternatives considered. P-numbers are the plan's "Decided in the run" items.
 
+<a id="r1"></a>
 ## R1. Reading a CSV file row by row with its line number
 
 - **Decision**: `CsvRows#each` opens the file with `CSV.open(path, 'r:bom|utf-8')` and the CSV library's default options, then reads with `csv.shift` in a loop. It keeps a running count of the physical lines already read, starting at 0. Before each `shift` the row's line number is that count plus 1, so a row spanning several lines (a quoted value with a newline) gets the line where it starts (DEC-07). After each `shift` the count grows by the number of line breaks in `csv.line` (the raw text of the row; a last line with no final break adds 1 when it is not empty, so the count stays a count of physical lines). The line given to `UnreadableFile.at_line` is the count plus 1 at the failing `shift`. Then:
@@ -11,6 +12,7 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
 - **Relation to DEC-32** (plan P29): DEC-32 says the transfers file is read one row at a time with Ruby's CSV library (`CSV.open`, one row per `shift`), so the physical line number of each row is kept (DEC-07). This read is exactly that: one row per `shift`, never the whole file, with `csv.line` giving the raw line that DEC-05 and DEC-07 need and the physical-line count built from it.
 - **Alternatives considered**: a block-style read that yields only the parsed rows (does not give the CSV object, so neither the line number nor the raw line is available); the `strip:` option (strips all whitespace and also inside quotes, depending on the version); `skip_blanks: true` (a line of spaces would not be skipped, and line numbers would need counting by hand).
 
+<a id="r2"></a>
 ## R2. Files that cannot be opened or read
 
 - **Decision**: `CsvRows` turns these into `UnreadableFile`:
@@ -21,12 +23,14 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
 - **Rationale**: an unclosed quote raises `MalformedCSVError` from `shift`. The csv gem's own `InvalidEncodingError` cannot be used for invalid bytes: the gem checks the encoding of all the text it samples to find the line ending (the whole of a small file) before it gives the first row, so the rows before the bad line would never be given; reading bytes and checking each row keeps them (plan P30). On Linux a folder opens and fails on the first read (`EISDIR`); on Windows it fails on open (`EACCES`); rescuing around the whole read gives `cannot read file` in both (plan P21). The readers never check existence (page 6): the `Runner` does, so a missing file only reaches a reader when a caller skips the start checks, and it still gets a clear message.
 - **Alternatives considered**: reading the whole file first to find the bad line (the rows before it would not be given one at a time); `CSV`'s `liberal_parsing` (accepts broken quoting that DEC-04 says must stop the run); passing Ruby's own message (repeats the path with call details).
 
+<a id="r3"></a>
 ## R3. Showing a path
 
 - **Decision**: `DisplayPath.of(path, folder = Dir.pwd)` expands `path` against `folder`, takes `Pathname#relative_path_from(folder)`, and returns that relative path when it has no `..` part (the file is in or below `folder`); otherwise, and when the two paths have no common root (another Windows drive raises `ArgumentError`), it returns the expanded full path (plan P10).
 - **Rationale**: DEC-26 shows the output path relative to the folder the command was run from, or in full if the file is outside that folder; page 2 shows `output/final_balances_2026-11-07_143005.csv` from the project root, the full path from `docs` and `/tmp/day1.csv` in full. A relative path with no `..` part is exactly a file in or below the folder, so the rule needs no other test. The `Runner` applies it to its start-check lines and to the balances and transfers paths it passes on, the infrastructure errors to the paths in their messages and `ReportPrinter` to the output line (plan P11); no application class uses it, so `DisplayPath` stays the one owner of the rule and `application/` does not depend on it.
 - **Alternatives considered**: allowing leading `..` steps (shows a file outside the run folder relative, which DEC-26 does not allow); comparing lengths (gives different answers for the same layout depending on folder names).
 
+<a id="r4"></a>
 ## R4. `LoadBalances` problem by problem
 
 - **Decision**: for each row, in this order (page 6 `LoadBalances`, FR-007):
@@ -39,6 +43,7 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
 - **Rationale**: the order is page 6's, so the problems come out in field order (page 10 picks 6, 13) and the known gap behaves as AC-01.10 and spec clarification 2 state (only an added row records a first line, page 10 pick 30). The duplicate text is taken from the domain error (`001` plan D21), so the domain stays its one owner. Problems are checked before "no rows" so a file whose first line cannot be read reports that line, not "no rows".
 - **Alternatives considered**: catching `DuplicateAccount` from `add` (the balance would have to be checked first, and the duplicate would come after the balance problem, against page 10 pick 13); a separate no-rows error (page 10 pick 32 rejects it).
 
+<a id="r5"></a>
 ## R5. `ProcessDailyTransfer` step by step
 
 - **Decision**: `call` runs, in this order: output path defaulted to `FinalBalancesCsvWriter.default_path(run_time)` when nil; `logger.info(LogMessages.run_started(b, t))` (the paths as given; the `Runner` gives them in their shown form, plan P11); `LoadBalances.new(balances_reader, repository).call(b)`; the opening balances (account number to balance) from one `repository.all`, and the total before as their sum (DEC-26); `transfers_reader.each_row(t)` turning each `Row` into a `TransferResult` and logging it; `NoTransfers.new(t)` when no row was read; `logger.warn(DayResult::ALL_REJECTED_WARNING)` when every result is rejected; total after, and `TotalChanged.new(before, after)` when they differ; `writer.write(repository.all, output_path)`; the `DayResult`; `reporter.print(day_result)`; `logger.info(LogMessages.run_ended(day_result))`; the `DayResult` is returned.
@@ -50,6 +55,7 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
 - **Rationale**: the order is FR-013's; logging each row as it is read keeps the warn lines before an `UnreadableFile` (AC-02.5) and keeps "Run started" and the row lines on a stopped run (spec clarification 3). Building the values one by one, in field order, gives the DEC-19 order with the domain's own check order inside `Transfer` (`001`). Nothing is caught except the domain errors, so `NoTransfers`, `TotalChanged`, `UnreadableFile` and `OutputNotWritable` reach the `Runner`.
 - **Alternatives considered**: logging all results at the end (warn lines would be lost when the file cannot be read past a line); a `case` on the error class (longer than one lookup table).
 
+<a id="r6"></a>
 ## R6. Writing the output file
 
 - **Decision**: `FinalBalancesCsvWriter.default_path(run_time)` returns `"output/final_balances_#{run_time.strftime('%Y-%m-%d_%H%M%S')}.csv"` (local time, 24-hour clock). `write(accounts, path)`:
@@ -60,6 +66,7 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
 - **Rationale**: `File::EXCL` makes the open fail with `EEXIST` when any file or folder is already there at that moment, so a file that appeared after the start checks is never touched (page 6 pick 40) and a folder at the path gives "cannot write output file" (page 10 pick 14). `File::BINARY` stops Windows turning LF into CR LF (page 10 pick 17). Writing as it goes needs no extra memory (page 9: O(1) extra space). Folders already created stay when a deeper one fails (spec clarification 4). `Time#strftime` uses the time's own zone, which is local for `Time.now`.
 - **Alternatives considered**: `File.write` (overwrites); `CSV.open(path, 'w')` (no exclusive create; uses the system's line ending); building the whole text first (O(m) extra space, and the partial-write case could not happen).
 
+<a id="r7"></a>
 ## R7. The runner
 
 - **Decision**: `Runner#run(arguments)`:
@@ -76,6 +83,7 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
 - **Rationale**: FR-031's order. The usage check comes before the logger is used, so a wrong-argument run logs nothing (page 10 pick 3). Returning the status rather than calling `exit` keeps every runner behaviour testable in one process (page 6 pick 42).
 - **Alternatives considered**: `OptionParser` (named options are out of scope, page 4); calling `exit` in the `Runner`.
 
+<a id="r8"></a>
 ## R8. RuboCop limits that shape the code
 
 - **Decision**: methods stay within 10 lines and `Metrics/AbcSize`; classes within 100 lines; `ProcessDailyTransfer` takes its six parts as one `ProcessDailyTransfer::Parts` parameter object (`Data.define` with the six names), reads each by its name, and takes the run time as a separate keyword (plan P6). Spec files follow `001`'s conventions (one expectation per example, examples of at most 5 lines, at most 3 levels of nesting).
@@ -83,6 +91,7 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
 - **Rationale**: DEC-36 keeps RuboCop's defaults. `Metrics/ParameterLists` allows 5 parameters and counts keyword arguments, so seven separate keywords would be an offence; a `Parts` value counts once and keeps every part named where it is built and where it is read. `Data.define` raises Ruby's own `ArgumentError` for a missing or unknown name and gives a frozen value. Splitting `ProcessDailyTransfer` into more classes would add names page 6 does not have.
 - **Alternatives considered**: a `.rubocop.yml` exception (changes the defaults); seven keyword parameters (an offence under the default `Metrics/ParameterLists`); the six names collected in `**parts` and read through a list of names (keeps the limit, but the constructor does not name its parts, so it is harder to read).
 
+<a id="r9"></a>
 ## R9. Test helpers and fakes
 
 - **Decision** (plan P17):
@@ -96,12 +105,14 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
 - **Rationale**: DEC-34 asks for small builders and fakes; each helper keeps one kind of set-up out of the examples. `Dir.chdir` with a block restores the folder even when an example fails; the specs run one at a time, so changing the process's folder is safe.
 - **Alternatives considered**: `instance_double` for every fake reader (the rows and the unreadable line are clearer as data); stubbing `Dir.pwd` (tests would depend on how the code finds the folder).
 
+<a id="r10"></a>
 ## R10. Line endings in the end-to-end specs
 
 - **Decision**: `run_command` replaces each `"\r\n"` with `"\n"` in the captured standard output and standard error; the output file is read with `File.binread` and compared with the expected bytes, LF only.
 - **Rationale**: Ruby on Windows writes CR LF to a pipe in text mode, so a byte comparison of the streams would fail there (spec clarification 5); the program's streams are not changed for a test. The output file is written in binary mode (R6), so its bytes are the same everywhere.
 - **Alternatives considered**: switching the program's standard output to binary mode (new behaviour); comparing the streams only on Linux.
 
+<a id="r11"></a>
 ## R11. Sample copies and fixture bytes
 
 - **Decision**: `data/` and `spec/fixtures/sample/` hold copies of `docs/challenge/mable_account_balances.csv` and `docs/challenge/mable_transactions.csv`, made with `cp` and checked with `git diff --no-index` against the originals. Byte-sensitive reading cases are written by the tests (plan P20).

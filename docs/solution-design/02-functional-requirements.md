@@ -29,22 +29,22 @@ The program must load every account and its opening balance from the balances fi
 
 Decisions: [DEC-04](../design-analysis/design-decisions.md#dec-04), [DEC-05](../design-analysis/design-decisions.md#dec-05), [DEC-06](../design-analysis/design-decisions.md#dec-06), [DEC-07](../design-analysis/design-decisions.md#dec-07), [DEC-08](../design-analysis/design-decisions.md#dec-08), [DEC-09](../design-analysis/design-decisions.md#dec-09), [DEC-10](../design-analysis/design-decisions.md#dec-10), [DEC-11](../design-analysis/design-decisions.md#dec-11), [DEC-12](../design-analysis/design-decisions.md#dec-12), [DEC-31](../design-analysis/design-decisions.md#dec-31).
 
-**AC-01.1 A valid file is loaded, including leading zeros and a $0.00 balance.**
+<a id="ac-01-1"></a>**AC-01.1 A valid file is loaded, including leading zeros and a $0.00 balance.**
 - Given `balances.csv` above and a transfers file with one valid row.
 - When the program runs.
 - Then the final balances section lists all three accounts in file order, with `0000123412341234` kept as written (leading zeros are not lost) and its balance `0.00` accepted.
 
-**AC-01.2 Common CSV forms are accepted.**
+<a id="ac-01-2"></a>**AC-01.2 Common CSV forms are accepted.**
 - Given a balances file that starts with a UTF-8 byte-order mark (an invisible marker some editors add), uses Windows line endings, has no final newline, quotes a value and has spaces around values: `"1111234522226789", 100.00 `.
 - When the program runs.
 - Then the account is loaded as `1111234522226789` with balance `100.00`, exactly as if the line were `1111234522226789,100.00`.
 
-**AC-01.3 Blank lines are skipped but still counted in line numbers.**
+<a id="ac-01-3"></a>**AC-01.3 Blank lines are skipped but still counted in line numbers.**
 - Given a balances file whose line 2 is empty and whose line 3 holds only spaces.
 - When the program runs.
 - Then neither line is an error or an account, and the row on line 4 is reported as line 4 in any message.
 
-**AC-01.4 An invalid file reports every problem and stops the run.**
+<a id="ac-01-4"></a>**AC-01.4 An invalid file reports every problem and stops the run.**
 - Given this balances file (line 2 is empty):
 
 ```
@@ -70,12 +70,12 @@ Error: the balances file is invalid (5 problems):
 E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 5 problems
 ```
 
-**AC-01.5 A row with several problems reports each one, in field order.** (Field order is the assistant's pick.)
+<a id="ac-01-5"></a>**AC-01.5 A row with several problems reports each one, in field order.** (Field order is the assistant's pick.)
 - Given a balances file whose line 1 is `12345,abc`.
 - When the program runs.
 - Then the problem lines are `Line 1: account number "12345" must be exactly 16 digits` and `Line 1: balance "abc" is not a valid amount`, the count is `(2 problems)`, and the exit status is 1.
 
-**AC-01.6 Other balance problems.** Each of these rows on line 2 gives the problem line shown, and the exit status is 1:
+<a id="ac-01-6"></a>**AC-01.6 Other balance problems.** Each of these rows on line 2 gives the problem line shown, and the exit status is 1:
 
 | Row on line 2 | Problem line |
 |---|---|
@@ -86,7 +86,7 @@ E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 5 problem
 
 When a row has the wrong number of fields, only the field-count problem is reported for it, because it is not known which value is which. (Assistant's pick.)
 
-**AC-01.7 A header row makes the file invalid, with a hint.**
+<a id="ac-01-7"></a>**AC-01.7 A header row makes the file invalid, with a hint.**
 - Given a balances file whose line 1 is `account,balance`.
 - When the program runs.
 - Then the exit status is 1 and the problem lines are:
@@ -98,7 +98,7 @@ When a row has the wrong number of fields, only the field-count problem is repor
 
 A mistyped account number such as `1111O34522226789` on line 1 gets only the 16-digit message, with no header hint, because it contains digits ([DEC-06](../design-analysis/design-decisions.md#dec-06)). A header-looking line 1 with the wrong number of fields gives `Line 1: expected 2 fields, found 3. This looks like a header row; files must not have a header.` (assistant's pick, following the transfers rule in DEC-06).
 
-**AC-01.8 An empty balances file stops the run.**
+<a id="ac-01-8"></a>**AC-01.8 An empty balances file stops the run.**
 - Given a balances file `empty.csv` that is empty or holds only blank lines.
 - When `bin/run empty.csv transfers.csv` runs.
 - Then stdout is (nothing), the exit status is 1, and stderr is:
@@ -110,7 +110,7 @@ E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 1 problem
 
 (The log line wording for an empty balances file is the assistant's pick: it counts as an invalid balances file under [DEC-11](../design-analysis/design-decisions.md#dec-11).)
 
-**AC-01.9 A balances file that cannot be read past a line.**
+<a id="ac-01-9"></a>**AC-01.9 A balances file that cannot be read past a line.**
 - Given a balances file `bad.csv` whose line 3 is `12345,100.00` and whose line 7 opens a quote that is never closed.
 - When `bin/run bad.csv transfers.csv` runs.
 - Then stdout is (nothing), the exit status is 1, and stderr is:
@@ -124,7 +124,7 @@ E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 2 problem
 
 (The wording of the unreadable-line problem inside the balances message, and counting it as one problem, are the assistant's pick.)
 
-**AC-01.10 A duplicate account is reported even when its balance is invalid.**
+<a id="ac-01-10"></a>**AC-01.10 A duplicate account is reported even when its balance is invalid.**
 - Given a balances file whose line 1 is `1111234522226789,5000.00` and whose line 2 is `1111234522226789,abc`.
 - When the program runs.
 - Then the exit status is 1, the count is `(2 problems)`, and the problem lines are:
@@ -146,7 +146,7 @@ The program must read the transfers file one row at a time, in file order, give 
 
 Decisions: [DEC-04](../design-analysis/design-decisions.md#dec-04), [DEC-05](../design-analysis/design-decisions.md#dec-05), [DEC-06](../design-analysis/design-decisions.md#dec-06), [DEC-07](../design-analysis/design-decisions.md#dec-07), [DEC-20](../design-analysis/design-decisions.md#dec-20), [DEC-21](../design-analysis/design-decisions.md#dec-21), [DEC-32](../design-analysis/design-decisions.md#dec-32).
 
-**AC-02.1 Blank lines are skipped; a row with the wrong number of fields is rejected and the run continues.**
+<a id="ac-02-1"></a>**AC-02.1 Blank lines are skipped; a row with the wrong number of fields is rejected and the run continues.**
 - Given `balances.csv` and this `transfers.csv` (lines 2 and 3 are blank; in the test, line 3 holds only spaces):
 
 ```
@@ -175,7 +175,7 @@ W, [<timestamp> #<pid>]  WARN -- : Line 4 rejected: ************6789 -> ********
 
 In the log line of a row with the wrong number of fields, the fields are taken by position (from, to, amount); fields the row does not have are left out, and fields after the third are not logged. (Assistant's pick.)
 
-**AC-02.2 A line of commas is a row with empty fields.** (Showing an empty value as `""` is the assistant's pick.)
+<a id="ac-02-2"></a>**AC-02.2 A line of commas is a row with empty fields.** (Showing an empty value as `""` is the assistant's pick.)
 - Given `balances.csv` and a `transfers.csv` whose line 1 is `,,`.
 - When the program runs.
 - Then the row is rejected, the transfers line is `  Line 1  rejected  "" -> ""  ""  invalid_account_number`, the report shows the all-rejected warning, and stderr is:
@@ -185,7 +185,7 @@ W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: **** -> **** "" invalid_acco
 W, [<timestamp> #<pid>]  WARN -- : All transfers were rejected; check this is the right file.
 ```
 
-**AC-02.3 A header row is rejected with a hint; every row rejected gives a warning but still completes.**
+<a id="ac-02-3"></a>**AC-02.3 A header row is rejected with a hint; every row rejected gives a warning but still completes.**
 - Given `balances.csv` and a `transfers.csv` holding only `from,to,amount`.
 - When the program runs.
 - Then the exit status is 0, the output file is written with the balances unchanged, and stdout is:
@@ -222,7 +222,7 @@ W, [<timestamp> #<pid>]  WARN -- : All transfers were rejected; check this is th
 
 A header-looking line 1 with the wrong number of fields, such as `from,to`, gives `  Line 1  rejected  malformed_row: 2 fields, expected 3. This looks like a header row; files must not have a header.` (Joining the two with ". " is the assistant's pick.)
 
-**AC-02.4 An empty transfers file stops the run.**
+<a id="ac-02-4"></a>**AC-02.4 An empty transfers file stops the run.**
 - Given `balances.csv` and a transfers file `empty.csv` that is empty or holds only blank lines.
 - When `bin/run balances.csv empty.csv` runs.
 - Then stdout is (nothing), no output file is written, the exit status is 1, and stderr is:
@@ -234,7 +234,7 @@ E, [<timestamp> #<pid>] ERROR -- : Run stopped: transfers file has no transfers
 
 - And if the balances file is also invalid, only the balances error from [FR-01](#fr-01-load-the-balances-file) is shown, because the balances file is checked first.
 
-**AC-02.5 A transfers file that cannot be read past a line stops the run, discarding earlier transfers.**
+<a id="ac-02-5"></a>**AC-02.5 A transfers file that cannot be read past a line stops the run, discarding earlier transfers.**
 - Given `balances.csv` and a `bad.csv` whose line 1 is a valid transfer and whose line 2 opens a quote that is never closed.
 - When `bin/run balances.csv bad.csv` runs.
 - Then the transfer on line 1 is discarded, stdout is (nothing), no output file is written, the exit status is 1, and stderr is:
@@ -254,7 +254,7 @@ The program must apply a valid transfer by taking the amount from the from accou
 
 Decisions: [DEC-13](../design-analysis/design-decisions.md#dec-13), [DEC-14](../design-analysis/design-decisions.md#dec-14), [DEC-16](../design-analysis/design-decisions.md#dec-16), [DEC-18](../design-analysis/design-decisions.md#dec-18), [DEC-19](../design-analysis/design-decisions.md#dec-19).
 
-**AC-03.1 A valid transfer moves the money.**
+<a id="ac-03-1"></a>**AC-03.1 A valid transfer moves the money.**
 - Given `balances.csv` and a `transfers.csv` of `1111234522226789,1212343433335665,30.00`.
 - When the program runs.
 - Then the exit status is 0, stderr is (nothing), and stdout contains:
@@ -269,12 +269,12 @@ Final balances
   0000123412341234     0.00     0.00
 ```
 
-**AC-03.2 A rejected transfer changes nothing and the run continues.**
+<a id="ac-03-2"></a>**AC-03.2 A rejected transfer changes nothing and the run continues.**
 - Given any transfer rejected for any of the six reasons in AC-03.3.
 - When the program runs.
 - Then both accounts keep their balances, the next row is processed, and the run ends with exit status 0.
 
-**AC-03.3 Each rejected transfer has exactly one reason: the first check it fails, in this order.**
+<a id="ac-03-3"></a>**AC-03.3 Each rejected transfer has exactly one reason: the first check it fails, in this order.**
 
 | Order | Reason code | When |
 |---|---|---|
@@ -298,7 +298,7 @@ The program must reject a transfer that would leave the from account below $0.00
 
 Decisions: [DEC-13](../design-analysis/design-decisions.md#dec-13), [DEC-10](../design-analysis/design-decisions.md#dec-10), [DEC-19](../design-analysis/design-decisions.md#dec-19).
 
-**AC-04.1 Below $0 by one cent is rejected, with both balances unchanged.**
+<a id="ac-04-1"></a>**AC-04.1 Below $0 by one cent is rejected, with both balances unchanged.**
 - Given `balances.csv` and a `transfers.csv` of `1111234522226789,1212343433335665,100.01`.
 - When the program runs.
 - Then the exit status is 0, the balances stay 100.00, 50.00 and 0.00, stdout contains `  Line 1  rejected  1111234522226789 -> 1212343433335665  100.01  insufficient_funds`, and stderr is:
@@ -308,12 +308,12 @@ W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************6789 -> ********
 W, [<timestamp> #<pid>]  WARN -- : All transfers were rejected; check this is the right file.
 ```
 
-**AC-04.2 Exactly $0 is applied.**
+<a id="ac-04-2"></a>**AC-04.2 Exactly $0 is applied.**
 - Given `balances.csv` and a `transfers.csv` of `1111234522226789,1212343433335665,100.00`.
 - When the program runs.
 - Then the transfer is applied, stderr is (nothing), and the closing balances are 0.00, 150.00 and 0.00 (the opening balances are 100.00, 50.00 and 0.00).
 
-**AC-04.3 An account already at $0.00 cannot pay anything.**
+<a id="ac-04-3"></a>**AC-04.3 An account already at $0.00 cannot pay anything.**
 - Given `balances.csv` and a `transfers.csv` of `0000123412341234,1111234522226789,0.01`.
 - When the program runs.
 - Then it is rejected as `insufficient_funds` and the balances are unchanged.
@@ -326,7 +326,7 @@ The program must reject a transfer whose from or to account is a valid 16-digit 
 
 Decisions: [DEC-17](../design-analysis/design-decisions.md#dec-17).
 
-**AC-05.1 Unknown to account.**
+<a id="ac-05-1"></a>**AC-05.1 Unknown to account.**
 - Given `balances.csv` and a `transfers.csv` of `1111234522226789,9999888877776666,10.00`.
 - When the program runs.
 - Then the exit status is 0, stdout contains `  Line 1  rejected  1111234522226789 -> 9999888877776666  10.00  unknown_account`, the final balances list only the three loaded accounts, unchanged, and stderr is:
@@ -336,7 +336,7 @@ W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************6789 -> ********
 W, [<timestamp> #<pid>]  WARN -- : All transfers were rejected; check this is the right file.
 ```
 
-**AC-05.2 Unknown from account.**
+<a id="ac-05-2"></a>**AC-05.2 Unknown from account.**
 - Given `balances.csv` and a `transfers.csv` of `9999888877776666,1111234522226789,10.00`.
 - When the program runs.
 - Then it is rejected as `unknown_account` and no balance changes.
@@ -349,7 +349,7 @@ The program must accept only account numbers of exactly 16 digits, kept as text,
 
 Decisions: [DEC-08](../design-analysis/design-decisions.md#dec-08), [DEC-09](../design-analysis/design-decisions.md#dec-09), [DEC-10](../design-analysis/design-decisions.md#dec-10), [DEC-19](../design-analysis/design-decisions.md#dec-19).
 
-**AC-06.1 Account numbers.** Given `balances.csv` and a transfer from the value below to `1212343433335665` for `10.00`, when the program runs, then:
+<a id="ac-06-1"></a>**AC-06.1 Account numbers.** Given `balances.csv` and a transfer from the value below to `1212343433335665` for `10.00`, when the program runs, then:
 
 | From value | Result |
 |---|---|
@@ -362,7 +362,7 @@ Decisions: [DEC-08](../design-analysis/design-decisions.md#dec-08), [DEC-09](../
 
 There is no check-digit check: all five sample account numbers are accepted.
 
-**AC-06.2 Amounts.** Given `balances.csv` and a transfer from `1111234522226789` to `1212343433335665` with the amount below, when the program runs, then:
+<a id="ac-06-2"></a>**AC-06.2 Amounts.** Given `balances.csv` and a transfer from `1111234522226789` to `1212343433335665` with the amount below, when the program runs, then:
 
 | Amount as written | Result |
 |---|---|
@@ -378,7 +378,7 @@ A rejected line shows the values as written in the file, after trimming spaces: 
 
 An applied amount is also shown with 2 decimal places in the info log line when `LOG_LEVEL=info` ([AC-09.5](#fr-09-the-runner)).
 
-**AC-06.3 The same rules hold in the balances file.** A balance follows the amount rules above, except that `0` and `0.00` are valid and a negative balance gets its own message ([FR-01](#fr-01-load-the-balances-file)).
+<a id="ac-06-3"></a>**AC-06.3 The same rules hold in the balances file.** A balance follows the amount rules above, except that `0` and `0.00` are valid and a negative balance gets its own message ([FR-01](#fr-01-load-the-balances-file)).
 
 ---
 
@@ -388,7 +388,7 @@ The program must apply each transfer once, in file order, never retry a rejected
 
 Decisions: [DEC-15](../design-analysis/design-decisions.md#dec-15), [DEC-16](../design-analysis/design-decisions.md#dec-16).
 
-**AC-07.1 One pass, no retry, repeats applied.**
+<a id="ac-07-1"></a>**AC-07.1 One pass, no retry, repeats applied.**
 - Given `balances.csv` and this `transfers.csv`:
 
 ```
@@ -428,7 +428,7 @@ The report has five parts, in this order, separated by one empty line. Within a 
 
 ### Acceptance criteria
 
-**AC-08.1 The sample files give the exact expected result.**
+<a id="ac-08-1"></a>**AC-08.1 The sample files give the exact expected result.**
 - Given the challenge's sample files in `data/`.
 - When `bin/run` runs with no arguments.
 - Then the exit status is 0, stderr is (nothing), and stdout is:
@@ -468,7 +468,7 @@ Output file: output/final_balances_2026-11-07_143005.csv
 3212343433335755,48679.50
 ```
 
-**AC-08.2 A day with mixed rejections.**
+<a id="ac-08-2"></a>**AC-08.2 A day with mixed rejections.**
 - Given `balances.csv` and this `transfers.csv`:
 
 ```
@@ -525,20 +525,20 @@ W, [<timestamp> #<pid>]  WARN -- : Line 5 rejected: ************5665 -> ********
 0000123412341234,70.00
 ```
 
-**AC-08.3 The output file.**
+<a id="ac-08-3"></a>**AC-08.3 The output file.**
 - The output file must have no header, one account per line as `account number,balance`, full account numbers, balances with exactly 2 decimal places, in load order: the same format as the balances file, so it can be the next day's balances file.
 - Every line, the last one included, must end with a line feed (LF) only, on every operating system. (Assistant's pick.)
 - With no third argument, it must be `output/final_balances_YYYY-MM-DD_HHMMSS.csv`, named from the local date and time the run started (24-hour clock).
 - With a third argument, that path must be used as given, and any missing folders on it must be created.
 
-**AC-08.4 The output path is shown relative to where the command was run, or in full when the file is outside that folder.**
+<a id="ac-08-4"></a>**AC-08.4 The output path is shown relative to where the command was run, or in full when the file is outside that folder.**
 - Given the sample files.
 - When `bin/run` runs with no arguments from the project root.
 - Then the last report line is `Output file: output/final_balances_2026-11-07_143005.csv`.
 - And when `../bin/run` runs with no arguments from the project's `docs` folder, the output file is outside that folder, so the last line shows the full path: `Output file: <project root>/output/final_balances_2026-11-07_143005.csv`, where `<project root>` is the full path of the project folder.
 - And when a third argument names a file outside the current folder, such as `/tmp/day1.csv`, the last line shows the full path: `Output file: /tmp/day1.csv`.
 
-**AC-08.5 A changed total stops the run.**
+<a id="ac-08-5"></a>**AC-08.5 A changed total stops the run.**
 - Given the sample files and a fault that makes the total after the transfers (66749.00) differ from the total before (66750.00). With correct code this cannot happen; the test creates it on purpose.
 - When the run reaches the end of the transfers.
 - Then stdout is (nothing), no output file is written, the exit status is 1, and stderr is:
@@ -556,7 +556,7 @@ The program must start from `bin/run`, process one balances file and one transfe
 
 Decisions: [DEC-02](../design-analysis/design-decisions.md#dec-02), [DEC-03](../design-analysis/design-decisions.md#dec-03), [DEC-22](../design-analysis/design-decisions.md#dec-22), [DEC-23](../design-analysis/design-decisions.md#dec-23), [DEC-25](../design-analysis/design-decisions.md#dec-25), [DEC-28](../design-analysis/design-decisions.md#dec-28), [DEC-29](../design-analysis/design-decisions.md#dec-29).
 
-**AC-09.1 Arguments.**
+<a id="ac-09-1"></a>**AC-09.1 Arguments.**
 
 | Command | Balances | Transfers | Output |
 |---|---|---|---|
@@ -566,7 +566,7 @@ Decisions: [DEC-02](../design-analysis/design-decisions.md#dec-02), [DEC-03](../
 
 Typed paths are relative to the current folder. The default paths are relative to the project root, so `bin/run` with no arguments works from any folder.
 
-**AC-09.2 Wrong number of arguments.**
+<a id="ac-09-2"></a>**AC-09.2 Wrong number of arguments.**
 - Given any folder.
 - When `bin/run` runs with 1 argument, or with 4 or more, including `bin/run -h` and `bin/run --help`.
 - Then stdout is (nothing), no file is read or written, the exit status is 1, and stderr is exactly:
@@ -576,7 +576,7 @@ Usage: bin/run [BALANCES_FILE TRANSFERS_FILE [OUTPUT_FILE]]
 With no arguments, runs the sample files in data/.
 ```
 
-**AC-09.3 Start checks are reported together.**
+<a id="ac-09-3"></a>**AC-09.3 Start checks are reported together.**
 - Given that neither `missing1.csv` nor `missing2.csv` exists, and `out/day1.csv` already exists.
 - When `bin/run missing1.csv missing2.csv out/day1.csv` runs.
 - Then stdout is (nothing), no file is read, `out/day1.csv` is unchanged, the exit status is 1, and stderr is:
@@ -591,7 +591,7 @@ E, [<timestamp> #<pid>] ERROR -- : Run stopped: start checks failed (file not fo
 - Every problem found at the start gets its own `Error:` line, in the order balances, transfers, output, followed by one log line that lists only the reasons that occurred (the order and the log wording are the assistant's pick). With only the two missing files, the log line is `Run stopped: start checks failed (file not found)`.
 - With only an existing output file, such as `bin/run balances.csv transfers.csv out/day1.csv`, no transfer is read, `out/day1.csv` is unchanged, and stderr is the third `Error:` line above followed by `E, [<timestamp> #<pid>] ERROR -- : Run stopped: start checks failed (output file already exists)`.
 
-**AC-09.3a An input file that cannot be opened stops the run.**
+<a id="ac-09-3a"></a>**AC-09.3a An input file that cannot be opened stops the run.**
 - Given `balances.csv` exists but cannot be opened (permission denied).
 - When `bin/run balances.csv transfers.csv` runs.
 - Then stdout is (nothing), no output file is written, the exit status is 1, and stderr is:
@@ -603,7 +603,7 @@ E, [<timestamp> #<pid>] ERROR -- : Run stopped: cannot read file
 
 The same holds for a transfers file that cannot be opened. This problem is found when the file is opened, after the start checks in AC-09.3 have passed. (The message wording, and reusing the `cannot read file` log line, are the assistant's pick.)
 
-**AC-09.4 An output file that cannot be written stops the run.**
+<a id="ac-09-4"></a>**AC-09.4 An output file that cannot be written stops the run.**
 - Given `balances.csv`, a valid `transfers.csv`, and a third argument `out` that names an existing folder.
 - When `bin/run balances.csv transfers.csv out` runs.
 - Then stdout is (nothing), no file is left behind, the exit status is 1, and stderr is:
@@ -615,7 +615,7 @@ E, [<timestamp> #<pid>] ERROR -- : Run stopped: cannot write output file
 
 A path that is an existing folder gives this error, not the "already exists" error. (Assistant's pick.)
 
-**AC-09.5 Log level.**
+<a id="ac-09-5"></a>**AC-09.5 Log level.**
 - Given the sample files.
 - When `LOG_LEVEL=info bin/run` runs (`INFO` and `Info` work the same).
 - Then stdout is the report in AC-08.1, the exit status is 0, and stderr is:
@@ -632,16 +632,16 @@ I, [<timestamp> #<pid>]  INFO -- : Run ended: processed 4, applied 4, rejected 0
 - With `LOG_LEVEL` unset, `warn`, or any other value such as `debug`, the level is warn and the sample run's stderr is (nothing).
 - At info level, a run with rejections ends with, for example, `Run ended: processed 5, applied 2, rejected 3 (same_account 1, unknown_account 1, insufficient_funds 1)`.
 
-**AC-09.6 Account numbers are masked only in log lines.**
+<a id="ac-09-6"></a>**AC-09.6 Account numbers are masked only in log lines.**
 - Log lines must show 12 asterisks and the last 4 characters: `************6789`. A value that is not a valid account number is masked the same way (`12345` becomes `*2345`), and a value of 4 characters or fewer becomes `****`.
 - The report, the error messages and the output file must show full account numbers. Error log lines must show no account numbers at all.
 
-**AC-09.7 Every run starts from the balances file.**
+<a id="ac-09-7"></a>**AC-09.7 Every run starts from the balances file.**
 - Given the sample files.
 - When `bin/run` runs twice, one second apart.
 - Then both runs give the same report and the same final balances, and each writes its own file (`..._143005.csv` and `..._143006.csv`). Nothing in the report, the logs or the output names a company.
 
-**AC-09.8 Exit status.**
+<a id="ac-09-8"></a>**AC-09.8 Exit status.**
 - 0 for every completed run, even if some or all transfers were rejected.
 - 1 for every stopped run: wrong arguments, a missing or unreadable input file, an invalid balances file, an empty transfers file, a file that cannot be read past a line, a changed total, an output file that already exists, or an output file that cannot be written.
 

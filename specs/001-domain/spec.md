@@ -37,16 +37,17 @@ These are copied from [page 2](../../docs/solution-design/02-functional-requirem
 
 ### Session 2026-11-07
 
-- Q: When a transfers row has the wrong number of fields, does its `TransferResult` keep every field the row had, as written? → A: Yes. It keeps all of the row's fields, in order, as written after trimming, so the number of fields gives `N fields, expected 3` for the report and the log takes from, to and amount by position (page 2 FR-02 and FR-08; page 10 pick 12).
-- Q: Are two `Money` values equal when one was written with a minus sign and the other was not, such as `-0` and `0`? → A: Yes. Equality uses the exact amount only; the recorded minus sign changes only whether the value counts as negative. A `Money` made by adding or taking away counts as negative only when its amount is below 0.
-- Q: Should `Account#withdraw` and `Account#deposit` themselves refuse an amount of $0 or less? → A: No. The amount-above-$0 rule lives only in `Transfer` (DEC-30, FR-028); `TransferService` passes them only the amount of a valid `Transfer`, so no test calls them with $0 or less.
+- <a id="clarification-1"></a>Q: When a transfers row has the wrong number of fields, does its `TransferResult` keep every field the row had, as written? → A: Yes. It keeps all of the row's fields, in order, as written after trimming, so the number of fields gives `N fields, expected 3` for the report and the log takes from, to and amount by position (page 2 FR-02 and FR-08; page 10 pick 12).
+- <a id="clarification-2"></a>Q: Are two `Money` values equal when one was written with a minus sign and the other was not, such as `-0` and `0`? → A: Yes. Equality uses the exact amount only; the recorded minus sign changes only whether the value counts as negative. A `Money` made by adding or taking away counts as negative only when its amount is below 0.
+- <a id="clarification-3"></a>Q: Should `Account#withdraw` and `Account#deposit` themselves refuse an amount of $0 or less? → A: No. The amount-above-$0 rule lives only in `Transfer` (DEC-30, FR-028); `TransferService` passes them only the amount of a valid `Transfer`, so no test calls them with $0 or less.
 
 ### Session 2026-11-09 (code review)
 
-- Q: Should `Account#withdraw` and `Account#deposit` guard against an amount of $0 or less? → A: Yes, as the developer asked in the code review (P33): each raises `ArgumentError` for such an amount, a programming error. The business rule, with `InvalidAmount` and its message, still lives only in `Transfer` (FR-008, FR-028), so no transfer outcome changes ([DEC-18](../../docs/design-analysis/design-decisions.md#dec-18), [DEC-30](../../docs/design-analysis/design-decisions.md#dec-30)). This answer replaces the one above.
+- <a id="clarification-4"></a>Q: Should `Account#withdraw` and `Account#deposit` guard against an amount of $0 or less? → A: Yes, as the developer asked in the code review (P33): each raises `ArgumentError` for such an amount, a programming error. The business rule, with `InvalidAmount` and its message, still lives only in `Transfer` (FR-008, FR-028), so no transfer outcome changes ([DEC-18](../../docs/design-analysis/design-decisions.md#dec-18), [DEC-30](../../docs/design-analysis/design-decisions.md#dec-30)). This answer replaces the one above.
 
 ## User Scenarios & Testing *(mandatory)*
 
+<a id="us1"></a>
 ### User Story 1 - A valid transfer moves the money, all or nothing (Priority: P1)
 
 The company asks for an amount to move from one of its accounts to another. When every check passes, the amount leaves the paying account and arrives in the receiving account. When any check fails, neither balance changes, and the reason is exactly one of six reason codes, the first check the transfer fails ([FR-03](../../docs/solution-design/02-functional-requirements.md#fr-03-apply-a-transfer); [DEC-13](../../docs/design-analysis/design-decisions.md#dec-13), [DEC-14](../../docs/design-analysis/design-decisions.md#dec-14), [DEC-16](../../docs/design-analysis/design-decisions.md#dec-16), [DEC-18](../../docs/design-analysis/design-decisions.md#dec-18), [DEC-19](../../docs/design-analysis/design-decisions.md#dec-19)).
@@ -57,7 +58,7 @@ The company asks for an amount to move from one of its accounts to another. When
 
 **Acceptance Scenarios**:
 
-1. **AC-03.1 A valid transfer moves the money** (FR-03; DEC-13, DEC-18).
+1. <a id="ac-03-1"></a>**AC-03.1 A valid transfer moves the money** (FR-03; DEC-13, DEC-18).
    - **Given** the accounts `1111234522226789` 100.00, `1212343433335665` 50.00 and `0000123412341234` 0.00, **When** a `Transfer` from `1111234522226789` to `1212343433335665` of `30.00` is applied, **Then** the balances are 70.00, 80.00 and 0.00 and no error is raised (domain outcome).
    - Run outcome, with `transfers.csv` holding `1111234522226789,1212343433335665,30.00`:
      - Standard output contains:
@@ -74,13 +75,13 @@ The company asks for an amount to move from one of its accounts to another. When
 
      - Standard error: (nothing)
      - Exit status: 0
-2. **AC-03.2 A rejected transfer changes nothing and the run continues** (FR-03; DEC-14, DEC-18).
+2. <a id="ac-03-2"></a>**AC-03.2 A rejected transfer changes nothing and the run continues** (FR-03; DEC-14, DEC-18).
    - **Given** the three accounts above, **When** a transfer is refused for any of the domain reasons (`InvalidAccountNumber`, `InvalidAmount`, `SameAccount`, `UnknownAccount`, `InsufficientFunds`), **Then** both accounts keep their balances, the total stays 150.00, and the next transfer can be applied (domain outcome). `TransferService` finds both accounts before it withdraws, and deposits only after the withdrawal succeeded, so nothing is ever undone.
    - Run outcome, for any transfer rejected for any of the six reasons in AC-03.3:
      - Standard output: the report in the FR-08 layout, listing the row as `rejected` with its reason code, and the final balances unchanged.
      - Standard error: the row's warn line, `W, [<timestamp> #<pid>]  WARN -- : Line N rejected: ...` with its reason code (FR-09, owned by `002`).
      - Exit status: 0
-3. **AC-03.3 Each rejected transfer has exactly one reason: the first check it fails, in this order** (FR-03; DEC-19).
+3. <a id="ac-03-3"></a>**AC-03.3 Each rejected transfer has exactly one reason: the first check it fails, in this order** (FR-03; DEC-19).
 
    | Order | Reason code | When | Refused by (domain outcome) |
    |---|---|---|---|
@@ -117,6 +118,7 @@ The company asks for an amount to move from one of its accounts to another. When
 
 ---
 
+<a id="us2"></a>
 ### User Story 2 - No balance ever goes below $0, and exactly $0 is allowed (Priority: P1)
 
 The company may empty an account to exactly $0.00, but no transfer may take an account below $0.00. An account already at $0.00 cannot pay anything ([FR-04](../../docs/solution-design/02-functional-requirements.md#fr-04-a-transfer-that-would-take-an-account-below-0-and-exactly-0); [DEC-10](../../docs/design-analysis/design-decisions.md#dec-10), [DEC-13](../../docs/design-analysis/design-decisions.md#dec-13), [DEC-19](../../docs/design-analysis/design-decisions.md#dec-19)).
@@ -127,7 +129,7 @@ The company may empty an account to exactly $0.00, but no transfer may take an a
 
 **Acceptance Scenarios**:
 
-1. **AC-04.1 Below $0 by one cent is rejected, with both balances unchanged** (FR-04; DEC-13, DEC-18).
+1. <a id="ac-04-1"></a>**AC-04.1 Below $0 by one cent is rejected, with both balances unchanged** (FR-04; DEC-13, DEC-18).
    - **Given** the three accounts of `balances.csv`, **When** a `Transfer` from `1111234522226789` to `1212343433335665` of `100.01` is applied, **Then** `Account#withdraw` raises `InsufficientFunds` with the message `account 1111234522226789 cannot pay 100.01 from a balance of 100.00`, `deposit` is never called, and the balances stay 100.00, 50.00 and 0.00 (domain outcome).
    - Run outcome, with `transfers.csv` holding `1111234522226789,1212343433335665,100.01`:
      - Standard output contains `  Line 1  rejected  1111234522226789 -> 1212343433335665  100.01  insufficient_funds`, and the final balances 100.00, 50.00 and 0.00.
@@ -139,7 +141,7 @@ The company may empty an account to exactly $0.00, but no transfer may take an a
        ```
 
      - Exit status: 0
-2. **AC-04.2 Exactly $0 is applied** (FR-04; DEC-13).
+2. <a id="ac-04-2"></a>**AC-04.2 Exactly $0 is applied** (FR-04; DEC-13).
    - **Given** the three accounts, **When** a `Transfer` from `1111234522226789` to `1212343433335665` of `100.00` is applied, **Then** no error is raised and the balances are 0.00, 150.00 and 0.00 (domain outcome).
    - Run outcome, with `transfers.csv` holding `1111234522226789,1212343433335665,100.00`:
      - Standard output contains `  Line 1  applied  1111234522226789 -> 1212343433335665  100.00` **(derived)** and the final balances, with the opening balances 100.00, 50.00 and 0.00 and the closing balances 0.00, 150.00 and 0.00:
@@ -154,7 +156,7 @@ The company may empty an account to exactly $0.00, but no transfer may take an a
        (each line is indented two spaces in the output)
      - Standard error: (nothing)
      - Exit status: 0 (a completed run, [DEC-25](../../docs/design-analysis/design-decisions.md#dec-25))
-3. **AC-04.3 An account already at $0.00 cannot pay anything** (FR-04; DEC-10, DEC-13).
+3. <a id="ac-04-3"></a>**AC-04.3 An account already at $0.00 cannot pay anything** (FR-04; DEC-10, DEC-13).
    - **Given** the three accounts, **When** a `Transfer` from `0000123412341234` to `1111234522226789` of `0.01` is applied, **Then** `InsufficientFunds` is raised with the message `account 0000123412341234 cannot pay 0.01 from a balance of 0.00` and the balances are unchanged (domain outcome).
    - Run outcome, with `transfers.csv` holding `0000123412341234,1111234522226789,0.01`:
      - Standard output contains `  Line 1  rejected  0000123412341234 -> 1111234522226789  0.01  insufficient_funds` **(derived)** and the final balances unchanged.
@@ -163,6 +165,7 @@ The company may empty an account to exactly $0.00, but no transfer may take an a
 
 ---
 
+<a id="us3"></a>
 ### User Story 3 - A transfer naming an account that is not loaded is refused (Priority: P2)
 
 Only accounts from the balances file exist. A transfer to or from any other valid 16-digit account number is refused, and no account is ever created ([FR-05](../../docs/solution-design/02-functional-requirements.md#fr-05-a-transfer-naming-an-account-that-is-not-loaded); [DEC-17](../../docs/design-analysis/design-decisions.md#dec-17), [DEC-31](../../docs/design-analysis/design-decisions.md#dec-31)).
@@ -173,7 +176,7 @@ Only accounts from the balances file exist. A transfer to or from any other vali
 
 **Acceptance Scenarios**:
 
-1. **AC-05.1 Unknown to account** (FR-05; DEC-17, DEC-18).
+1. <a id="ac-05-1"></a>**AC-05.1 Unknown to account** (FR-05; DEC-17, DEC-18).
    - **Given** the three accounts, **When** a `Transfer` from `1111234522226789` to `9999888877776666` of `10.00` is applied, **Then** `UnknownAccount` is raised with the message `account 9999888877776666 is not loaded`, `withdraw` and `deposit` are never called, the balances stay 100.00, 50.00 and 0.00, and `all` still returns only the three loaded accounts (domain outcome).
    - Run outcome, with `transfers.csv` holding `1111234522226789,9999888877776666,10.00`:
      - Standard output contains `  Line 1  rejected  1111234522226789 -> 9999888877776666  10.00  unknown_account`, and the final balances list only the three loaded accounts, unchanged.
@@ -185,7 +188,7 @@ Only accounts from the balances file exist. A transfer to or from any other vali
        ```
 
      - Exit status: 0
-2. **AC-05.2 Unknown from account** (FR-05; DEC-17).
+2. <a id="ac-05-2"></a>**AC-05.2 Unknown from account** (FR-05; DEC-17).
    - **Given** the three accounts, **When** a `Transfer` from `9999888877776666` to `1111234522226789` of `10.00` is applied, **Then** `UnknownAccount` is raised with the message `account 9999888877776666 is not loaded` and no balance changes (domain outcome).
    - Run outcome, with `transfers.csv` holding `9999888877776666,1111234522226789,10.00`:
      - Standard output contains `  Line 1  rejected  9999888877776666 -> 1111234522226789  10.00  unknown_account` **(derived)** and the final balances unchanged.
@@ -200,6 +203,7 @@ Only accounts from the balances file exist. A transfer to or from any other vali
 
 ---
 
+<a id="us4"></a>
 ### User Story 4 - Only valid account numbers and exact money values are accepted (Priority: P1)
 
 An account number is exactly 16 digits, kept as text so leading zeros stay. A money value is digits, optionally followed by a point and 1 or 2 digits, with an optional leading minus sign that makes it negative; it is never rounded or truncated. A transfer amount must be above $0. A opening balance may be $0.00 but must not be negative ([FR-06](../../docs/solution-design/02-functional-requirements.md#fr-06-validation-of-account-numbers-and-amounts); [DEC-08](../../docs/design-analysis/design-decisions.md#dec-08), [DEC-09](../../docs/design-analysis/design-decisions.md#dec-09), [DEC-10](../../docs/design-analysis/design-decisions.md#dec-10), [DEC-11](../../docs/design-analysis/design-decisions.md#dec-11), [DEC-19](../../docs/design-analysis/design-decisions.md#dec-19)).
@@ -210,7 +214,7 @@ An account number is exactly 16 digits, kept as text so leading zeros stay. A mo
 
 **Acceptance Scenarios**:
 
-1. **AC-06.1 Account numbers** (FR-06; DEC-08).
+1. <a id="ac-06-1"></a>**AC-06.1 Account numbers** (FR-06; DEC-08).
    - Domain outcome: **Given** the text below, **When** an `AccountNumber` is built, **Then**:
 
      | Text | Domain outcome |
@@ -238,7 +242,7 @@ An account number is exactly 16 digits, kept as text so leading zeros stay. A mo
 
      Every rejected row also puts the all-rejected warning in standard output.
 
-2. **AC-06.2 Amounts** (FR-06; DEC-09, DEC-10).
+2. <a id="ac-06-2"></a>**AC-06.2 Amounts** (FR-06; DEC-09, DEC-10).
    - Domain outcome for `Money`: **Given** the text below, **When** a `Money` is built for a transfer amount, **Then**:
 
      | Text | Domain outcome |
@@ -265,7 +269,7 @@ An account number is exactly 16 digits, kept as text so leading zeros stay. A mo
 
      A rejected line shows the values as written in the file, after trimming spaces: `10.` is shown as `10.`, not `10.00`. Every rejected row also puts the all-rejected warning in standard output. The `malformed_row` row is decided by the transfers reader (`002`), not by the domain.
 
-3. **AC-06.3 The same rules hold in the balances file** (FR-06; FR-01 owned by `002`; DEC-09, DEC-10, DEC-11).
+3. <a id="ac-06-3"></a>**AC-06.3 The same rules hold in the balances file** (FR-06; FR-01 owned by `002`; DEC-09, DEC-10, DEC-11).
    - Domain outcome: **Given** the text below, **When** a `Money` is built for an opening balance and the `Account` opening-balance check runs, **Then**:
 
      | Text | Domain outcome |
@@ -283,6 +287,7 @@ An account number is exactly 16 digits, kept as text so leading zeros stay. A mo
 
 ---
 
+<a id="us5"></a>
 ### User Story 5 - The repository keeps the accounts, one per number, in load order (Priority: P2)
 
 The run's accounts are held in one place. It refuses a second account with the same number, says whether a number is already held, finds an account by its number, and lists the accounts in the order they were added. Each add, check and find takes the same time however many accounts there are (supports [FR-01](../../docs/solution-design/02-functional-requirements.md#fr-01-load-the-balances-file), which `002` owns; [NFR-02](../../docs/solution-design/03-non-functional-requirements.md#nfr-02); [DEC-11](../../docs/design-analysis/design-decisions.md#dec-11), [DEC-12](../../docs/design-analysis/design-decisions.md#dec-12), [DEC-31](../../docs/design-analysis/design-decisions.md#dec-31)).
@@ -304,6 +309,7 @@ The run's accounts are held in one place. It refuses a second account with the s
 
 ---
 
+<a id="us6"></a>
 ### User Story 6 - Money stays exact to the cent (Priority: P2)
 
 Every amount and balance is exact after any number of transfers, with no fraction of a cent gained or lost, and is always written with exactly 2 decimal places ([NFR-01](../../docs/solution-design/03-non-functional-requirements.md#nfr-01); [DEC-09](../../docs/design-analysis/design-decisions.md#dec-09), [DEC-35](../../docs/design-analysis/design-decisions.md#dec-35)).
@@ -335,6 +341,7 @@ Every amount and balance is exact after any number of transfers, with no fractio
 
 ---
 
+<a id="us7"></a>
 ### User Story 7 - A developer can install, test and style-check the project (Priority: P3)
 
 A developer (or reviewer) clones the project, installs its gems, runs the tests and the style checker, and gets a readable test list in random order, a coverage report and zero style offences. The code is organised so each rule lives in one place inside the model it belongs to ([NFR-05](../../docs/solution-design/03-non-functional-requirements.md#nfr-05); [DEC-01](../../docs/design-analysis/design-decisions.md#dec-01), [DEC-30](../../docs/design-analysis/design-decisions.md#dec-30), [DEC-33](../../docs/design-analysis/design-decisions.md#dec-33), [DEC-34](../../docs/design-analysis/design-decisions.md#dec-34), [DEC-36](../../docs/design-analysis/design-decisions.md#dec-36)).
@@ -383,75 +390,75 @@ Each is covered by a domain unit test in this spec (DEC-34):
 
 **Account numbers ([FR-06](../../docs/solution-design/02-functional-requirements.md#fr-06-validation-of-account-numbers-and-amounts))**
 
-- **FR-001** (FR-06; DEC-08): `AccountNumber` MUST accept only text of exactly 16 characters, each a digit 0 to 9, and MUST raise `InvalidAccountNumber` for any other text, with the message `account number "<text>" must be exactly 16 digits`, where `<text>` is the text it was given.
-- **FR-002** (FR-06; DEC-08): `AccountNumber` MUST keep the number as text, never as an integer, so leading zeros stay; it MUST give its full text, and two `AccountNumber`s with the same text MUST be equal and usable as the same lookup key. It MUST NOT run a check-digit (Luhn) check and MUST NOT mask itself.
+- <a id="fr-001"></a>**FR-001** (FR-06; DEC-08): `AccountNumber` MUST accept only text of exactly 16 characters, each a digit 0 to 9, and MUST raise `InvalidAccountNumber` for any other text, with the message `account number "<text>" must be exactly 16 digits`, where `<text>` is the text it was given.
+- <a id="fr-002"></a>**FR-002** (FR-06; DEC-08): `AccountNumber` MUST keep the number as text, never as an integer, so leading zeros stay; it MUST give its full text, and two `AccountNumber`s with the same text MUST be equal and usable as the same lookup key. It MUST NOT run a check-digit (Luhn) check and MUST NOT mask itself.
 
 **Money ([FR-06](../../docs/solution-design/02-functional-requirements.md#fr-06-validation-of-account-numbers-and-amounts), [NFR-01](../../docs/solution-design/03-non-functional-requirements.md#nfr-01))**
 
-- **FR-003** (FR-06, NFR-01; DEC-09): `Money` MUST accept text that is digits, optionally followed by a point and 1 or 2 digits, with an optional leading minus sign, and MUST hold the value as an exact decimal, never as floating point. A value never passes through floating point on the way in.
-- **FR-004** (FR-06; DEC-09): `Money` MUST record that a minus sign was written, so `-0` and `-0.00` count as negative, and MUST NOT itself decide whether a negative value is allowed. The recorded sign changes only whether the value counts as negative; a `Money` made by adding or taking away counts as negative only when its amount is below 0.
-- **FR-005** (FR-06, NFR-01; DEC-09): `Money` MUST raise `InvalidAmount` for: empty text (message `<label> is empty`); digits with a point and 3 or more decimal places, with or without a leading minus sign (message `<label> "<text>" has more than 2 decimal places`); and any other text (message `<label> "<text>" is not a valid amount`). `<label>` is `balance` for an opening balance and `amount` for a transfer amount; `<text>` is the text as given. It MUST never round or truncate.
-- **FR-006** (NFR-01; DEC-09): `Money` MUST support adding and taking away values exactly, with no upper limit, and two `Money` values of the same amount MUST be equal, whatever sign was written (`-0` equals `0`).
-- **FR-007** (NFR-01; DEC-09): `Money` MUST write itself with exactly 2 decimal places and no leading zeros before the units digit: `550` is written `550.00`, `007.50` is written `7.50`, `10.5` is written `10.50`.
+- <a id="fr-003"></a>**FR-003** (FR-06, NFR-01; DEC-09): `Money` MUST accept text that is digits, optionally followed by a point and 1 or 2 digits, with an optional leading minus sign, and MUST hold the value as an exact decimal, never as floating point. A value never passes through floating point on the way in.
+- <a id="fr-004"></a>**FR-004** (FR-06; DEC-09): `Money` MUST record that a minus sign was written, so `-0` and `-0.00` count as negative, and MUST NOT itself decide whether a negative value is allowed. The recorded sign changes only whether the value counts as negative; a `Money` made by adding or taking away counts as negative only when its amount is below 0.
+- <a id="fr-005"></a>**FR-005** (FR-06, NFR-01; DEC-09): `Money` MUST raise `InvalidAmount` for: empty text (message `<label> is empty`); digits with a point and 3 or more decimal places, with or without a leading minus sign (message `<label> "<text>" has more than 2 decimal places`); and any other text (message `<label> "<text>" is not a valid amount`). `<label>` is `balance` for an opening balance and `amount` for a transfer amount; `<text>` is the text as given. It MUST never round or truncate.
+- <a id="fr-006"></a>**FR-006** (NFR-01; DEC-09): `Money` MUST support adding and taking away values exactly, with no upper limit, and two `Money` values of the same amount MUST be equal, whatever sign was written (`-0` equals `0`).
+- <a id="fr-007"></a>**FR-007** (NFR-01; DEC-09): `Money` MUST write itself with exactly 2 decimal places and no leading zeros before the units digit: `550` is written `550.00`, `007.50` is written `7.50`, `10.5` is written `10.50`.
 
 **Transfers ([FR-03](../../docs/solution-design/02-functional-requirements.md#fr-03-apply-a-transfer), [FR-06](../../docs/solution-design/02-functional-requirements.md#fr-06-validation-of-account-numbers-and-amounts))**
 
-- **FR-008** (FR-03, FR-06; DEC-10, DEC-13, DEC-19, DEC-30): `Transfer` MUST hold a from `AccountNumber`, a to `AccountNumber` and a `Money` amount. It MUST first raise `InvalidAmount` when the amount is $0 or less, including a negative zero, with the message `amount "<text>" must be greater than 0.00`, and only then raise `SameAccount` when from and to are equal, with the message `account <number> cannot transfer to itself`.
-- **FR-009** (FR-03; DEC-30): `Transfer` MUST NOT look up accounts, check balances, hold `Account`s or change anything.
+- <a id="fr-008"></a>**FR-008** (FR-03, FR-06; DEC-10, DEC-13, DEC-19, DEC-30): `Transfer` MUST hold a from `AccountNumber`, a to `AccountNumber` and a `Money` amount. It MUST first raise `InvalidAmount` when the amount is $0 or less, including a negative zero, with the message `amount "<text>" must be greater than 0.00`, and only then raise `SameAccount` when from and to are equal, with the message `account <number> cannot transfer to itself`.
+- <a id="fr-009"></a>**FR-009** (FR-03; DEC-30): `Transfer` MUST NOT look up accounts, check balances, hold `Account`s or change anything.
 
 **Accounts ([FR-04](../../docs/solution-design/02-functional-requirements.md#fr-04-a-transfer-that-would-take-an-account-below-0-and-exactly-0), [FR-06](../../docs/solution-design/02-functional-requirements.md#fr-06-validation-of-account-numbers-and-amounts))**
 
-- **FR-010** (FR-04; DEC-13, DEC-30): `Account` MUST be the aggregate root: it owns its `AccountNumber` and its balance, and its balance MUST change only through `withdraw` and `deposit`.
-- **FR-011** (FR-04; DEC-13, DEC-18): `Account#withdraw(money)` MUST work out the remaining balance first and change the balance only when the balance minus the amount is $0.00 or more; otherwise it MUST raise `InsufficientFunds` with the message `account <number> cannot pay <amount> from a balance of <balance>` (amounts written with 2 decimal places) and leave the balance unchanged. A withdrawal that leaves exactly $0.00 MUST succeed.
-- **FR-012** (FR-03; DEC-18, DEC-30): `Account#deposit(money)` MUST add the amount and cannot fail for a valid transfer. `withdraw` and `deposit` MUST each raise `ArgumentError` with the message `amount <amount> must be greater than 0.00` for an amount of $0 or less, before changing anything: a guard against programming errors, not a business rule. The amount-above-$0 rule, with `InvalidAmount`, lives only in `Transfer` (FR-008, FR-028), and `TransferService` passes them only the amount of a valid `Transfer`, so the guard never changes a transfer's outcome.
-- **FR-013** (FR-06, supports FR-01; DEC-10, DEC-11): `Account` MUST refuse a negative opening balance with `NegativeBalance` and the message `balance "<text>" must not be negative`, and MUST accept an opening balance of `0.00`. The same check MUST be available on `Account` as a class-level check that needs only the `Money`, so it can run when the row's account number is invalid.
+- <a id="fr-010"></a>**FR-010** (FR-04; DEC-13, DEC-30): `Account` MUST be the aggregate root: it owns its `AccountNumber` and its balance, and its balance MUST change only through `withdraw` and `deposit`.
+- <a id="fr-011"></a>**FR-011** (FR-04; DEC-13, DEC-18): `Account#withdraw(money)` MUST work out the remaining balance first and change the balance only when the balance minus the amount is $0.00 or more; otherwise it MUST raise `InsufficientFunds` with the message `account <number> cannot pay <amount> from a balance of <balance>` (amounts written with 2 decimal places) and leave the balance unchanged. A withdrawal that leaves exactly $0.00 MUST succeed.
+- <a id="fr-012"></a>**FR-012** (FR-03; DEC-18, DEC-30): `Account#deposit(money)` MUST add the amount and cannot fail for a valid transfer. `withdraw` and `deposit` MUST each raise `ArgumentError` with the message `amount <amount> must be greater than 0.00` for an amount of $0 or less, before changing anything: a guard against programming errors, not a business rule. The amount-above-$0 rule, with `InvalidAmount`, lives only in `Transfer` (FR-008, FR-028), and `TransferService` passes them only the amount of a valid `Transfer`, so the guard never changes a transfer's outcome.
+- <a id="fr-013"></a>**FR-013** (FR-06, supports FR-01; DEC-10, DEC-11): `Account` MUST refuse a negative opening balance with `NegativeBalance` and the message `balance "<text>" must not be negative`, and MUST accept an opening balance of `0.00`. The same check MUST be available on `Account` as a class-level check that needs only the `Money`, so it can run when the row's account number is invalid.
 
 **Repository ([FR-05](../../docs/solution-design/02-functional-requirements.md#fr-05-a-transfer-naming-an-account-that-is-not-loaded); supports FR-01)**
 
-- **FR-014** (supports FR-01; DEC-11, DEC-31): `AccountRepository#add(account)` MUST add the account, and MUST raise `DuplicateAccount` with the message `account <number> appears more than once` when the number is already held, keeping the first account unchanged.
-- **FR-015** (supports FR-01; DEC-12, DEC-31): `AccountRepository#include?(account_number)` MUST say whether the number is already held.
-- **FR-016** (FR-05; DEC-17, DEC-31): `AccountRepository#find(account_number)` MUST return the held `Account`, or raise `UnknownAccount` with the message `account <number> is not loaded`. It MUST NOT create an account.
-- **FR-017** (supports FR-01 and FR-08; DEC-26, DEC-27, DEC-31): `AccountRepository#all` MUST return the accounts in the order they were added.
-- **FR-018** (DEC-03, DEC-31): `AccountRepository` MUST hold accounts in memory for one run only, MUST NOT know line numbers and MUST NOT store anything between runs.
+- <a id="fr-014"></a>**FR-014** (supports FR-01; DEC-11, DEC-31): `AccountRepository#add(account)` MUST add the account, and MUST raise `DuplicateAccount` with the message `account <number> appears more than once` when the number is already held, keeping the first account unchanged.
+- <a id="fr-015"></a>**FR-015** (supports FR-01; DEC-12, DEC-31): `AccountRepository#include?(account_number)` MUST say whether the number is already held.
+- <a id="fr-016"></a>**FR-016** (FR-05; DEC-17, DEC-31): `AccountRepository#find(account_number)` MUST return the held `Account`, or raise `UnknownAccount` with the message `account <number> is not loaded`. It MUST NOT create an account.
+- <a id="fr-017"></a>**FR-017** (supports FR-01 and FR-08; DEC-26, DEC-27, DEC-31): `AccountRepository#all` MUST return the accounts in the order they were added.
+- <a id="fr-018"></a>**FR-018** (DEC-03, DEC-31): `AccountRepository` MUST hold accounts in memory for one run only, MUST NOT know line numbers and MUST NOT store anything between runs.
 
 **Applying a transfer ([FR-03](../../docs/solution-design/02-functional-requirements.md#fr-03-apply-a-transfer), [FR-04](../../docs/solution-design/02-functional-requirements.md#fr-04-a-transfer-that-would-take-an-account-below-0-and-exactly-0), [FR-05](../../docs/solution-design/02-functional-requirements.md#fr-05-a-transfer-naming-an-account-that-is-not-loaded))**
 
-- **FR-019** (FR-03, FR-04, FR-05; DEC-13, DEC-17, DEC-18): `TransferService` MUST apply one `Transfer` against the repository in this order: find the from account, find the to account, `withdraw` from the from account, then `deposit` to the to account. It MUST let `UnknownAccount` or `InsufficientFunds` pass to its caller with both balances unchanged.
-- **FR-020** (FR-03; DEC-14, DEC-18): `TransferService` MUST NOT read rows, build `TransferResult`s, log, or undo anything, and every transfer it is given MUST end fully applied or not applied at all.
-- **FR-021** (FR-03; DEC-16): every `Transfer` MUST be applied on its own; two equal transfers MUST both be applied.
+- <a id="fr-019"></a>**FR-019** (FR-03, FR-04, FR-05; DEC-13, DEC-17, DEC-18): `TransferService` MUST apply one `Transfer` against the repository in this order: find the from account, find the to account, `withdraw` from the from account, then `deposit` to the to account. It MUST let `UnknownAccount` or `InsufficientFunds` pass to its caller with both balances unchanged.
+- <a id="fr-020"></a>**FR-020** (FR-03; DEC-14, DEC-18): `TransferService` MUST NOT read rows, build `TransferResult`s, log, or undo anything, and every transfer it is given MUST end fully applied or not applied at all.
+- <a id="fr-021"></a>**FR-021** (FR-03; DEC-16): every `Transfer` MUST be applied on its own; two equal transfers MUST both be applied.
 
 **Transfer results ([FR-03](../../docs/solution-design/02-functional-requirements.md#fr-03-apply-a-transfer); supports FR-08)**
 
-- **FR-022** (FR-03; DEC-19): `TransferResult` MUST hold the line number, the row's values as written (after trimming: every field the row had, in order, so a `malformed_row` result keeps fewer or more than 3 and their number gives the field count), and either applied or exactly one reason code from `malformed_row`, `invalid_account_number`, `invalid_amount`, `same_account`, `unknown_account` and `insufficient_funds`. It is the application's record of each row's outcome and lives in `lib/application/` (DEC-19).
-- **FR-023** (FR-03; DEC-06, DEC-19): a rejected `TransferResult` for a header-looking row MUST also carry the header hint `This looks like a header row; files must not have a header.`; any other result carries none.
-- **FR-024** (FR-03; DEC-19, DEC-26): the six reason codes MUST be defined once, in `TransferResult`, in the [DEC-19](../../docs/design-analysis/design-decisions.md#dec-19) check order, so the summary (`002`) can list counts in that order.
-- **FR-025** (FR-03; DEC-26): `TransferResult` MUST NOT format itself for the screen or the log.
+- <a id="fr-022"></a>**FR-022** (FR-03; DEC-19): `TransferResult` MUST hold the line number, the row's values as written (after trimming: every field the row had, in order, so a `malformed_row` result keeps fewer or more than 3 and their number gives the field count), and either applied or exactly one reason code from `malformed_row`, `invalid_account_number`, `invalid_amount`, `same_account`, `unknown_account` and `insufficient_funds`. It is the application's record of each row's outcome and lives in `lib/application/` (DEC-19).
+- <a id="fr-023"></a>**FR-023** (FR-03; DEC-06, DEC-19): a rejected `TransferResult` for a header-looking row MUST also carry the header hint `This looks like a header row; files must not have a header.`; any other result carries none.
+- <a id="fr-024"></a>**FR-024** (FR-03; DEC-19, DEC-26): the six reason codes MUST be defined once, in `TransferResult`, in the [DEC-19](../../docs/design-analysis/design-decisions.md#dec-19) check order, so the summary (`002`) can list counts in that order.
+- <a id="fr-025"></a>**FR-025** (FR-03; DEC-26): `TransferResult` MUST NOT format itself for the screen or the log.
 
 **Domain errors**
 
-- **FR-026** (FR-03 to FR-06; DEC-30): the domain MUST define exactly these errors: `InvalidAccountNumber`, `InvalidAmount`, `SameAccount`, `NegativeBalance`, `UnknownAccount`, `DuplicateAccount` and `InsufficientFunds`. Each names the value or account number involved, and carries no line number and no reason code.
-- **FR-027** (FR-03 to FR-06; DEC-07, DEC-30): the domain MUST own the exact message text of every domain error, as in the [message table](#domain-error-messages). Where page 2 shows a balances problem line, the domain message is exactly the text after `Line N: `, so the application layer only adds the line number, the duplicate's first line or the header hint, and never rewrites the domain text.
+- <a id="fr-026"></a>**FR-026** (FR-03 to FR-06; DEC-30): the domain MUST define exactly these errors: `InvalidAccountNumber`, `InvalidAmount`, `SameAccount`, `NegativeBalance`, `UnknownAccount`, `DuplicateAccount` and `InsufficientFunds`. Each names the value or account number involved, and carries no line number and no reason code.
+- <a id="fr-027"></a>**FR-027** (FR-03 to FR-06; DEC-07, DEC-30): the domain MUST own the exact message text of every domain error, as in the [message table](#domain-error-messages). Where page 2 shows a balances problem line, the domain message is exactly the text after `Line N: `, so the application layer only adds the line number, the duplicate's first line or the header hint, and never rewrites the domain text.
 
 **Code organisation ([NFR-05](../../docs/solution-design/03-non-functional-requirements.md#nfr-05)) and cost ([NFR-02](../../docs/solution-design/03-non-functional-requirements.md#nfr-02))**
 
-- **FR-028** (NFR-05; DEC-30): each business rule (16 digits, money format, amount above $0, different accounts, no overdraft, opening balance not negative, no duplicate account, unknown account) MUST live in exactly one place, inside the domain model it belongs to, as listed under [Key Entities](#key-entities-include-if-feature-involves-data).
-- **FR-029** (NFR-05; DEC-30): the domain MUST NOT read files, print, log, read the clock or know line numbers.
-- **FR-030** (NFR-05; DEC-30): names MUST be the plain domain names on page 6 and in the page 10 glossary, with no base classes, no suffixes such as `AggregateRoot` or `ValueObject`, and no domain events, factories or commands.
-- **FR-031** (NFR-05; DEC-30, DEC-36): RuboCop with its default settings and `rubocop-rspec` MUST report zero offences, which sets at most 10 lines per method. Every later spec MUST keep zero offences.
-- **FR-032** (NFR-05; DEC-30, DEC-37): the design reasoning MUST NOT be explained in code comments; it goes in the README (`003`). A DEC or FR ID MAY appear in a test name or a short comment where it makes the link clearer.
-- **FR-033** (NFR-02; DEC-31, solution design pick 49): `find`, `include?` and `add` MUST take the same time however many accounts are held, and `all` MUST keep load order without a second list.
-- **FR-034** (NFR-02; DEC-18): applying one transfer MUST take the same time however many accounts and transfers there are: two lookups, the checks, then two balance changes and nothing else. A rejected transfer MUST cost no more than an applied one and leave nothing to undo.
-- **FR-035** (NFR-02): listing the accounts with `all` MUST visit each account once, so listing and adding up the total grow in proportion to the number of accounts.
+- <a id="fr-028"></a>**FR-028** (NFR-05; DEC-30): each business rule (16 digits, money format, amount above $0, different accounts, no overdraft, opening balance not negative, no duplicate account, unknown account) MUST live in exactly one place, inside the domain model it belongs to, as listed under [Key Entities](#key-entities-include-if-feature-involves-data).
+- <a id="fr-029"></a>**FR-029** (NFR-05; DEC-30): the domain MUST NOT read files, print, log, read the clock or know line numbers.
+- <a id="fr-030"></a>**FR-030** (NFR-05; DEC-30): names MUST be the plain domain names on page 6 and in the page 10 glossary, with no base classes, no suffixes such as `AggregateRoot` or `ValueObject`, and no domain events, factories or commands.
+- <a id="fr-031"></a>**FR-031** (NFR-05; DEC-30, DEC-36): RuboCop with its default settings and `rubocop-rspec` MUST report zero offences, which sets at most 10 lines per method. Every later spec MUST keep zero offences.
+- <a id="fr-032"></a>**FR-032** (NFR-05; DEC-30, DEC-37): the design reasoning MUST NOT be explained in code comments; it goes in the README (`003`). A DEC or FR ID MAY appear in a test name or a short comment where it makes the link clearer.
+- <a id="fr-033"></a>**FR-033** (NFR-02; DEC-31, solution design pick 49): `find`, `include?` and `add` MUST take the same time however many accounts are held, and `all` MUST keep load order without a second list.
+- <a id="fr-034"></a>**FR-034** (NFR-02; DEC-18): applying one transfer MUST take the same time however many accounts and transfers there are: two lookups, the checks, then two balance changes and nothing else. A rejected transfer MUST cost no more than an applied one and leave nothing to undo.
+- <a id="fr-035"></a>**FR-035** (NFR-02): listing the accounts with `all` MUST visit each account once, so listing and adding up the total grow in proportion to the number of accounts.
 
 **Project skeleton ([NFR-05](../../docs/solution-design/03-non-functional-requirements.md#nfr-05))**
 
-- **FR-036** (DEC-01): the project MUST pin Ruby to the latest 3.4.x release in `.ruby-version`; the exact version is recorded by the plan.
-- **FR-037** (DEC-01, DEC-36): the `Gemfile` MUST list `csv`, `bigdecimal` and `logger` for runtime and `rspec`, `simplecov`, `rubocop` and `rubocop-rspec` for development only, and no other gem; `Gemfile.lock` MUST be committed.
-- **FR-038** (DEC-30, DEC-34): the code MUST live under `lib/`, in the folders `domain/`, `application/` and `infrastructure/`; this spec creates `lib/domain/` only, and a folder is added only when it holds several files. Specs MUST mirror the code, one spec file per class, in `spec/domain/`, with shared helpers (builders valid by default) in `spec/support/`.
-- **FR-039** (DEC-34): `spec_helper.rb` MUST set random order and `.rspec` MUST set `--format documentation`.
-- **FR-040** (DEC-36): SimpleCov MUST measure coverage on every test run, with no minimum figure that fails the run.
-- **FR-041** (DEC-27, DEC-36): `.gitignore` MUST list `coverage/` and `output/`.
-- **FR-042** (DEC-34): every domain rule MUST be tested once, in the spec of the class where it lives, using builders and no files; every edge case listed above MUST have a test.
+- <a id="fr-036"></a>**FR-036** (DEC-01): the project MUST pin Ruby to the latest 3.4.x release in `.ruby-version`; the exact version is recorded by the plan.
+- <a id="fr-037"></a>**FR-037** (DEC-01, DEC-36): the `Gemfile` MUST list `csv`, `bigdecimal` and `logger` for runtime and `rspec`, `simplecov`, `rubocop` and `rubocop-rspec` for development only, and no other gem; `Gemfile.lock` MUST be committed.
+- <a id="fr-038"></a>**FR-038** (DEC-30, DEC-34): the code MUST live under `lib/`, in the folders `domain/`, `application/` and `infrastructure/`; this spec creates `lib/domain/` only, and a folder is added only when it holds several files. Specs MUST mirror the code, one spec file per class, in `spec/domain/`, with shared helpers (builders valid by default) in `spec/support/`.
+- <a id="fr-039"></a>**FR-039** (DEC-34): `spec_helper.rb` MUST set random order and `.rspec` MUST set `--format documentation`.
+- <a id="fr-040"></a>**FR-040** (DEC-36): SimpleCov MUST measure coverage on every test run, with no minimum figure that fails the run.
+- <a id="fr-041"></a>**FR-041** (DEC-27, DEC-36): `.gitignore` MUST list `coverage/` and `output/`.
+- <a id="fr-042"></a>**FR-042** (DEC-34): every domain rule MUST be tested once, in the spec of the class where it lives, using builders and no files; every edge case listed above MUST have a test.
 
 ### Domain error messages
 
@@ -487,14 +494,14 @@ Names and meanings as on [page 6](../../docs/solution-design/06-components.md) a
 
 ### Measurable Outcomes
 
-- **SC-001** (FR-03 to FR-06): 100% of the domain outcomes in the acceptance scenarios above are checked by automated tests, and all pass.
-- **SC-002** (FR-03, FR-04, FR-05): after every refused transfer in the tests, the difference in both balances and in the total of all balances is exactly $0.00.
-- **SC-003** (NFR-01): after 1,000 additions and 1,000 subtractions of 25.60, the value differs from the exact result by $0.00; the five sample balances end exactly at 4820.50, 9974.40, 1550.00, 1725.60 and 48679.50, total 66750.00.
-- **SC-004** (FR-03 to FR-06): every domain error message in the tests matches the [message table](#domain-error-messages) character for character, 10 of 10 rows.
-- **SC-005** (NFR-05): the style checker reports 0 offences, and no method is longer than 10 lines.
-- **SC-006** (NFR-05): each of the 8 business rules in FR-028 is found in exactly 1 class on design review.
-- **SC-007** (NFR-02): the design review of the [time and space table](../../docs/solution-design/09-considerations.md#time-and-space) finds no lookup, add or transfer whose cost grows with the number of accounts.
-- **SC-008** (NFR-05): the test suite passes in 3 runs in a row with different random seeds.
+- <a id="sc-001"></a>**SC-001** (FR-03 to FR-06): 100% of the domain outcomes in the acceptance scenarios above are checked by automated tests, and all pass.
+- <a id="sc-002"></a>**SC-002** (FR-03, FR-04, FR-05): after every refused transfer in the tests, the difference in both balances and in the total of all balances is exactly $0.00.
+- <a id="sc-003"></a>**SC-003** (NFR-01): after 1,000 additions and 1,000 subtractions of 25.60, the value differs from the exact result by $0.00; the five sample balances end exactly at 4820.50, 9974.40, 1550.00, 1725.60 and 48679.50, total 66750.00.
+- <a id="sc-004"></a>**SC-004** (FR-03 to FR-06): every domain error message in the tests matches the [message table](#domain-error-messages) character for character, 10 of 10 rows.
+- <a id="sc-005"></a>**SC-005** (NFR-05): the style checker reports 0 offences, and no method is longer than 10 lines.
+- <a id="sc-006"></a>**SC-006** (NFR-05): each of the 8 business rules in FR-028 is found in exactly 1 class on design review.
+- <a id="sc-007"></a>**SC-007** (NFR-02): the design review of the [time and space table](../../docs/solution-design/09-considerations.md#time-and-space) finds no lookup, add or transfer whose cost grows with the number of accounts.
+- <a id="sc-008"></a>**SC-008** (NFR-05): the test suite passes in 3 runs in a row with different random seeds.
 
 ## Assumptions
 
@@ -509,20 +516,20 @@ Small gaps decided while writing this spec, consistent with `design-decisions.md
 
 | # | Decision | Relates to | Reason | Rejected |
 |---|---|---|---|---|
-| 1 | The code lives under `lib/` (`lib/domain/`, later `lib/application/` and `lib/infrastructure/`) | DEC-30, DEC-34 | The decisions name the three folders but not their parent; `lib/` is Ruby's usual home for code, next to `bin/` and `spec/` | Folders at the project root; `app/` |
-| 2 | `Money` messages say `balance` for an opening balance and `amount` for a transfer amount (`balance is empty`, `amount "abc" is not a valid amount`) | DEC-09, FR-01, FR-06 | Page 2 shows `balance ...` problem lines; the domain owns the message, so the word must come from the domain, not from `LoadBalances` rewriting it. How `Money` is told which is the plan's choice | One fixed word for both (would show `amount` in the balances errors); `LoadBalances` rewriting the message |
-| 3 | `Money` keeps the text it was given, and messages quote that text, so `-5` stays `-5` and `-0` stays `-0` | DEC-09, DEC-12 | Page 2 quotes values as written (`"1.234"`, `"abc"`, `"12345"`) | Quoting the 2-decimal form (`"-5.00"` for `-5`) |
-| 4 | Text with a point and 3 or more decimals (with or without a minus sign) gets "has more than 2 decimal places"; every other bad text gets "is not a valid amount" | DEC-09 | Matches AC-01.4 (`1.234`) and AC-01.5 (`abc`); one test of shape decides the message | A separate message for each bad form |
-| 5 | The `Transfer` $0-or-less message: `amount "<text>" must be greater than 0.00` | DEC-10, DEC-19 | Page 2 shows only the reason code; a short message that names the value | `amount must be above $0` (does not name the value) |
-| 6 | The `SameAccount` message: `account <number> cannot transfer to itself` | DEC-13 | Not shown on page 2; names the account | `from and to accounts are the same` |
-| 7 | The `UnknownAccount` message: `account <number> is not loaded` | DEC-17 | Not shown on page 2; the domain knows no file, so it does not say "balances file" | `... is not in the balances file` |
-| 8 | The `DuplicateAccount` message: `account <number> appears more than once`, the text `LoadBalances` puts before ` (first on line N)` | DEC-12, DEC-31 | Matches AC-01.4 line 5, so the domain owns that wording | A separate wording only for the guard |
-| 9 | The `InsufficientFunds` message: `account <number> cannot pay <amount> from a balance of <balance>` | DEC-13 | Not shown on page 2; gives both values for a developer | Naming only the account |
-| 10 | When both accounts are unknown, `UnknownAccount` names the from account, because it is looked up first | DEC-17, page 7.6 | Follows the lookup order on page 7.6 | Naming both accounts |
-| 11 | The six reason codes are defined once, in `TransferResult`, in DEC-19 order | DEC-19, DEC-26 | The summary (`002`) lists counts in that order; one place for the list | Each user of the codes listing them |
-| 12 | Run-outcome lines marked **(derived)** are built from the FR-08 layout, AC-09.6 masking and DEC-21, where page 2 gives no full output for that criterion | DEC-21, DEC-26, DEC-29 | The brief asks for standard output, standard error and exit status in every scenario; deriving adds no behaviour | Leaving the channels unstated |
-| 13 | Each single-row example on page 2 is the only row of `transfers.csv`, on line 1 | FR-03 to FR-06 | Page 2 gives the rows without line numbers | Other line numbers |
-| 14 | The exact Ruby 3.4.x version is recorded by the plan, from the latest release when the plan is written | DEC-01 | The decision says "the latest 3.4.x release"; the number depends on when the plan runs | A version written into this spec |
-| 15 | A `TransferResult` keeps every field of its row, in order, as written; for `malformed_row` the number of fields gives `N fields, expected 3` | DEC-19, page 2 FR-08, page 10 pick 12 | The report needs the field count and the log takes fields by position; keeping the fields gives both with no extra member | A separate field-count member; keeping only the first 3 fields (loses the count) |
-| 16 | `Money` equality uses the amount only, so `-0` equals `0`; the written minus sign changes only whether the value counts as negative, and a computed `Money` is negative only below 0 | DEC-09, page 6 `Money`, page 10 pick 25 | A value model is equal by content, and the content is the amount; the sign is recorded only so `-0` is refused | Equality that also compares the written sign (`-0` not equal to `0`) |
-| 17 | `Account#withdraw` and `#deposit` raise `ArgumentError` for an amount of $0 or less, as the developer asked (P33); the amount-above-$0 rule with `InvalidAmount` stays in `Transfer` | DEC-18, DEC-30, FR-028 | The business rule keeps one place; the guard stops a mistake in the code from changing a balance, and a valid transfer never reaches it | No guard (a mistake would change a balance silently); `InvalidAmount` in `Account` (two places for one business rule) |
+| <a id="item-1"></a>1 | The code lives under `lib/` (`lib/domain/`, later `lib/application/` and `lib/infrastructure/`) | DEC-30, DEC-34 | The decisions name the three folders but not their parent; `lib/` is Ruby's usual home for code, next to `bin/` and `spec/` | Folders at the project root; `app/` |
+| <a id="item-2"></a>2 | `Money` messages say `balance` for an opening balance and `amount` for a transfer amount (`balance is empty`, `amount "abc" is not a valid amount`) | DEC-09, FR-01, FR-06 | Page 2 shows `balance ...` problem lines; the domain owns the message, so the word must come from the domain, not from `LoadBalances` rewriting it. How `Money` is told which is the plan's choice | One fixed word for both (would show `amount` in the balances errors); `LoadBalances` rewriting the message |
+| <a id="item-3"></a>3 | `Money` keeps the text it was given, and messages quote that text, so `-5` stays `-5` and `-0` stays `-0` | DEC-09, DEC-12 | Page 2 quotes values as written (`"1.234"`, `"abc"`, `"12345"`) | Quoting the 2-decimal form (`"-5.00"` for `-5`) |
+| <a id="item-4"></a>4 | Text with a point and 3 or more decimals (with or without a minus sign) gets "has more than 2 decimal places"; every other bad text gets "is not a valid amount" | DEC-09 | Matches AC-01.4 (`1.234`) and AC-01.5 (`abc`); one test of shape decides the message | A separate message for each bad form |
+| <a id="item-5"></a>5 | The `Transfer` $0-or-less message: `amount "<text>" must be greater than 0.00` | DEC-10, DEC-19 | Page 2 shows only the reason code; a short message that names the value | `amount must be above $0` (does not name the value) |
+| <a id="item-6"></a>6 | The `SameAccount` message: `account <number> cannot transfer to itself` | DEC-13 | Not shown on page 2; names the account | `from and to accounts are the same` |
+| <a id="item-7"></a>7 | The `UnknownAccount` message: `account <number> is not loaded` | DEC-17 | Not shown on page 2; the domain knows no file, so it does not say "balances file" | `... is not in the balances file` |
+| <a id="item-8"></a>8 | The `DuplicateAccount` message: `account <number> appears more than once`, the text `LoadBalances` puts before ` (first on line N)` | DEC-12, DEC-31 | Matches AC-01.4 line 5, so the domain owns that wording | A separate wording only for the guard |
+| <a id="item-9"></a>9 | The `InsufficientFunds` message: `account <number> cannot pay <amount> from a balance of <balance>` | DEC-13 | Not shown on page 2; gives both values for a developer | Naming only the account |
+| <a id="item-10"></a>10 | When both accounts are unknown, `UnknownAccount` names the from account, because it is looked up first | DEC-17, page 7.6 | Follows the lookup order on page 7.6 | Naming both accounts |
+| <a id="item-11"></a>11 | The six reason codes are defined once, in `TransferResult`, in DEC-19 order | DEC-19, DEC-26 | The summary (`002`) lists counts in that order; one place for the list | Each user of the codes listing them |
+| <a id="item-12"></a>12 | Run-outcome lines marked **(derived)** are built from the FR-08 layout, AC-09.6 masking and DEC-21, where page 2 gives no full output for that criterion | DEC-21, DEC-26, DEC-29 | The brief asks for standard output, standard error and exit status in every scenario; deriving adds no behaviour | Leaving the channels unstated |
+| <a id="item-13"></a>13 | Each single-row example on page 2 is the only row of `transfers.csv`, on line 1 | FR-03 to FR-06 | Page 2 gives the rows without line numbers | Other line numbers |
+| <a id="item-14"></a>14 | The exact Ruby 3.4.x version is recorded by the plan, from the latest release when the plan is written | DEC-01 | The decision says "the latest 3.4.x release"; the number depends on when the plan runs | A version written into this spec |
+| <a id="item-15"></a>15 | A `TransferResult` keeps every field of its row, in order, as written; for `malformed_row` the number of fields gives `N fields, expected 3` | DEC-19, page 2 FR-08, page 10 pick 12 | The report needs the field count and the log takes fields by position; keeping the fields gives both with no extra member | A separate field-count member; keeping only the first 3 fields (loses the count) |
+| <a id="item-16"></a>16 | `Money` equality uses the amount only, so `-0` equals `0`; the written minus sign changes only whether the value counts as negative, and a computed `Money` is negative only below 0 | DEC-09, page 6 `Money`, page 10 pick 25 | A value model is equal by content, and the content is the amount; the sign is recorded only so `-0` is refused | Equality that also compares the written sign (`-0` not equal to `0`) |
+| <a id="item-17"></a>17 | `Account#withdraw` and `#deposit` raise `ArgumentError` for an amount of $0 or less, as the developer asked (P33); the amount-above-$0 rule with `InvalidAmount` stays in `Transfer` | DEC-18, DEC-30, FR-028 | The business rule keeps one place; the guard stops a mistake in the code from changing a balance, and a valid transfer never reaches it | No guard (a mistake would change a balance silently); `InvalidAmount` in `Account` (two places for one business rule) |

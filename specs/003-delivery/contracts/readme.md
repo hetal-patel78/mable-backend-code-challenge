@@ -89,17 +89,17 @@ Read the finished README against each item; every item must be "present". The se
 
 | ID | Item | FR | Present when |
 |---|---|---|---|
-| R-01 | Build, test and run come first; sections in the order above | FR-001 | Headings appear in the order 1 to 10 |
-| R-02 | The three command forms, path rules, default output name, no overwrite, the usage message exactly | FR-002 | All five points present; usage lines equal AC-09.2 |
-| R-03 | The sample report exactly as AC-08.1 | FR-003 | Character for character equal, run time `2026-11-07_143005` |
-| R-04 | `ruby bin/run` on Windows | FR-004 | Present |
-| R-05 | Docker: build, run (POSIX and PowerShell), tests; `TZ` and UTC; the mount; own files mounted; root on a Linux host; no `--user` | FR-005 | All present; commands equal [dockerfile.md](dockerfile.md#commands-the-readme-gives) |
-| R-06 | Both file formats; no header; a header row is a bad row | FR-006 | Present |
-| R-07 | `LOG_LEVEL` values, letter case, fallback; log lines on standard error, masked; report on standard output | FR-007 | Present; mask written `************6789` |
-| R-08 | Exit statuses 0 and 1, with the AC-09.8 reasons | FR-008 | All eight reasons listed |
-| R-09 | The ten assumptions with reasons, worded as in `design-decisions.md` | FR-009 | 10 of 10, same words |
-| R-10 | The design reasoning and the links | FR-010 | Every point present; both links resolve |
-| R-11 | Storage, production items, known limitations | FR-011 | (a), (b) and the nine limitations present |
-| R-12 | Coverage line, `coverage/index.html`, no minimum | FR-012 | Present; figure equals C-33 |
-| R-13 | "How this was built": AI assistant, four steps with links, `docs/prompts/` | FR-013 | Present; links resolve |
-| R-14 | Layout table, challenge link, no "Status" or "To be added", no company whose balances are processed | FR-014 | Present; `grep -n -e 'To be added' -e '## Status' README.md` finds nothing |
+| <a id="r-01"></a>R-01 | Build, test and run come first; sections in the order above | FR-001 | Headings appear in the order 1 to 10 |
+| <a id="r-02"></a>R-02 | The three command forms, path rules, default output name, no overwrite, the usage message exactly | FR-002 | All five points present; usage lines equal AC-09.2 |
+| <a id="r-03"></a>R-03 | The sample report exactly as AC-08.1 | FR-003 | Character for character equal, run time `2026-11-07_143005` |
+| <a id="r-04"></a>R-04 | `ruby bin/run` on Windows | FR-004 | Present |
+| <a id="r-05"></a>R-05 | Docker: build, run (POSIX and PowerShell), tests; `TZ` and UTC; the mount; own files mounted; root on a Linux host; no `--user` | FR-005 | All present; commands equal [dockerfile.md](dockerfile.md#commands-the-readme-gives) |
+| <a id="r-06"></a>R-06 | Both file formats; no header; a header row is a bad row | FR-006 | Present |
+| <a id="r-07"></a>R-07 | `LOG_LEVEL` values, letter case, fallback; log lines on standard error, masked; report on standard output | FR-007 | Present; mask written `************6789` |
+| <a id="r-08"></a>R-08 | Exit statuses 0 and 1, with the AC-09.8 reasons | FR-008 | All eight reasons listed |
+| <a id="r-09"></a>R-09 | The ten assumptions with reasons, worded as in `design-decisions.md` | FR-009 | 10 of 10, same words |
+| <a id="r-10"></a>R-10 | The design reasoning and the links | FR-010 | Every point present; both links resolve |
+| <a id="r-11"></a>R-11 | Storage, production items, known limitations | FR-011 | (a), (b) and the nine limitations present |
+| <a id="r-12"></a>R-12 | Coverage line, `coverage/index.html`, no minimum | FR-012 | Present; figure equals C-33 |
+| <a id="r-13"></a>R-13 | "How this was built": AI assistant, four steps with links, `docs/prompts/` | FR-013 | Present; links resolve |
+| <a id="r-14"></a>R-14 | Layout table, challenge link, no "Status" or "To be added", no company whose balances are processed | FR-014 | Present; `grep -n -e 'To be added' -e '## Status' README.md` finds nothing |

@@ -104,14 +104,15 @@ Template R is the layout page 2 prints in full in AC-02.3.
 
 Answered from `design-decisions.md` and the solution design (no developer was asked; each answer is also an item in [Decided in the run](#decided-in-the-run)).
 
-- Q: When a value in either file has tabs around it as well as spaces, are the tabs trimmed too? → A: Yes. Spaces and tabs around each value are trimmed (DEC-04), the same whitespace that makes a line blank (DEC-05); `1111234522226789,<tab>100.00` loads as `100.00`. Spaces or tabs inside a value are kept, so `1 0` stays invalid. (FR-001; item 18)
-- Q: Does the duplicate known gap also cover a first copy rejected for a reason other than an invalid balance, such as the wrong number of fields or a negative balance? → A: Yes. Any first copy that is not added because of its own problem (the wrong number of fields, or an invalid or negative balance) leaves the later copy unseen as a duplicate; only the first row's problem is reported and the run stops either way (DEC-12; page 6 known gap). (FR-011, AC-01.10; item 19)
-- Q: With `LOG_LEVEL=info`, which info lines appear in a run that passes the start checks and then stops? → A: `Run started: ...` is logged first, then any `Line <N> applied` and warn lines for the rows read before the stop, then the `Error:` line(s) and the error log line; `Run ended` is never logged for a stopped run. A run stopped by the arguments or the start checks logs no info line (DEC-28; FR-013 order). (FR-013, FR-020, AC-09.5; item 20)
-- Q: If a missing folder on the output path cannot be created (for example a file stands where a folder should be, or permission is denied), what happens? → A: The run stops with `OutputNotWritable` and the message `cannot write output file <path>: <reason from the system>`, exactly as in AC-09.4; folders already created on the way are left in place, because no output file is left behind (DEC-25, DEC-27). (FR-026; item 21)
-- Q: How do the end-to-end specs compare standard output and standard error when `bin/run` runs on Windows, where Ruby writes a line ending as CR LF to a pipe? → A: They turn each CR LF into LF in the captured standard output and standard error before comparing them exactly; the output file is compared byte for byte and must use LF only (page 2 pick 17). The program itself is not changed for this (DEC-26, DEC-34, NFR-04). (FR-044; item 22)
+- <a id="clarification-1"></a>Q: When a value in either file has tabs around it as well as spaces, are the tabs trimmed too? → A: Yes. Spaces and tabs around each value are trimmed (DEC-04), the same whitespace that makes a line blank (DEC-05); `1111234522226789,<tab>100.00` loads as `100.00`. Spaces or tabs inside a value are kept, so `1 0` stays invalid. (FR-001; item 18)
+- <a id="clarification-2"></a>Q: Does the duplicate known gap also cover a first copy rejected for a reason other than an invalid balance, such as the wrong number of fields or a negative balance? → A: Yes. Any first copy that is not added because of its own problem (the wrong number of fields, or an invalid or negative balance) leaves the later copy unseen as a duplicate; only the first row's problem is reported and the run stops either way (DEC-12; page 6 known gap). (FR-011, AC-01.10; item 19)
+- <a id="clarification-3"></a>Q: With `LOG_LEVEL=info`, which info lines appear in a run that passes the start checks and then stops? → A: `Run started: ...` is logged first, then any `Line <N> applied` and warn lines for the rows read before the stop, then the `Error:` line(s) and the error log line; `Run ended` is never logged for a stopped run. A run stopped by the arguments or the start checks logs no info line (DEC-28; FR-013 order). (FR-013, FR-020, AC-09.5; item 20)
+- <a id="clarification-4"></a>Q: If a missing folder on the output path cannot be created (for example a file stands where a folder should be, or permission is denied), what happens? → A: The run stops with `OutputNotWritable` and the message `cannot write output file <path>: <reason from the system>`, exactly as in AC-09.4; folders already created on the way are left in place, because no output file is left behind (DEC-25, DEC-27). (FR-026; item 21)
+- <a id="clarification-5"></a>Q: How do the end-to-end specs compare standard output and standard error when `bin/run` runs on Windows, where Ruby writes a line ending as CR LF to a pipe? → A: They turn each CR LF into LF in the captured standard output and standard error before comparing them exactly; the output file is compared byte for byte and must use LF only (page 2 pick 17). The program itself is not changed for this (DEC-26, DEC-34, NFR-04). (FR-044; item 22)
 
 ## User Scenarios & Testing *(mandatory)*
 
+<a id="us1"></a>
 ### User Story 1 - The sample files give the exact expected result (Priority: P1)
 
 A reviewer runs the challenge's two sample files with `bin/run` and no arguments, and gets the exact report on standard output, the exact final balances file and exit status 0 ([FR-08](../../docs/solution-design/02-functional-requirements.md#fr-08-the-end-of-day-result-and-its-output), [FR-09](../../docs/solution-design/02-functional-requirements.md#fr-09-the-runner); [DEC-22](../../docs/design-analysis/design-decisions.md#dec-22), [DEC-26](../../docs/design-analysis/design-decisions.md#dec-26), [DEC-27](../../docs/design-analysis/design-decisions.md#dec-27), [DEC-35](../../docs/design-analysis/design-decisions.md#dec-35)).
@@ -122,7 +123,7 @@ A reviewer runs the challenge's two sample files with `bin/run` and no arguments
 
 **Acceptance Scenarios**:
 
-1. **AC-08.1 The sample files give the exact expected result** (FR-08, NFR-01; DEC-22, DEC-26, DEC-27, DEC-35).
+1. <a id="ac-08-1"></a>**AC-08.1 The sample files give the exact expected result** (FR-08, NFR-01; DEC-22, DEC-26, DEC-27, DEC-35).
    - **Given** the challenge's sample files in `data/`, **When** `bin/run` runs with no arguments, **Then**:
      - Standard output is exactly:
 
@@ -178,6 +179,7 @@ A reviewer runs the challenge's two sample files with `bin/run` and no arguments
 
 ---
 
+<a id="us2"></a>
 ### User Story 2 - The balances file is loaded, or every problem in it is reported (Priority: P1)
 
 The program loads every account and its opening balance from the balances file, accepting the common CSV forms. If the file has any problem, the run stops before any transfer, listing every problem with its physical line number, so the user can fix them all at once ([FR-01](../../docs/solution-design/02-functional-requirements.md#fr-01-load-the-balances-file); [DEC-04](../../docs/design-analysis/design-decisions.md#dec-04) to [DEC-12](../../docs/design-analysis/design-decisions.md#dec-12), [DEC-31](../../docs/design-analysis/design-decisions.md#dec-31)).
@@ -188,17 +190,17 @@ The program loads every account and its opening balance from the balances file, 
 
 **Acceptance Scenarios**:
 
-1. **AC-01.1 A valid file is loaded, including leading zeros and a $0.00 balance** (FR-01; DEC-08, DEC-10).
+1. <a id="ac-01-1"></a>**AC-01.1 A valid file is loaded, including leading zeros and a $0.00 balance** (FR-01; DEC-08, DEC-10).
    - **Given** `balances.csv` and a `transfers.csv` holding `1111234522226789,1212343433335665,10.00`, **When** the program runs, **Then**:
      - Standard output: Template A with `1111234522226789 -> 1212343433335665  10.00` and the balances `90.00`, `60.00`, `0.00` **(derived)**: the final balances list all three accounts in file order, with `0000123412341234` kept as written and its balance `0.00` accepted.
      - Standard error: (nothing)
      - Exit status: 0
-2. **AC-01.2 Common CSV forms are accepted** (FR-01; DEC-04).
+2. <a id="ac-01-2"></a>**AC-01.2 Common CSV forms are accepted** (FR-01; DEC-04).
    - **Given** a `balances.csv` that starts with a UTF-8 byte-order mark, uses Windows line endings, has no final newline, and whose line 1 is `"1111234522226789", 100.00 ` (a quoted value and spaces around values), followed by lines 2 and 3 of `balances.csv`, and the `transfers.csv` of AC-01.1, **When** the program runs, **Then** the account is loaded as `1111234522226789` with balance `100.00`, exactly as if the line were `1111234522226789,100.00`:
      - Standard output: exactly that of AC-01.1.
      - Standard error: (nothing)
      - Exit status: 0
-3. **AC-01.3 Blank lines are skipped but still counted in line numbers** (FR-01; DEC-05, DEC-07).
+3. <a id="ac-01-3"></a>**AC-01.3 Blank lines are skipped but still counted in line numbers** (FR-01; DEC-05, DEC-07).
    - **Given** a `balances.csv` whose line 1 is `1111234522226789,100.00`, line 2 is empty, line 3 holds only spaces and line 4 is `12345,50.00` (decided in the run, item 9), **When** the program runs, **Then** neither blank line is an error or an account, and the row on line 4 is reported as line 4:
      - Standard output: (nothing)
      - Standard error **(derived)**:
@@ -210,7 +212,7 @@ The program loads every account and its opening balance from the balances file, 
        ```
 
      - Exit status: 1
-4. **AC-01.4 An invalid file reports every problem and stops the run** (FR-01; DEC-07, DEC-11, DEC-12).
+4. <a id="ac-01-4"></a>**AC-01.4 An invalid file reports every problem and stops the run** (FR-01; DEC-07, DEC-11, DEC-12).
    - **Given** this `balances.csv` (line 2 is empty):
 
      ```
@@ -239,7 +241,7 @@ The program loads every account and its opening balance from the balances file, 
 
      - Exit status: 1
    - This is the invalid-balances end-to-end run (decided in the run, item 2).
-5. **AC-01.5 A row with several problems reports each one, in field order** (FR-01; DEC-12).
+5. <a id="ac-01-5"></a>**AC-01.5 A row with several problems reports each one, in field order** (FR-01; DEC-12).
    - **Given** a `balances.csv` whose only line is `12345,abc`, **When** the program runs, **Then**:
      - Standard output: (nothing)
      - Standard error:
@@ -252,7 +254,7 @@ The program loads every account and its opening balance from the balances file, 
        ```
 
      - Exit status: 1
-6. **AC-01.6 Other balance problems** (FR-01; DEC-04, DEC-09, DEC-11, DEC-12).
+6. <a id="ac-01-6"></a>**AC-01.6 Other balance problems** (FR-01; DEC-04, DEC-09, DEC-11, DEC-12).
    - **Given** a `balances.csv` whose line 1 is `1212343433335665,50.00` (decided in the run, item 9) and whose line 2 is the row below, **When** the program runs, **Then** standard output is (nothing), standard error is `Error: the balances file is invalid (<count>):`, then the problem lines, then `E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: <count>`, and
      Exit status: 1:
 
@@ -264,7 +266,7 @@ The program loads every account and its opening balance from the balances file, 
      | `,` | `2 problems` | `  Line 2: account number "" must be exactly 16 digits` and `  Line 2: balance is empty` |
 
      A row with the wrong number of fields reports only the field-count problem, because it is not known which value is which.
-7. **AC-01.7 A header row makes the file invalid, with a hint** (FR-01; DEC-06).
+7. <a id="ac-01-7"></a>**AC-01.7 A header row makes the file invalid, with a hint** (FR-01; DEC-06).
    - **Given** a `balances.csv` whose line 1 is `account,balance`, followed by the three rows of `balances.csv` on lines 2 to 4 (decided in the run, item 9), **When** the program runs, **Then**:
      - Standard output: (nothing)
      - Standard error:
@@ -279,7 +281,7 @@ The program loads every account and its opening balance from the balances file, 
      - Exit status: 1
    - With line 1 `1111O34522226789,100.00` instead, the only problem line is `  Line 1: account number "1111O34522226789" must be exactly 16 digits`, with no header hint, because it contains digits, and the count is `1 problem`.
    - With line 1 `account,balance,x` instead, the only problem line is `  Line 1: expected 2 fields, found 3. This looks like a header row; files must not have a header.`, and the count is `1 problem`.
-8. **AC-01.8 An empty balances file stops the run** (FR-01; DEC-05, DEC-11).
+8. <a id="ac-01-8"></a>**AC-01.8 An empty balances file stops the run** (FR-01; DEC-05, DEC-11).
    - **Given** a balances file `empty.csv` that is empty, or holds only blank lines, **When** `bin/run empty.csv transfers.csv` runs, **Then**:
      - Standard output: (nothing)
      - Standard error:
@@ -290,7 +292,7 @@ The program loads every account and its opening balance from the balances file, 
        ```
 
      - Exit status: 1
-9. **AC-01.9 A balances file that cannot be read past a line** (FR-01; DEC-04, DEC-07, DEC-12).
+9. <a id="ac-01-9"></a>**AC-01.9 A balances file that cannot be read past a line** (FR-01; DEC-04, DEC-07, DEC-12).
    - **Given** a balances file `bad.csv` whose lines 1 and 2 are the first two rows of `balances.csv`, line 3 is `12345,100.00`, line 4 is `0000123412341234,0.00`, lines 5 and 6 are empty, and line 7 opens a quote that is never closed (decided in the run, item 9), **When** `bin/run bad.csv transfers.csv` runs, **Then**:
      - Standard output: (nothing)
      - Standard error:
@@ -303,7 +305,7 @@ The program loads every account and its opening balance from the balances file, 
        ```
 
      - Exit status: 1
-10. **AC-01.10 A duplicate account is reported even when its balance is invalid** (FR-01; DEC-12, DEC-31).
+10. <a id="ac-01-10"></a>**AC-01.10 A duplicate account is reported even when its balance is invalid** (FR-01; DEC-12, DEC-31).
     - **Given** a `balances.csv` whose line 1 is `1111234522226789,5000.00` and whose line 2 is `1111234522226789,abc`, **When** the program runs, **Then**:
       - Standard output: (nothing)
       - Standard error:
@@ -323,6 +325,7 @@ The program loads every account and its opening balance from the balances file, 
 
 ---
 
+<a id="us3"></a>
 ### User Story 3 - The transfers file is read one row at a time, in file order (Priority: P1)
 
 The program reads the transfers file one row at a time, in file order, gives each row its physical line number, applies each transfer once, never retries a rejected one, and treats every row as a separate transfer. A bad row is rejected with one reason and the run continues. An empty transfers file, or one that cannot be read past a line, stops the run ([FR-02](../../docs/solution-design/02-functional-requirements.md#fr-02-read-the-transfers-file), [FR-07](../../docs/solution-design/02-functional-requirements.md#fr-07-the-order-transfers-are-applied-in); [DEC-04](../../docs/design-analysis/design-decisions.md#dec-04) to [DEC-07](../../docs/design-analysis/design-decisions.md#dec-07), [DEC-14](../../docs/design-analysis/design-decisions.md#dec-14) to [DEC-16](../../docs/design-analysis/design-decisions.md#dec-16), [DEC-19](../../docs/design-analysis/design-decisions.md#dec-19) to [DEC-21](../../docs/design-analysis/design-decisions.md#dec-21), [DEC-32](../../docs/design-analysis/design-decisions.md#dec-32)).
@@ -333,7 +336,7 @@ The program reads the transfers file one row at a time, in file order, gives eac
 
 **Acceptance Scenarios**:
 
-1. **AC-02.1 Blank lines are skipped; a row with the wrong number of fields is rejected and the run continues** (FR-02; DEC-04, DEC-05, DEC-07, DEC-14, DEC-19, DEC-28).
+1. <a id="ac-02-1"></a>**AC-02.1 Blank lines are skipped; a row with the wrong number of fields is rejected and the run continues** (FR-02; DEC-04, DEC-05, DEC-07, DEC-14, DEC-19, DEC-28).
    - **Given** `balances.csv` and this `transfers.csv` (line 2 is empty; line 3 holds only spaces):
 
      ```
@@ -378,7 +381,7 @@ The program reads the transfers file one row at a time, in file order, gives eac
 
      - Exit status: 0
    - In the log line of a row with the wrong number of fields, the fields are taken by position (from, to, amount); fields the row does not have are left out, and fields after the third are not logged.
-2. **AC-02.2 A line of commas is a row with empty fields** (FR-02; DEC-05, DEC-06, DEC-21).
+2. <a id="ac-02-2"></a>**AC-02.2 A line of commas is a row with empty fields** (FR-02; DEC-05, DEC-06, DEC-21).
    - **Given** `balances.csv` and a `transfers.csv` whose line 1 is `,,`, **When** the program runs, **Then** the row is rejected (an empty first field is not a header):
      - Standard output: Template R with the transfers line `  Line 1  rejected  "" -> ""  ""  invalid_account_number` and the reason code `invalid_account_number` **(derived)**.
      - Standard error:
@@ -389,7 +392,7 @@ The program reads the transfers file one row at a time, in file order, gives eac
        ```
 
      - Exit status: 0
-3. **AC-02.3 A header row is rejected with a hint; every row rejected gives a warning but still completes** (FR-02; DEC-06, DEC-21, DEC-26).
+3. <a id="ac-02-3"></a>**AC-02.3 A header row is rejected with a hint; every row rejected gives a warning but still completes** (FR-02; DEC-06, DEC-21, DEC-26).
    - **Given** `balances.csv` and a `transfers.csv` holding only `from,to,amount`, **When** the program runs, **Then** the output file is written with the balances unchanged, and:
      - Standard output:
 
@@ -427,7 +430,7 @@ The program reads the transfers file one row at a time, in file order, gives eac
      - And the output file holds exactly the three lines of `balances.csv`, each ending with a line feed.
    - This is the all-rejected end-to-end run (decided in the run, item 2).
    - With `transfers.csv` holding only `from,to` instead: standard output is Template R with the transfers line `  Line 1  rejected  malformed_row: 2 fields, expected 3. This looks like a header row; files must not have a header.` and the reason code `malformed_row` **(derived)**; standard error is `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: **** -> **** malformed_row` **(derived)**, then the all-rejected warn line; exit status 0.
-4. **AC-02.4 An empty transfers file stops the run** (FR-02; DEC-05, DEC-20).
+4. <a id="ac-02-4"></a>**AC-02.4 An empty transfers file stops the run** (FR-02; DEC-05, DEC-20).
    - **Given** `balances.csv` and a transfers file `empty.csv` that is empty, or holds only blank lines, **When** `bin/run balances.csv empty.csv` runs, **Then** no output file is written, and:
      - Standard output: (nothing)
      - Standard error:
@@ -439,7 +442,7 @@ The program reads the transfers file one row at a time, in file order, gives eac
 
      - Exit status: 1
    - And if the balances file is also invalid, only the balances error from FR-01 is shown, because the balances file is checked first (User Story 2, scenario 11).
-5. **AC-02.5 A transfers file that cannot be read past a line stops the run, discarding earlier transfers** (FR-02; DEC-04, DEC-07, DEC-25).
+5. <a id="ac-02-5"></a>**AC-02.5 A transfers file that cannot be read past a line stops the run, discarding earlier transfers** (FR-02; DEC-04, DEC-07, DEC-25).
    - **Given** `balances.csv` and a `bad.csv` whose line 1 is `1111234522226789,1212343433335665,10.00` and whose line 2 opens a quote that is never closed, **When** `bin/run balances.csv bad.csv` runs, **Then** the transfer on line 1 is discarded, no output file is written, and:
      - Standard output: (nothing)
      - Standard error:
@@ -451,7 +454,7 @@ The program reads the transfers file one row at a time, in file order, gives eac
 
      - Exit status: 1
    - Any warn lines for rows rejected before line 2 appear above these lines. With line 1 `1111234522226789,1212343433335665,100.01` instead, standard error starts with `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************6789 -> ************5665 100.01 insufficient_funds` **(derived)**, then the two lines above.
-6. **AC-07.1 One pass, no retry, repeats applied** (FR-07; DEC-15, DEC-16).
+6. <a id="ac-07-1"></a>**AC-07.1 One pass, no retry, repeats applied** (FR-07; DEC-15, DEC-16).
    - **Given** `balances.csv` and this `transfers.csv`:
 
      ```
@@ -496,6 +499,7 @@ The program reads the transfers file one row at a time, in file order, gives eac
 
 ---
 
+<a id="us4"></a>
 ### User Story 4 - A completed run checks the total, writes a new output file, then prints the report (Priority: P1)
 
 At the end of a completed run the program checks that the total of all balances has not changed, writes the final balances to a new CSV file that can be the next day's balances file, and then prints the report on standard output. It never overwrites a file, and nothing is written or printed when the run stops ([FR-08](../../docs/solution-design/02-functional-requirements.md#fr-08-the-end-of-day-result-and-its-output); [DEC-24](../../docs/design-analysis/design-decisions.md#dec-24), [DEC-26](../../docs/design-analysis/design-decisions.md#dec-26), [DEC-27](../../docs/design-analysis/design-decisions.md#dec-27), [DEC-35](../../docs/design-analysis/design-decisions.md#dec-35)).
@@ -506,7 +510,7 @@ At the end of a completed run the program checks that the total of all balances 
 
 **Acceptance Scenarios**:
 
-1. **AC-08.2 A day with mixed rejections** (FR-08; DEC-14, DEC-19, DEC-26, DEC-27, DEC-28).
+1. <a id="ac-08-2"></a>**AC-08.2 A day with mixed rejections** (FR-08; DEC-14, DEC-19, DEC-26, DEC-27, DEC-28).
    - **Given** `balances.csv` and this `transfers.csv`:
 
      ```
@@ -565,7 +569,7 @@ At the end of a completed run the program checks that the total of all balances 
        ```
 
    - This is the mixed-rejections end-to-end run (decided in the run, item 2).
-2. **AC-08.3 The output file** (FR-08; DEC-27; page 2 pick 17).
+2. <a id="ac-08-3"></a>**AC-08.3 The output file** (FR-08; DEC-27; page 2 pick 17).
    - **Given** any completed run, **Then** the output file has no header, one account per line as `account number,balance`, full account numbers, balances with exactly 2 decimal places, in load order: the same format as the balances file, so it can be the next day's balances file.
    - Every line, the last one included, ends with a line feed (LF) only, on every operating system.
    - With no third argument, the file is `output/final_balances_YYYY-MM-DD_HHMMSS.csv`, named from the local date and time the run started (24-hour clock): for the run time 2026-11-07 14:30:05, `FinalBalancesCsvWriter.default_path` gives `output/final_balances_2026-11-07_143005.csv`.
@@ -580,13 +584,13 @@ At the end of a completed run the program checks that the total of all balances 
      - Standard output: Template A with `1212343433335665 -> 1111234522226789  10.00`, the opening balances `0.00`, `80.00`, `70.00` and the balances `10.00`, `70.00`, `70.00` **(derived)**.
      - Standard error: (nothing)
      - Exit status: 0
-3. **AC-08.4 The output path is shown relative to where the command was run, or in full when the file is outside that folder** (FR-08; DEC-26).
+3. <a id="ac-08-4"></a>**AC-08.4 The output path is shown relative to where the command was run, or in full when the file is outside that folder** (FR-08; DEC-26).
    - **Given** the sample files, **When** `bin/run` runs with no arguments from the project root, **Then** standard output is AC-08.1's report, whose last line is `Output file: output/final_balances_2026-11-07_143005.csv` **(derived)**.
    - **And when** `../bin/run` runs with no arguments from the project's `docs` folder, the output file is outside that folder, so standard output is AC-08.1's report with the last line `Output file: <project root>/output/final_balances_2026-11-07_143005.csv`, where `<project root>` is the full path of the project folder **(derived)**.
    - **And when** a third argument names a file outside the current folder, such as `/tmp/day1.csv`, standard output is AC-08.1's report with the last line `Output file: /tmp/day1.csv`, the full path **(derived)**.
    - Standard error: (nothing); exit status: 0, in all three.
    - Test: `ReportPrinter` with a `DayResult` whose output path is inside or below the current folder, or outside it (in another folder of its parent, or elsewhere); every runner scenario run from the temporary folder with the default arguments, whose last line is `Output file: output/final_balances_2026-11-07_143005.csv` (for example AC-01.1); a runner scenario run from a subfolder of the temporary folder with `../balances.csv ../transfers.csv ../output/final_balances_2026-11-07_143005.csv`, whose standard output is Template A (`1111234522226789 -> 1212343433335665  10.00`; balances `90.00`, `60.00`, `0.00`) with the last line `Output file: ` followed by the full path of `output/final_balances_2026-11-07_143005.csv` in the temporary folder; and one with an output path in a second temporary folder, whose standard output is Template A with the last line `Output file: ` followed by that full path (decided in the run, item 3).
-4. **AC-08.5 A changed total stops the run** (FR-08; DEC-24, DEC-25; page 9 picks 46 and 47).
+4. <a id="ac-08-5"></a>**AC-08.5 A changed total stops the run** (FR-08; DEC-24, DEC-25; page 9 picks 46 and 47).
    - **Given** the sample files and a fault that makes the total after the transfers (66749.00) differ from the total before (66750.00); with correct code this cannot happen, so the test creates it on purpose. **When** the run reaches the end of the transfers, **Then** no output file is written and no report is printed, and:
      - Standard output: (nothing)
      - Standard error:
@@ -600,7 +604,7 @@ At the end of a completed run the program checks that the total of all balances 
    - Test, split across two specs (page 9 pick 46): the `ProcessDailyTransfer` spec passes a fake repository whose total changes after the transfers, a fake reporter and the real `FinalBalancesCsvWriter` with an output path in a temporary folder, and checks that `TotalChanged` is raised with the message `the total of all balances changed from 66750.00 to 66749.00. No output file was written.`, that the file does not exist and that the reporter was never called. The `Runner` spec stubs `ProcessDailyTransfer.new` to return a stand-in whose run raises that `TotalChanged`, and checks standard output (nothing), the two standard error lines above and exit status 1.
 5. **The report is printed once, after the output file is written** (FR-08; DEC-26).
    - **Given** a completed run, **When** `ProcessDailyTransfer` finishes, **Then** the reporter was called exactly once, with a `DayResult` holding the `TransferResult`s in file order, the totals before and after, the opening balances, the final accounts in load order and the output path, and the output file already existed at that moment.
-6. **AC-09.4 An output file that cannot be written stops the run** (FR-08, FR-09; DEC-25, DEC-27; page 2 pick 14).
+6. <a id="ac-09-4"></a>**AC-09.4 An output file that cannot be written stops the run** (FR-08, FR-09; DEC-25, DEC-27; page 2 pick 14).
    - **Given** `balances.csv`, the `transfers.csv` of AC-01.1, and a third argument `out` that names an existing folder, **When** `bin/run balances.csv transfers.csv out` runs, **Then** no file is left behind, and:
      - Standard output: (nothing)
      - Standard error:
@@ -615,6 +619,7 @@ At the end of a completed run the program checks that the total of all balances 
 
 ---
 
+<a id="us5"></a>
 ### User Story 5 - The runner starts the run, reports every stop clearly and sets the exit status (Priority: P1)
 
 A user runs `bin/run` with 0, 2 or 3 positional arguments. The runner checks the arguments and the files before reading anything, reports every start problem together, logs at the level `LOG_LEVEL` sets with account numbers masked, prints a clear message for every stopped run with no Ruby stack trace, and exits with 0 for a completed run and 1 for a stopped one ([FR-09](../../docs/solution-design/02-functional-requirements.md#fr-09-the-runner); [DEC-02](../../docs/design-analysis/design-decisions.md#dec-02), [DEC-03](../../docs/design-analysis/design-decisions.md#dec-03), [DEC-22](../../docs/design-analysis/design-decisions.md#dec-22), [DEC-23](../../docs/design-analysis/design-decisions.md#dec-23), [DEC-25](../../docs/design-analysis/design-decisions.md#dec-25), [DEC-28](../../docs/design-analysis/design-decisions.md#dec-28), [DEC-29](../../docs/design-analysis/design-decisions.md#dec-29)).
@@ -625,7 +630,7 @@ A user runs `bin/run` with 0, 2 or 3 positional arguments. The runner checks the
 
 **Acceptance Scenarios**:
 
-1. **AC-09.1 Arguments** (FR-09; DEC-22, DEC-27).
+1. <a id="ac-09-1"></a>**AC-09.1 Arguments** (FR-09; DEC-22, DEC-27).
 
    | Command | Balances | Transfers | Output |
    |---|---|---|---|
@@ -636,7 +641,7 @@ A user runs `bin/run` with 0, 2 or 3 positional arguments. The runner checks the
    - Standard output, standard error and exit status **(derived**, as page 2 prints none of them for this scenario**)**, for input files that are valid: `bin/run` with no arguments: standard output is AC-08.1's report, with the run's default `Output file:` line; standard error (nothing); exit status 0. `bin/run b.csv t.csv`: a completed run whose last report line is `Output file:` with the default output path; standard error (nothing); exit status 0. `bin/run b.csv t.csv out/day1.csv`: a completed run whose last report line is `Output file: out/day1.csv`; standard error (nothing); exit status 0.
    - Typed paths are relative to the current folder. The default paths (`data/...` and `output/...`) are relative to the project root, so `bin/run` with no arguments works from any folder.
    - Test: the `Runner` spec, from a temporary current folder, stubs `ProcessDailyTransfer.new` with a stand-in that records the run time and the paths it is given (decided in the run, item 3), and checks: with no arguments, the project root's `data/mable_account_balances.csv` and `data/mable_transactions.csv` and the project root joined with `FinalBalancesCsvWriter.default_path` for the recorded run time; with 2 arguments, the two typed paths in the current folder and the same default output path; with 3, the third typed path. Nothing is written in the project's `output/`.
-2. **AC-09.2 Wrong number of arguments** (FR-09; DEC-22).
+2. <a id="ac-09-2"></a>**AC-09.2 Wrong number of arguments** (FR-09; DEC-22).
    - **Given** any folder, **When** `bin/run` runs with 1 argument, or with 4 or more, including `bin/run -h` and `bin/run --help`, **Then** no file is read or written, and:
      - Standard output: (nothing)
      - Standard error, exactly:
@@ -648,7 +653,7 @@ A user runs `bin/run` with 0, 2 or 3 positional arguments. The runner checks the
 
      - Exit status: 1
    - There is no log line, because the run never started. `bin/run` with 1 argument is the usage end-to-end run (DEC-34).
-3. **AC-09.3 Start checks are reported together** (FR-09; DEC-23, DEC-25).
+3. <a id="ac-09-3"></a>**AC-09.3 Start checks are reported together** (FR-09; DEC-23, DEC-25).
    - **Given** that neither `missing1.csv` nor `missing2.csv` exists, and `out/day1.csv` already exists, **When** `bin/run missing1.csv missing2.csv out/day1.csv` runs, **Then** no file is read and `out/day1.csv` is unchanged, and:
      - Standard output: (nothing)
      - Standard error:
@@ -664,7 +669,7 @@ A user runs `bin/run` with 0, 2 or 3 positional arguments. The runner checks the
    - Every problem found at the start gets its own `Error:` line, in the order balances, transfers, output, followed by one log line that lists only the reasons that occurred.
    - With only the two missing files (no third argument and no file at the default path): standard output (nothing); standard error the first two `Error:` lines above, then `E, [<timestamp> #<pid>] ERROR -- : Run stopped: start checks failed (file not found)`; exit status 1.
    - With only an existing output file, `bin/run balances.csv transfers.csv out/day1.csv`: no transfer is read and `out/day1.csv` is unchanged; standard output (nothing); standard error `Error: output file already exists: out/day1.csv. Delete it or give another output path.` then `E, [<timestamp> #<pid>] ERROR -- : Run stopped: start checks failed (output file already exists)`; exit status 1.
-4. **AC-09.3a An input file that cannot be opened stops the run** (FR-09; DEC-23, DEC-25; page 2 pick 16).
+4. <a id="ac-09-3a"></a>**AC-09.3a An input file that cannot be opened stops the run** (FR-09; DEC-23, DEC-25; page 2 pick 16).
    - **Given** `balances.csv` exists but cannot be opened (permission denied), **When** `bin/run balances.csv transfers.csv` runs, **Then** no output file is written, and:
      - Standard output: (nothing)
      - Standard error:
@@ -676,7 +681,7 @@ A user runs `bin/run` with 0, 2 or 3 positional arguments. The runner checks the
 
      - Exit status: 1
    - The same holds for a transfers file that cannot be opened: `Error: cannot read file transfers.csv: <reason from the system>`, then the same log line. This problem is found when the file is opened, after the start checks have passed. How the test makes a file that exists but cannot be opened is decided in the run, item 11.
-5. **AC-09.5 Log level** (FR-09; DEC-28, DEC-29).
+5. <a id="ac-09-5"></a>**AC-09.5 Log level** (FR-09; DEC-28, DEC-29).
    - **Given** the sample files in `data/`, **When** `LOG_LEVEL=info bin/run` runs (`INFO` and `Info` work the same), **Then**:
      - Standard output: exactly the report in AC-08.1.
      - Standard error:
@@ -694,7 +699,7 @@ A user runs `bin/run` with 0, 2 or 3 positional arguments. The runner checks the
    - With `LOG_LEVEL` unset, `warn`, or any other value such as `debug`, the level is warn. For the sample run: standard output is exactly the report in AC-08.1; standard error is (nothing); exit status 0.
    - At info level, a run that passes the start checks and then stops logs `Run started: ...` first, then the info and warn lines of the rows read before the stop, then the `Error:` line(s) and the error log line, and never `Run ended` (clarified, item 20). For AC-01.4 with `LOG_LEVEL=info`, standard error is `I, [<timestamp> #<pid>]  INFO -- : Run started: balances balances.csv, transfers transfers.csv` **(derived)** followed by the lines of AC-01.4. Standard output is (nothing); exit status 1. A run stopped by the arguments or the start checks logs no info line.
    - At info level, a run with rejections ends with, for example, `Run ended: processed 5, applied 2, rejected 3 (same_account 1, unknown_account 1, insufficient_funds 1)`: for AC-08.2 with `LOG_LEVEL=info`, standard error is **(derived)** `Run started: balances balances.csv, transfers transfers.csv` (info), `Line 1 applied: ************6789 -> ************5665 30.00` (info), the Line 2 and Line 3 warn lines of AC-08.2, `Line 4 applied: ************6789 -> ************1234 70.00` (info), the Line 5 warn line, then `Run ended: processed 5, applied 2, rejected 3 (same_account 1, unknown_account 1, insufficient_funds 1)` (info), each in the log format `I, [<timestamp> #<pid>]  INFO -- : ` or `W, [<timestamp> #<pid>]  WARN -- : `. Standard output is exactly AC-08.2's report; exit status 0.
-6. **AC-09.6 Account numbers are masked only in log lines** (FR-09; DEC-26, DEC-29).
+6. <a id="ac-09-6"></a>**AC-09.6 Account numbers are masked only in log lines** (FR-09; DEC-26, DEC-29).
    - Log lines show 12 asterisks and the last 4 characters: `************6789`. A value that is not a valid account number is masked the same way (`12345` becomes `*2345`), and a value of 4 characters or fewer, including an empty value, becomes `****`.
    - The report, the error messages and the output file show full account numbers. Error log lines show no account numbers at all.
    - **(derived)** **Given** the sample files in `data/`, **When** `LOG_LEVEL=info bin/run` runs, **Then**:
@@ -702,10 +707,10 @@ A user runs `bin/run` with 0, 2 or 3 positional arguments. The runner checks the
      - Standard error: exactly the six info lines of AC-09.5, with every account number masked as `************NNNN` and no run of 16 digits.
      - Exit status: 0
    - **(derived)** A stopped run (AC-01.4 with `LOG_LEVEL=info`): standard output (nothing); standard error as in AC-09.5's stopped-run example, with full account numbers in the `Error:` lines and none in the error log line; exit status 1.
-7. **AC-09.7 Every run starts from the balances file** (FR-09; DEC-02, DEC-03, DEC-27).
+7. <a id="ac-09-7"></a>**AC-09.7 Every run starts from the balances file** (FR-09; DEC-02, DEC-03, DEC-27).
    - **Given** the sample files, **When** `bin/run` runs twice, one second apart, **Then** both runs give the same report and the same final balances, and each writes its own file (`..._143005.csv` and `..._143006.csv`). For both runs: standard output is AC-08.1's report apart from the `Output file:` line, which shows the run's own file; standard error (nothing); exit status 0. Nothing in the report, the logs or the output names a company.
    - Test (decided in the run, item 4): `FinalBalancesCsvWriter.default_path` gives `output/final_balances_2026-11-07_143005.csv` and `output/final_balances_2026-11-07_143006.csv` for run times one second apart; two runner runs on the same sample files, with the two output paths, give identical standard output apart from the `Output file:` line and identical output files.
-8. **AC-09.8 Exit status** (FR-09; DEC-25).
+8. <a id="ac-09-8"></a>**AC-09.8 Exit status** (FR-09; DEC-25).
    - 0 for every completed run, even if some or all transfers were rejected (AC-02.3, AC-08.2).
    - 1 for every stopped run: wrong arguments (AC-09.2), a missing input file (AC-09.3) or one that cannot be opened (AC-09.3a), an invalid balances file (AC-01.3 to AC-01.10), an empty transfers file (AC-02.4), a file that cannot be read past a line (AC-01.9, AC-02.5), a changed total (AC-08.5), an output file that already exists (AC-09.3), or an output file that cannot be written (AC-09.4).
    - Standard error: for exit status 0, nothing unless a transfer was rejected (warn lines, AC-09.5) or `LOG_LEVEL` asks for more; for exit status 1, the `Error:` lines and the error log line of the scenario that stopped the run.
@@ -713,6 +718,7 @@ A user runs `bin/run` with 0, 2 or 3 positional arguments. The runner checks the
 
 ---
 
+<a id="us6"></a>
 ### User Story 6 - Every domain scenario gives its exact run outcome (Priority: P2)
 
 The page 2 scenarios of FR-03 to FR-06 are owned by `001-domain`. This spec runs each of them through the runner with real CSV files, so the user sees exactly the report line, log line and exit status page 2 describes (brief rule 4; [DEC-14](../../docs/design-analysis/design-decisions.md#dec-14), [DEC-19](../../docs/design-analysis/design-decisions.md#dec-19), [DEC-26](../../docs/design-analysis/design-decisions.md#dec-26), [DEC-28](../../docs/design-analysis/design-decisions.md#dec-28), [DEC-29](../../docs/design-analysis/design-decisions.md#dec-29)).
@@ -754,7 +760,7 @@ The page 2 scenarios of FR-03 to FR-06 are owned by `001-domain`. This spec runs
 
    - Exit status: 0 for every row of this table.
 
-4. **AC-06.1 Account numbers** (FR-06, owned by `001`; DEC-08). The row is `<from>,1212343433335665,10.00`:
+4. <a id="ac-06-1"></a>**AC-06.1 Account numbers** (FR-06, owned by `001`; DEC-08). The row is `<from>,1212343433335665,10.00`:
 
    | From value | Standard output | Standard error |
    |---|---|---|
@@ -767,7 +773,7 @@ The page 2 scenarios of FR-03 to FR-06 are owned by `001-domain`. This spec runs
 
    - Exit status: 0 for every row of this table.
    - The account number with leading zeros matched across both files is also an integration test with fixture files (DEC-34).
-5. **AC-06.2 Amounts** (FR-06, owned by `001`; DEC-09, DEC-10). The row is `1111234522226789,1212343433335665,<amount>`:
+5. <a id="ac-06-2"></a>**AC-06.2 Amounts** (FR-06, owned by `001`; DEC-09, DEC-10). The row is `1111234522226789,1212343433335665,<amount>`:
 
    | Amount as written | Standard output | Standard error |
    |---|---|---|
@@ -781,10 +787,11 @@ The page 2 scenarios of FR-03 to FR-06 are owned by `001-domain`. This spec runs
 
    - Exit status: 0 for every row of this table.
    - `<as written>` is the value after trimming spaces: `10.` is shown as `10.`, not `10.00`. An applied amount is shown with 2 decimal places in the report and in the info log line (`LOG_LEVEL=info`).
-6. **AC-06.3 The same rules hold in the balances file** (FR-06, owned by `001`; FR-01; DEC-09 to DEC-11): run through the runner by AC-01.4 to AC-01.6 above.
+6. <a id="ac-06-3"></a>**AC-06.3 The same rules hold in the balances file** (FR-06, owned by `001`; FR-01; DEC-09 to DEC-11): run through the runner by AC-01.4 to AC-01.6 above.
 
 ---
 
+<a id="us7"></a>
 ### User Story 7 - The run's cost grows only with the size of the two files (Priority: P3)
 
 A whole run takes time and memory in proportion to the rows in the balances file plus the rows in the transfers file, reads the transfers file one row at a time, and keeps nothing between runs ([NFR-03](../../docs/solution-design/03-non-functional-requirements.md#nfr-03); [DEC-03](../../docs/design-analysis/design-decisions.md#dec-03), [DEC-26](../../docs/design-analysis/design-decisions.md#dec-26), [DEC-32](../../docs/design-analysis/design-decisions.md#dec-32)).
@@ -803,6 +810,7 @@ A whole run takes time and memory in proportion to the rows in the balances file
 
 ---
 
+<a id="us8"></a>
 ### User Story 8 - The tests prove every behaviour once, in any order (Priority: P2)
 
 A developer runs the whole suite and gets orthogonal RSpec specs that read as the behaviour, pass in random order, do not depend on the clock or the terminal, prove the total-check failure that correct code never reaches, and measure coverage ([NFR-06](../../docs/solution-design/03-non-functional-requirements.md#nfr-06); [DEC-24](../../docs/design-analysis/design-decisions.md#dec-24), [DEC-28](../../docs/design-analysis/design-decisions.md#dec-28), [DEC-30](../../docs/design-analysis/design-decisions.md#dec-30), [DEC-34](../../docs/design-analysis/design-decisions.md#dec-34), [DEC-36](../../docs/design-analysis/design-decisions.md#dec-36)).
@@ -874,75 +882,75 @@ Each has a planned test (DEC-34); the level is given in brackets.
 
 **Reading the files ([FR-01](../../docs/solution-design/02-functional-requirements.md#fr-01-load-the-balances-file), [FR-02](../../docs/solution-design/02-functional-requirements.md#fr-02-read-the-transfers-file))**
 
-- **FR-001** (FR-01, FR-02; DEC-04, DEC-07): `BalancesCsvReader` and `TransfersCsvReader` MUST read a file with Ruby's CSV library, opened as `bom|utf-8` so a byte-order mark is ignored, accepting quoted values, Windows line endings and a missing final newline, and MUST give each row's values, each trimmed of spaces and tabs around it (spaces and tabs inside a value kept; clarified, item 18), with the row's physical line number (starting at 1, counting blank lines; a row spanning several lines has the line where it starts).
-- **FR-002** (FR-01, FR-02; DEC-05): the readers MUST skip a blank line (empty, or only spaces or tabs): it is not a row, not an error and not counted. A line of only commas MUST be a row with empty fields.
-- **FR-003** (FR-01, FR-02; DEC-04, DEC-19): the readers MUST mark a row whose number of fields is not 2 (balances) or 3 (transfers) with its field count, instead of raising an error.
-- **FR-004** (FR-01, FR-02; DEC-06): the readers MUST mark the first data row with the header hint when its first field is not empty and contains no digits at all. They MUST NOT skip it.
-- **FR-005** (FR-01, FR-02, FR-09; DEC-04, DEC-23): the readers MUST raise `UnreadableFile` for a file that cannot be opened, with the message `cannot read file <path>: <reason from the system>`; and for a file the CSV library cannot read past a line (an unclosed quote, or bytes that are not valid UTF-8 text), after giving every row before it, with the line where the unreadable row starts and the message `cannot read <path> from line <N>. Check for an unclosed quote or characters that are not text.` A system error raised while the file is opened or a row is read MUST be reported as `cannot read file <path>: <reason from the system>`; an error raised by the code the rows are given to MUST pass through unchanged (page 10 pick 58).
-- **FR-006** (FR-01, FR-02, NFR-03; DEC-32; page 6 pick 36): `BalancesCsvReader` MUST read the whole file; `TransfersCsvReader` MUST give one row at a time, read with Ruby's CSV library (`CSV.open`, one row per `shift`) so each row keeps its physical line number (DEC-07, DEC-32), and never hold the file's text in full. The readers MUST be built without a path and given the path when asked to read. They MUST NOT check account numbers or amounts, build domain models, or check whether the file exists.
+- <a id="fr-001"></a>**FR-001** (FR-01, FR-02; DEC-04, DEC-07): `BalancesCsvReader` and `TransfersCsvReader` MUST read a file with Ruby's CSV library, opened as `bom|utf-8` so a byte-order mark is ignored, accepting quoted values, Windows line endings and a missing final newline, and MUST give each row's values, each trimmed of spaces and tabs around it (spaces and tabs inside a value kept; clarified, item 18), with the row's physical line number (starting at 1, counting blank lines; a row spanning several lines has the line where it starts).
+- <a id="fr-002"></a>**FR-002** (FR-01, FR-02; DEC-05): the readers MUST skip a blank line (empty, or only spaces or tabs): it is not a row, not an error and not counted. A line of only commas MUST be a row with empty fields.
+- <a id="fr-003"></a>**FR-003** (FR-01, FR-02; DEC-04, DEC-19): the readers MUST mark a row whose number of fields is not 2 (balances) or 3 (transfers) with its field count, instead of raising an error.
+- <a id="fr-004"></a>**FR-004** (FR-01, FR-02; DEC-06): the readers MUST mark the first data row with the header hint when its first field is not empty and contains no digits at all. They MUST NOT skip it.
+- <a id="fr-005"></a>**FR-005** (FR-01, FR-02, FR-09; DEC-04, DEC-23): the readers MUST raise `UnreadableFile` for a file that cannot be opened, with the message `cannot read file <path>: <reason from the system>`; and for a file the CSV library cannot read past a line (an unclosed quote, or bytes that are not valid UTF-8 text), after giving every row before it, with the line where the unreadable row starts and the message `cannot read <path> from line <N>. Check for an unclosed quote or characters that are not text.` A system error raised while the file is opened or a row is read MUST be reported as `cannot read file <path>: <reason from the system>`; an error raised by the code the rows are given to MUST pass through unchanged (page 10 pick 58).
+- <a id="fr-006"></a>**FR-006** (FR-01, FR-02, NFR-03; DEC-32; page 6 pick 36): `BalancesCsvReader` MUST read the whole file; `TransfersCsvReader` MUST give one row at a time, read with Ruby's CSV library (`CSV.open`, one row per `shift`) so each row keeps its physical line number (DEC-07, DEC-32), and never hold the file's text in full. The readers MUST be built without a path and given the path when asked to read. They MUST NOT check account numbers or amounts, build domain models, or check whether the file exists.
 
 **Loading the balances ([FR-01](../../docs/solution-design/02-functional-requirements.md#fr-01-load-the-balances-file))**
 
-- **FR-007** (FR-01; DEC-11, DEC-12, DEC-31; page 6 picks 30, 31): `LoadBalances` MUST take the `BalancesCsvReader`, the balances path and the `AccountRepository`, and for each row, in this order: (1) if the row is marked with the wrong number of fields, report only `expected 2 fields, found <K>` and go to the next row; (2) build the `AccountNumber`; (3) if it is valid, ask `AccountRepository#include?` and, if the number is already held, report the duplicate naming the line where the account first appeared; (4) build the `Money` and run the `Account` opening-balance check; (5) add the `Account` only if the row has no problem, recording that row's line as where the account first appeared. Steps 2 to 4 run separately, so a row reports each of its problems, in field order; each value is parsed once, and step 5 builds the `Account` from the values already parsed (page 10 pick 55).
-- **FR-008** (FR-01; DEC-06, DEC-07, DEC-12): each problem MUST be one line `Line <N>: <problem>`, written by one method of `LoadBalances` (page 10 pick 55), where `<problem>` is the domain error's message unchanged (`001`), or `account <number> appears more than once (first on line <M>)` for a duplicate (the `DuplicateAccount` message text followed by ` (first on line <M>)`), or `expected 2 fields, found <K>` for the field count. When the row is marked header-looking, `. This looks like a header row; files must not have a header.` MUST follow the account-number problem, or the field-count problem.
-- **FR-009** (FR-01; DEC-04, DEC-12; page 2 pick 9; page 6 pick 33): if the reader raises `UnreadableFile` at a line, `LoadBalances` MUST keep the problems found before it and add `Line <N>: cannot read <path> from this line. Check for an unclosed quote or characters that are not text.` as the last problem, counted as one problem. An `UnreadableFile` for a file that cannot be opened MUST pass through unchanged.
-- **FR-010** (FR-01; DEC-11, DEC-12; page 6 pick 32): if any problem is found, `LoadBalances` MUST raise `InvalidBalancesFile` carrying every problem in file order, with the message `the balances file is invalid (<count>):` followed, on separate lines, by each problem line indented by two spaces, where `<count>` is `1 problem` or `<n> problems` (decided in the run, item 6). A file with no rows MUST raise `InvalidBalancesFile` with the single no-rows problem and the message `the balances file has no rows: <path>`.
-- **FR-011** (FR-01; DEC-12): `LoadBalances` MUST NOT check digits or money format itself, keep its own list of accounts, stop at the first problem, or apply any transfer. The known gap (a duplicate whose first copy was not added because of its own problem: an invalid or negative balance, or the wrong number of fields) MUST behave as AC-01.10 states (clarified, item 19).
+- <a id="fr-007"></a>**FR-007** (FR-01; DEC-11, DEC-12, DEC-31; page 6 picks 30, 31): `LoadBalances` MUST take the `BalancesCsvReader`, the balances path and the `AccountRepository`, and for each row, in this order: (1) if the row is marked with the wrong number of fields, report only `expected 2 fields, found <K>` and go to the next row; (2) build the `AccountNumber`; (3) if it is valid, ask `AccountRepository#include?` and, if the number is already held, report the duplicate naming the line where the account first appeared; (4) build the `Money` and run the `Account` opening-balance check; (5) add the `Account` only if the row has no problem, recording that row's line as where the account first appeared. Steps 2 to 4 run separately, so a row reports each of its problems, in field order; each value is parsed once, and step 5 builds the `Account` from the values already parsed (page 10 pick 55).
+- <a id="fr-008"></a>**FR-008** (FR-01; DEC-06, DEC-07, DEC-12): each problem MUST be one line `Line <N>: <problem>`, written by one method of `LoadBalances` (page 10 pick 55), where `<problem>` is the domain error's message unchanged (`001`), or `account <number> appears more than once (first on line <M>)` for a duplicate (the `DuplicateAccount` message text followed by ` (first on line <M>)`), or `expected 2 fields, found <K>` for the field count. When the row is marked header-looking, `. This looks like a header row; files must not have a header.` MUST follow the account-number problem, or the field-count problem.
+- <a id="fr-009"></a>**FR-009** (FR-01; DEC-04, DEC-12; page 2 pick 9; page 6 pick 33): if the reader raises `UnreadableFile` at a line, `LoadBalances` MUST keep the problems found before it and add `Line <N>: cannot read <path> from this line. Check for an unclosed quote or characters that are not text.` as the last problem, counted as one problem. An `UnreadableFile` for a file that cannot be opened MUST pass through unchanged.
+- <a id="fr-010"></a>**FR-010** (FR-01; DEC-11, DEC-12; page 6 pick 32): if any problem is found, `LoadBalances` MUST raise `InvalidBalancesFile` carrying every problem in file order, with the message `the balances file is invalid (<count>):` followed, on separate lines, by each problem line indented by two spaces, where `<count>` is `1 problem` or `<n> problems` (decided in the run, item 6). A file with no rows MUST raise `InvalidBalancesFile` with the single no-rows problem and the message `the balances file has no rows: <path>`.
+- <a id="fr-011"></a>**FR-011** (FR-01; DEC-12): `LoadBalances` MUST NOT check digits or money format itself, keep its own list of accounts, stop at the first problem, or apply any transfer. The known gap (a duplicate whose first copy was not added because of its own problem: an invalid or negative balance, or the wrong number of fields) MUST behave as AC-01.10 states (clarified, item 19).
 
 **Running the day ([FR-02](../../docs/solution-design/02-functional-requirements.md#fr-02-read-the-transfers-file), [FR-07](../../docs/solution-design/02-functional-requirements.md#fr-07-the-order-transfers-are-applied-in), [FR-08](../../docs/solution-design/02-functional-requirements.md#fr-08-the-end-of-day-result-and-its-output))**
 
-- **FR-012** (FR-02, FR-07, NFR-06; DEC-28, DEC-30; page 6 picks 34, 35): `ProcessDailyTransfer` MUST take in its constructor the run time (defaulting to the current time) and the balances reader, the transfers reader, the writer, the repository, the reporter and the logger as one `ProcessDailyTransfer::Parts`, each by name, and MUST create `LoadBalances` and `TransferService` itself from the parts it was given. It MUST run with the balances path, the transfers path and the output path; when the output path is left out, it MUST use `FinalBalancesCsvWriter.default_path` for its run time.
-- **FR-013** (FR-02, FR-07, FR-08; DEC-15, DEC-24, DEC-26, DEC-28; page 6): `ProcessDailyTransfer` MUST, in order: (1) log the run start and load the balances through `LoadBalances`, then note each account's opening balance from `AccountRepository#all` and add them up for the total before; (2) read each transfers row in file order; (3) turn each row into a `TransferResult` (FR-014); (4) log each result; (5) raise `NoTransfers` if there were no rows, and log the all-rejected warning if every row was rejected; (6) add up the total after from `all` and raise `TotalChanged` if it differs from the total before; (7) write the output file through the writer; (8) print the report through the reporter, once; (9) log the run end; and return the `DayResult`. When a run-stopping error is raised after step 1 began, the lines already logged stay and the run end is not logged (clarified, item 20).
-- **FR-014** (FR-02, FR-07; DEC-14, DEC-16, DEC-19; page 7.1): for each row, `ProcessDailyTransfer` MUST give a row marked with the wrong number of fields the reason `malformed_row` without building any domain object; otherwise it MUST build the from `AccountNumber`, then the to `AccountNumber`, then the `Money` amount, then the `Transfer`, and hand it to `TransferService`. It MUST turn `InvalidAccountNumber` into `invalid_account_number`, `InvalidAmount` into `invalid_amount`, `SameAccount` into `same_account`, `UnknownAccount` into `unknown_account` and `InsufficientFunds` into `insufficient_funds`, carry the header hint from a marked row into the rejected `TransferResult`, and go on to the next row. A domain error MUST never leave `ProcessDailyTransfer`.
-- **FR-015** (FR-07; DEC-15, DEC-16): each row MUST be applied once, in file order; a rejected row MUST NOT be retried; two equal rows MUST be two transfers.
-- **FR-016** (FR-02; DEC-20): `NoTransfers` MUST be raised, after the balances are loaded, when the transfers file has no rows, with the message `the transfers file has no transfers: <path>`.
-- **FR-017** (FR-02; DEC-21): when the transfers file has rows and every one is rejected, the run MUST still complete, and `ProcessDailyTransfer` MUST log `All transfers were rejected; check this is the right file.` at warn level after the rows' warn lines.
-- **FR-018** (FR-08; DEC-24; page 6 pick 38): `TotalChanged` MUST carry the totals before and after, with the message `the total of all balances changed from <before> to <after>. No output file was written.`, both written with 2 decimal places, and MUST be raised before the writer or the reporter is called.
-- **FR-019** (FR-08; DEC-25, DEC-26): the writer MUST be called only after the total check passes, and the reporter only after the output file is written, exactly once per completed run, and never when the run stops.
-- **FR-020** (FR-09; DEC-28, DEC-29): `ProcessDailyTransfer` MUST log through the logger it was given, deciding when to log and at which level, and MUST take each text from `LogMessages` (page 6 pick 37), except the all-rejected warning, whose text `DayResult` owns (shared with the report). The texts are (the log format adds the level and timestamp): info `Run started: balances <balances path>, transfers <transfers path>`; info `Line <N> applied: <masked from> -> <masked to> <amount with 2 decimal places>`; warn `Line <N> rejected: <masked from> -> <masked to> <amount as written> <reason code>`; warn `All transfers were rejected; check this is the right file.`; info `Run ended: processed <p>, applied <a>, rejected <r>`, followed, when <r> is above 0, by ` (<code> <count>, ...)` for each reason code that occurred, in DEC-19 order, separated by `, `.
-- **FR-021** (FR-09; DEC-28, DEC-29; page 2 picks 11, 12; page 6 pick 37): in a rejected row's warn line, an empty amount MUST be shown as `""`; for a row marked with the wrong number of fields, the fields MUST be taken by position (from, to, amount), fields the row does not have left out with their separator (decided in the run, item 8), and fields after the third not logged. The header hint MUST NOT appear in a log line. Masking MUST be done by `LogMessages`, which builds the text of every log line except the all-rejected warning, whose text `DayResult` owns (shared with the report): every character except the last 4 becomes `*`, and a value of 4 characters or fewer, including an empty value, is `****`.
-- **FR-022** (FR-08; DEC-26): `DayResult` MUST hold the `TransferResult`s in file order, the totals before and after, the opening balance of each account by account number (taken before any transfer is applied), the final accounts in load order, and the output path, and MUST NOT format, print or change anything.
-- **FR-023** (FR-02, FR-07, FR-08; DEC-30): `ProcessDailyTransfer` MUST NOT create its own readers, writer, repository, reporter or logger; read the clock when a run time is given; write to standard output except through the reporter; parse CSV; check arguments or file existence; print error messages; or set the exit status.
+- <a id="fr-012"></a>**FR-012** (FR-02, FR-07, NFR-06; DEC-28, DEC-30; page 6 picks 34, 35): `ProcessDailyTransfer` MUST take in its constructor the run time (defaulting to the current time) and the balances reader, the transfers reader, the writer, the repository, the reporter and the logger as one `ProcessDailyTransfer::Parts`, each by name, and MUST create `LoadBalances` and `TransferService` itself from the parts it was given. It MUST run with the balances path, the transfers path and the output path; when the output path is left out, it MUST use `FinalBalancesCsvWriter.default_path` for its run time.
+- <a id="fr-013"></a>**FR-013** (FR-02, FR-07, FR-08; DEC-15, DEC-24, DEC-26, DEC-28; page 6): `ProcessDailyTransfer` MUST, in order: (1) log the run start and load the balances through `LoadBalances`, then note each account's opening balance from `AccountRepository#all` and add them up for the total before; (2) read each transfers row in file order; (3) turn each row into a `TransferResult` (FR-014); (4) log each result; (5) raise `NoTransfers` if there were no rows, and log the all-rejected warning if every row was rejected; (6) add up the total after from `all` and raise `TotalChanged` if it differs from the total before; (7) write the output file through the writer; (8) print the report through the reporter, once; (9) log the run end; and return the `DayResult`. When a run-stopping error is raised after step 1 began, the lines already logged stay and the run end is not logged (clarified, item 20).
+- <a id="fr-014"></a>**FR-014** (FR-02, FR-07; DEC-14, DEC-16, DEC-19; page 7.1): for each row, `ProcessDailyTransfer` MUST give a row marked with the wrong number of fields the reason `malformed_row` without building any domain object; otherwise it MUST build the from `AccountNumber`, then the to `AccountNumber`, then the `Money` amount, then the `Transfer`, and hand it to `TransferService`. It MUST turn `InvalidAccountNumber` into `invalid_account_number`, `InvalidAmount` into `invalid_amount`, `SameAccount` into `same_account`, `UnknownAccount` into `unknown_account` and `InsufficientFunds` into `insufficient_funds`, carry the header hint from a marked row into the rejected `TransferResult`, and go on to the next row. A domain error MUST never leave `ProcessDailyTransfer`.
+- <a id="fr-015"></a>**FR-015** (FR-07; DEC-15, DEC-16): each row MUST be applied once, in file order; a rejected row MUST NOT be retried; two equal rows MUST be two transfers.
+- <a id="fr-016"></a>**FR-016** (FR-02; DEC-20): `NoTransfers` MUST be raised, after the balances are loaded, when the transfers file has no rows, with the message `the transfers file has no transfers: <path>`.
+- <a id="fr-017"></a>**FR-017** (FR-02; DEC-21): when the transfers file has rows and every one is rejected, the run MUST still complete, and `ProcessDailyTransfer` MUST log `All transfers were rejected; check this is the right file.` at warn level after the rows' warn lines.
+- <a id="fr-018"></a>**FR-018** (FR-08; DEC-24; page 6 pick 38): `TotalChanged` MUST carry the totals before and after, with the message `the total of all balances changed from <before> to <after>. No output file was written.`, both written with 2 decimal places, and MUST be raised before the writer or the reporter is called.
+- <a id="fr-019"></a>**FR-019** (FR-08; DEC-25, DEC-26): the writer MUST be called only after the total check passes, and the reporter only after the output file is written, exactly once per completed run, and never when the run stops.
+- <a id="fr-020"></a>**FR-020** (FR-09; DEC-28, DEC-29): `ProcessDailyTransfer` MUST log through the logger it was given, deciding when to log and at which level, and MUST take each text from `LogMessages` (page 6 pick 37), except the all-rejected warning, whose text `DayResult` owns (shared with the report). The texts are (the log format adds the level and timestamp): info `Run started: balances <balances path>, transfers <transfers path>`; info `Line <N> applied: <masked from> -> <masked to> <amount with 2 decimal places>`; warn `Line <N> rejected: <masked from> -> <masked to> <amount as written> <reason code>`; warn `All transfers were rejected; check this is the right file.`; info `Run ended: processed <p>, applied <a>, rejected <r>`, followed, when <r> is above 0, by ` (<code> <count>, ...)` for each reason code that occurred, in DEC-19 order, separated by `, `.
+- <a id="fr-021"></a>**FR-021** (FR-09; DEC-28, DEC-29; page 2 picks 11, 12; page 6 pick 37): in a rejected row's warn line, an empty amount MUST be shown as `""`; for a row marked with the wrong number of fields, the fields MUST be taken by position (from, to, amount), fields the row does not have left out with their separator (decided in the run, item 8), and fields after the third not logged. The header hint MUST NOT appear in a log line. Masking MUST be done by `LogMessages`, which builds the text of every log line except the all-rejected warning, whose text `DayResult` owns (shared with the report): every character except the last 4 becomes `*`, and a value of 4 characters or fewer, including an empty value, is `****`.
+- <a id="fr-022"></a>**FR-022** (FR-08; DEC-26): `DayResult` MUST hold the `TransferResult`s in file order, the totals before and after, the opening balance of each account by account number (taken before any transfer is applied), the final accounts in load order, and the output path, and MUST NOT format, print or change anything.
+- <a id="fr-023"></a>**FR-023** (FR-02, FR-07, FR-08; DEC-30): `ProcessDailyTransfer` MUST NOT create its own readers, writer, repository, reporter or logger; read the clock when a run time is given; write to standard output except through the reporter; parse CSV; check arguments or file existence; print error messages; or set the exit status.
 
 **The output file ([FR-08](../../docs/solution-design/02-functional-requirements.md#fr-08-the-end-of-day-result-and-its-output))**
 
-- **FR-024** (FR-08; DEC-27; page 6 pick 39): `FinalBalancesCsvWriter.default_path(run_time)` MUST return `output/final_balances_YYYY-MM-DD_HHMMSS.csv` from the local run time, 24-hour clock, for example `output/final_balances_2026-11-07_143005.csv`.
-- **FR-025** (FR-08; DEC-27; page 2 pick 17): writing MUST produce one line per account, `<full account number>,<balance with exactly 2 decimal places>`, in load order, no header, each line, the last included, ending with LF only on every operating system. It MUST create missing folders on the path.
-- **FR-026** (FR-08; DEC-25, DEC-27; page 6 pick 40): the writer MUST create the file only if no file exists at that path at the moment it is opened; otherwise, or if the file cannot be created, it MUST raise `OutputNotWritable` with the message `cannot write output file <path>: <reason from the system>`, leaving a file that already existed unchanged. If writing fails partway, it MUST delete the partial file it created before raising. If a missing folder on the path cannot be created, it MUST raise `OutputNotWritable` with the same message, leaving in place any folder it already created (clarified, item 21). It MUST NOT overwrite a file, read the clock or print anything.
+- <a id="fr-024"></a>**FR-024** (FR-08; DEC-27; page 6 pick 39): `FinalBalancesCsvWriter.default_path(run_time)` MUST return `output/final_balances_YYYY-MM-DD_HHMMSS.csv` from the local run time, 24-hour clock, for example `output/final_balances_2026-11-07_143005.csv`.
+- <a id="fr-025"></a>**FR-025** (FR-08; DEC-27; page 2 pick 17): writing MUST produce one line per account, `<full account number>,<balance with exactly 2 decimal places>`, in load order, no header, each line, the last included, ending with LF only on every operating system. It MUST create missing folders on the path.
+- <a id="fr-026"></a>**FR-026** (FR-08; DEC-25, DEC-27; page 6 pick 40): the writer MUST create the file only if no file exists at that path at the moment it is opened; otherwise, or if the file cannot be created, it MUST raise `OutputNotWritable` with the message `cannot write output file <path>: <reason from the system>`, leaving a file that already existed unchanged. If writing fails partway, it MUST delete the partial file it created before raising. If a missing folder on the path cannot be created, it MUST raise `OutputNotWritable` with the same message, leaving in place any folder it already created (clarified, item 21). It MUST NOT overwrite a file, read the clock or print anything.
 
 **The report ([FR-08](../../docs/solution-design/02-functional-requirements.md#fr-08-the-end-of-day-result-and-its-output))**
 
-- **FR-027** (FR-08; DEC-21, DEC-26): `ReportPrinter` MUST print the report on standard output from a `DayResult`, in five parts in this order, separated by one empty line, with two spaces between the parts of a line and money with exactly 2 decimal places: (1) `Transfers` then, per row, `  Line <N>  applied  <from> -> <to>  <amount>` or `  Line <N>  rejected  <from> -> <to>  <amount as written>  <reason code>`, or for a row with the wrong number of fields `  Line <N>  rejected  malformed_row: <K> fields, expected 3`; (2) `Summary` then `  Processed: <p>`, `  Applied: <a>`, `  Rejected: <r>`, then `    <reason code>: <count>` for each reason that occurred in DEC-19 order, then `  Total before: <total>` and `  Total after: <total>`; (3) only when every row was rejected, `Warning: All transfers were rejected; check this is the right file.`; (4) `Final balances`, then the header row `Account`, `Opening`, `Closing`, then per account in load order its full account number, its opening balance and its closing balance, each line starting with two spaces, each column as wide as its widest value or heading, two spaces between columns, the account number left-aligned and the amounts right-aligned (DEC-26), for example `  Account           Opening  Closing` and `  1111234522226789   100.00    90.00`; (5) `Output file: <path>`.
-- **FR-028** (FR-08; DEC-06, DEC-26; page 2 picks 10, 11): in the report, an empty value MUST be shown as `""`; a rejected header-looking row MUST show `: This looks like a header row; files must not have a header.` after its reason code, or `. This looks like a header row; files must not have a header.` after `malformed_row: <K> fields, expected 3`. Account numbers MUST be shown in full.
-- **FR-029** (FR-08; DEC-26; page 6 pick 41): `ReportPrinter` MUST show the output path relative to the current folder when the file is in or below the current folder, and otherwise in full (plan P10). It MUST NOT write to standard error or decide when to print.
-- **FR-030** (FR-01, FR-02, FR-09; page 2 pick 15; page 6 pick 53): every file path in a message or log line MUST be shown by the same rule as the output path in the report (decided in the run, item 12). The rule MUST be worked out only in `infrastructure/`, by the helper `DisplayPath`: the `Runner` MUST give `ProcessDailyTransfer` the balances and transfers paths in their shown form and the output path in full, and the application classes MUST show the paths they are given, so no `application/` file requires `infrastructure/display_path`.
+- <a id="fr-027"></a>**FR-027** (FR-08; DEC-21, DEC-26): `ReportPrinter` MUST print the report on standard output from a `DayResult`, in five parts in this order, separated by one empty line, with two spaces between the parts of a line and money with exactly 2 decimal places: (1) `Transfers` then, per row, `  Line <N>  applied  <from> -> <to>  <amount>` or `  Line <N>  rejected  <from> -> <to>  <amount as written>  <reason code>`, or for a row with the wrong number of fields `  Line <N>  rejected  malformed_row: <K> fields, expected 3`; (2) `Summary` then `  Processed: <p>`, `  Applied: <a>`, `  Rejected: <r>`, then `    <reason code>: <count>` for each reason that occurred in DEC-19 order, then `  Total before: <total>` and `  Total after: <total>`; (3) only when every row was rejected, `Warning: All transfers were rejected; check this is the right file.`; (4) `Final balances`, then the header row `Account`, `Opening`, `Closing`, then per account in load order its full account number, its opening balance and its closing balance, each line starting with two spaces, each column as wide as its widest value or heading, two spaces between columns, the account number left-aligned and the amounts right-aligned (DEC-26), for example `  Account           Opening  Closing` and `  1111234522226789   100.00    90.00`; (5) `Output file: <path>`.
+- <a id="fr-028"></a>**FR-028** (FR-08; DEC-06, DEC-26; page 2 picks 10, 11): in the report, an empty value MUST be shown as `""`; a rejected header-looking row MUST show `: This looks like a header row; files must not have a header.` after its reason code, or `. This looks like a header row; files must not have a header.` after `malformed_row: <K> fields, expected 3`. Account numbers MUST be shown in full.
+- <a id="fr-029"></a>**FR-029** (FR-08; DEC-26; page 6 pick 41): `ReportPrinter` MUST show the output path relative to the current folder when the file is in or below the current folder, and otherwise in full (plan P10). It MUST NOT write to standard error or decide when to print.
+- <a id="fr-030"></a>**FR-030** (FR-01, FR-02, FR-09; page 2 pick 15; page 6 pick 53): every file path in a message or log line MUST be shown by the same rule as the output path in the report (decided in the run, item 12). The rule MUST be worked out only in `infrastructure/`, by the helper `DisplayPath`: the `Runner` MUST give `ProcessDailyTransfer` the balances and transfers paths in their shown form and the output path in full, and the application classes MUST show the paths they are given, so no `application/` file requires `infrastructure/display_path`.
 
 **The runner ([FR-09](../../docs/solution-design/02-functional-requirements.md#fr-09-the-runner))**
 
-- **FR-031** (FR-09; DEC-22, DEC-23, DEC-27, DEC-28, DEC-30; page 6 pick 42): `Runner` MUST, in order: (1) check the number of arguments and, if it is 1 or 4 or more, print the usage message on standard error with no log line and return 1; (2) resolve the paths: typed paths against the current folder, default paths against the project root; (3) read `LOG_LEVEL` and build the logger on standard error; (4) read the clock once for the run time; (5) take the output path from the third argument, or from `FinalBalancesCsvWriter.default_path` for the run time, resolved against the project root; (6) run the start checks together; (7) build the real readers, writer, repository and reporter; (8) build `ProcessDailyTransfer` with those parts, the logger and the run time, and run it with the three paths (the balances and transfers paths in their shown form, the output path in full; FR-030); (9) return 0, or for a run-stopping error print its message and one error log line and return 1.
-- **FR-032** (FR-09; DEC-22): with no arguments, the balances and transfers files MUST be `data/mable_account_balances.csv` and `data/mable_transactions.csv` under the project root; with 2, the typed files and the default output path; with 3, the third argument as the output path, used as given. The usage message MUST be exactly `Usage: bin/run [BALANCES_FILE TRANSFERS_FILE [OUTPUT_FILE]]` and `With no arguments, runs the sample files in data/.` on two lines. `-h` and `--help` MUST count as one argument.
-- **FR-033** (FR-09; DEC-23, DEC-25; page 2 pick 18): the start checks MUST check that the balances file exists, that the transfers file exists, and that no file exists at the output path, and MUST report every problem found, in that order, one line each: `Error: file not found: <path>` and `Error: output file already exists: <path>. Delete it or give another output path.`, then one error log line `Run stopped: start checks failed (<reasons>)`, where `<reasons>` lists `file not found` and `output file already exists`, each once and only if it occurred, in that order, separated by `, `. Nothing is read when a start check fails. An existing folder at the output path MUST pass the start check (it fails when written, AC-09.4).
-- **FR-034** (FR-09; DEC-25, DEC-28): for each run-stopping error (`InvalidBalancesFile`, `NoTransfers`, `TotalChanged`, `UnreadableFile`, `OutputNotWritable`), `Runner` MUST print `Error: ` followed by the error's message, unchanged, on standard error as plain text, then one error log line from the [run-stopping messages table](#run-stopping-messages), with no account numbers, and return 1. No Ruby stack trace MUST reach the user for these errors. An unexpected error (a bug) MUST NOT be caught (page 9 pick 45).
-- **FR-035** (FR-09; DEC-28): the log level MUST be info when `LOG_LEVEL` is `info` in any letter case, and warn otherwise (unset, `warn`, or any other value). The logger MUST use `Logger`'s default format in local time, writing to standard error.
-- **FR-036** (FR-09; DEC-25, DEC-26): standard output MUST carry only the report; error messages, the usage message and log lines MUST go to standard error. A stopped run MUST print no report and leave no output file, and an output file that already existed MUST be unchanged.
-- **FR-037** (FR-09; DEC-22; page 6): `bin/run` MUST call `Runner` with the arguments and exit with the status it returns, passing no run time and doing nothing else. On Windows it is run as `ruby bin/run`.
-- **FR-038** (FR-09; DEC-22, DEC-34; decided in the run, item 14): `data/` MUST hold unchanged copies of `docs/challenge/mable_account_balances.csv` and `docs/challenge/mable_transactions.csv` named the same, and `spec/fixtures/sample/` MUST hold the same copies for the tests; `docs/challenge/` is never edited.
+- <a id="fr-031"></a>**FR-031** (FR-09; DEC-22, DEC-23, DEC-27, DEC-28, DEC-30; page 6 pick 42): `Runner` MUST, in order: (1) check the number of arguments and, if it is 1 or 4 or more, print the usage message on standard error with no log line and return 1; (2) resolve the paths: typed paths against the current folder, default paths against the project root; (3) read `LOG_LEVEL` and build the logger on standard error; (4) read the clock once for the run time; (5) take the output path from the third argument, or from `FinalBalancesCsvWriter.default_path` for the run time, resolved against the project root; (6) run the start checks together; (7) build the real readers, writer, repository and reporter; (8) build `ProcessDailyTransfer` with those parts, the logger and the run time, and run it with the three paths (the balances and transfers paths in their shown form, the output path in full; FR-030); (9) return 0, or for a run-stopping error print its message and one error log line and return 1.
+- <a id="fr-032"></a>**FR-032** (FR-09; DEC-22): with no arguments, the balances and transfers files MUST be `data/mable_account_balances.csv` and `data/mable_transactions.csv` under the project root; with 2, the typed files and the default output path; with 3, the third argument as the output path, used as given. The usage message MUST be exactly `Usage: bin/run [BALANCES_FILE TRANSFERS_FILE [OUTPUT_FILE]]` and `With no arguments, runs the sample files in data/.` on two lines. `-h` and `--help` MUST count as one argument.
+- <a id="fr-033"></a>**FR-033** (FR-09; DEC-23, DEC-25; page 2 pick 18): the start checks MUST check that the balances file exists, that the transfers file exists, and that no file exists at the output path, and MUST report every problem found, in that order, one line each: `Error: file not found: <path>` and `Error: output file already exists: <path>. Delete it or give another output path.`, then one error log line `Run stopped: start checks failed (<reasons>)`, where `<reasons>` lists `file not found` and `output file already exists`, each once and only if it occurred, in that order, separated by `, `. Nothing is read when a start check fails. An existing folder at the output path MUST pass the start check (it fails when written, AC-09.4).
+- <a id="fr-034"></a>**FR-034** (FR-09; DEC-25, DEC-28): for each run-stopping error (`InvalidBalancesFile`, `NoTransfers`, `TotalChanged`, `UnreadableFile`, `OutputNotWritable`), `Runner` MUST print `Error: ` followed by the error's message, unchanged, on standard error as plain text, then one error log line from the [run-stopping messages table](#run-stopping-messages), with no account numbers, and return 1. No Ruby stack trace MUST reach the user for these errors. An unexpected error (a bug) MUST NOT be caught (page 9 pick 45).
+- <a id="fr-035"></a>**FR-035** (FR-09; DEC-28): the log level MUST be info when `LOG_LEVEL` is `info` in any letter case, and warn otherwise (unset, `warn`, or any other value). The logger MUST use `Logger`'s default format in local time, writing to standard error.
+- <a id="fr-036"></a>**FR-036** (FR-09; DEC-25, DEC-26): standard output MUST carry only the report; error messages, the usage message and log lines MUST go to standard error. A stopped run MUST print no report and leave no output file, and an output file that already existed MUST be unchanged.
+- <a id="fr-037"></a>**FR-037** (FR-09; DEC-22; page 6): `bin/run` MUST call `Runner` with the arguments and exit with the status it returns, passing no run time and doing nothing else. On Windows it is run as `ruby bin/run`.
+- <a id="fr-038"></a>**FR-038** (FR-09; DEC-22, DEC-34; decided in the run, item 14): `data/` MUST hold unchanged copies of `docs/challenge/mable_account_balances.csv` and `docs/challenge/mable_transactions.csv` named the same, and `spec/fixtures/sample/` MUST hold the same copies for the tests; `docs/challenge/` is never edited.
 
 **Scale ([NFR-03](../../docs/solution-design/03-non-functional-requirements.md#nfr-03))**
 
-- **FR-039** (NFR-03; DEC-32): a whole run MUST take time and memory in proportion to the rows in the balances file plus the rows in the transfers file, with no step comparing every row with every other row.
-- **FR-040** (NFR-03; DEC-12, DEC-26, DEC-32): the balances file MUST be read in full before any transfer; the transfers file MUST be read one row at a time; one `TransferResult` per row MUST be kept for the report; there MUST be no fixed limit on the number of accounts or transfers.
-- **FR-041** (NFR-03; DEC-03): each run MUST start from the balances file and keep nothing between runs.
+- <a id="fr-039"></a>**FR-039** (NFR-03; DEC-32): a whole run MUST take time and memory in proportion to the rows in the balances file plus the rows in the transfers file, with no step comparing every row with every other row.
+- <a id="fr-040"></a>**FR-040** (NFR-03; DEC-12, DEC-26, DEC-32): the balances file MUST be read in full before any transfer; the transfers file MUST be read one row at a time; one `TransferResult` per row MUST be kept for the report; there MUST be no fixed limit on the number of accounts or transfers.
+- <a id="fr-041"></a>**FR-041** (NFR-03; DEC-03): each run MUST start from the balances file and keep nothing between runs.
 
 **Tests ([NFR-06](../../docs/solution-design/03-non-functional-requirements.md#nfr-06))**
 
-- **FR-042** (NFR-06; DEC-34): every rule in this spec MUST be tested once, at the level where it lives: application classes in `spec/application/` (builders, fakes such as readers giving rows from memory, a memory logger and a fixed run time); infrastructure classes in `spec/infrastructure/` (fixture files or a temporary folder); one spec file per class; shared helpers in `spec/support/`.
-- **FR-043** (NFR-06; DEC-34): fixture files MUST be used only for the file-level behaviour DEC-34 lists and the end-to-end inputs; copies of the challenge's files MUST be in `spec/fixtures/sample/`.
-- **FR-044** (NFR-06; DEC-22, DEC-34, DEC-35; page 9 pick 48): exactly five end-to-end specs in `spec/acceptance/` MUST run `bin/run` as a separate process and check standard output, standard error, the output file and the exit status: the sample files, mixed rejections, all rejected, an invalid balances file, and 1 argument. Apart from the usage run, each passes all three arguments and writes into a temporary folder. The captured standard output and standard error MUST have each CR LF turned into LF before the exact comparison, so the specs pass on Windows as well; the output file MUST be compared byte for byte (clarified, item 22).
-- **FR-045** (NFR-06, brief rule 4; decided in the run, item 1): every page 2 scenario of FR-01 to FR-09 MUST be run through `Runner` with real CSV files written into a temporary folder, checking standard output, standard error and the exit status exactly, with `<timestamp>`, `<pid>` and `<reason from the system>` matched as patterns. Where a scenario needs a state that correct code or the operating system cannot produce on demand (AC-08.5, AC-09.1, AC-09.3a), the test is as that scenario states.
-- **FR-046** (NFR-06; DEC-24; page 9 picks 46, 47): the total-check failure MUST be tested as AC-08.5 states, split between the `ProcessDailyTransfer` and `Runner` specs.
-- **FR-047** (NFR-06; DEC-28, DEC-30): no test MUST depend on the clock or the terminal: tests pass a fixed run time and a memory logger to `ProcessDailyTransfer`, and capture standard output and standard error of `Runner`. No test stubs `Time.now` or `Date.today`.
-- **FR-048** (NFR-06; DEC-34, DEC-36): the suite MUST pass in random order, with test names that read as behaviour in documentation format, and SimpleCov MUST measure coverage on every run with no minimum. RuboCop MUST still report zero offences (NFR-05, owned by `001`).
+- <a id="fr-042"></a>**FR-042** (NFR-06; DEC-34): every rule in this spec MUST be tested once, at the level where it lives: application classes in `spec/application/` (builders, fakes such as readers giving rows from memory, a memory logger and a fixed run time); infrastructure classes in `spec/infrastructure/` (fixture files or a temporary folder); one spec file per class; shared helpers in `spec/support/`.
+- <a id="fr-043"></a>**FR-043** (NFR-06; DEC-34): fixture files MUST be used only for the file-level behaviour DEC-34 lists and the end-to-end inputs; copies of the challenge's files MUST be in `spec/fixtures/sample/`.
+- <a id="fr-044"></a>**FR-044** (NFR-06; DEC-22, DEC-34, DEC-35; page 9 pick 48): exactly five end-to-end specs in `spec/acceptance/` MUST run `bin/run` as a separate process and check standard output, standard error, the output file and the exit status: the sample files, mixed rejections, all rejected, an invalid balances file, and 1 argument. Apart from the usage run, each passes all three arguments and writes into a temporary folder. The captured standard output and standard error MUST have each CR LF turned into LF before the exact comparison, so the specs pass on Windows as well; the output file MUST be compared byte for byte (clarified, item 22).
+- <a id="fr-045"></a>**FR-045** (NFR-06, brief rule 4; decided in the run, item 1): every page 2 scenario of FR-01 to FR-09 MUST be run through `Runner` with real CSV files written into a temporary folder, checking standard output, standard error and the exit status exactly, with `<timestamp>`, `<pid>` and `<reason from the system>` matched as patterns. Where a scenario needs a state that correct code or the operating system cannot produce on demand (AC-08.5, AC-09.1, AC-09.3a), the test is as that scenario states.
+- <a id="fr-046"></a>**FR-046** (NFR-06; DEC-24; page 9 picks 46, 47): the total-check failure MUST be tested as AC-08.5 states, split between the `ProcessDailyTransfer` and `Runner` specs.
+- <a id="fr-047"></a>**FR-047** (NFR-06; DEC-28, DEC-30): no test MUST depend on the clock or the terminal: tests pass a fixed run time and a memory logger to `ProcessDailyTransfer`, and capture standard output and standard error of `Runner`. No test stubs `Time.now` or `Date.today`.
+- <a id="fr-048"></a>**FR-048** (NFR-06; DEC-34, DEC-36): the suite MUST pass in random order, with test names that read as behaviour in documentation format, and SimpleCov MUST measure coverage on every run with no minimum. RuboCop MUST still report zero offences (NFR-05, owned by `001`).
 
 ### Run-stopping messages
 
@@ -986,14 +994,14 @@ Names and meanings as on [page 6](../../docs/solution-design/06-components.md) a
 
 ### Measurable Outcomes
 
-- **SC-001** (FR-08; DEC-35): the sample files give exactly the closing balances 4820.50, 9974.40, 1550.00, 1725.60 and 48679.50, total 66750.00 before and after, in the report and the output file, with exit status 0 and empty standard error.
-- **SC-002** (FR-01, FR-02, FR-07 to FR-09, brief rule 4): 100% of the page 2 scenarios (FR-01 to FR-09) are run through the runner, and each matches standard output, standard error and the exit status exactly.
-- **SC-003** (FR-01, FR-02, FR-08, FR-09): every run-stopping message in the tests matches the [run-stopping messages table](#run-stopping-messages) character for character, 11 of 11 rows.
-- **SC-004** (FR-09; DEC-25): every stopped run in the tests leaves standard output empty, writes no output file and leaves an existing output file byte for byte unchanged.
-- **SC-005** (NFR-06; DEC-34): exactly 5 end-to-end specs, and the suite passes in 3 runs in a row with different random seeds.
-- **SC-006** (NFR-06; DEC-28, DEC-30): 0 tests read or stub the clock, and 0 tests depend on the terminal.
-- **SC-007** (NFR-03): the design review of the time and space table finds 0 steps whose cost grows faster than the rows in the two files.
-- **SC-008** (NFR-05, owned by `001`): the style checker still reports 0 offences.
+- <a id="sc-001"></a>**SC-001** (FR-08; DEC-35): the sample files give exactly the closing balances 4820.50, 9974.40, 1550.00, 1725.60 and 48679.50, total 66750.00 before and after, in the report and the output file, with exit status 0 and empty standard error.
+- <a id="sc-002"></a>**SC-002** (FR-01, FR-02, FR-07 to FR-09, brief rule 4): 100% of the page 2 scenarios (FR-01 to FR-09) are run through the runner, and each matches standard output, standard error and the exit status exactly.
+- <a id="sc-003"></a>**SC-003** (FR-01, FR-02, FR-08, FR-09): every run-stopping message in the tests matches the [run-stopping messages table](#run-stopping-messages) character for character, 11 of 11 rows.
+- <a id="sc-004"></a>**SC-004** (FR-09; DEC-25): every stopped run in the tests leaves standard output empty, writes no output file and leaves an existing output file byte for byte unchanged.
+- <a id="sc-005"></a>**SC-005** (NFR-06; DEC-34): exactly 5 end-to-end specs, and the suite passes in 3 runs in a row with different random seeds.
+- <a id="sc-006"></a>**SC-006** (NFR-06; DEC-28, DEC-30): 0 tests read or stub the clock, and 0 tests depend on the terminal.
+- <a id="sc-007"></a>**SC-007** (NFR-03): the design review of the time and space table finds 0 steps whose cost grows faster than the rows in the two files.
+- <a id="sc-008"></a>**SC-008** (NFR-05, owned by `001`): the style checker still reports 0 offences.
 
 ## Assumptions
 
@@ -1009,26 +1017,26 @@ Small gaps decided while writing this spec, consistent with `design-decisions.md
 
 | # | Decision | Relates to | Reason | Rejected |
 |---|---|---|---|---|
-| 1 | Runner scenarios run `Runner` in the same process with a temporary folder as the current folder, write the scenario's CSV files into it (not fixture files), and pass `output/final_balances_2026-11-07_143005.csv` as the third argument | Brief rule 4, DEC-30, DEC-34, NFR-06 | The brief asks for every page 2 scenario through the runner with real CSV files and exact streams; this gives page 2's exact output, file paths and output line without reading or stubbing the clock (DEC-30), keeps fixture files for file-level behaviour only and the end-to-end runs at five (DEC-34). The domain rules stay unit-tested once in `001`; these specs check what the runner shows | Stubbing the clock (rejected by DEC-30); a fixture file and an end-to-end run per scenario (rejected by DEC-34); checking only parts of each stream |
-| 2 | The five end-to-end runs use AC-08.1 (sample files), AC-08.2 (mixed rejections), AC-02.3 (all rejected: header only), AC-01.4 (invalid balances) and AC-09.2 with 1 argument; each runs in a temporary folder as the current folder, with the default output name as the third argument | DEC-34, NFR-06, page 9 pick 48 | They are the page 2 criteria that print every stream in full for each kind DEC-34 names; the default name as the third argument keeps page 2's exact `Output file:` line | Other criteria; running from the project root (writes into the project's `output/`) |
-| 3 | AC-09.1 is checked in the `Runner` spec with a stand-in `ProcessDailyTransfer` that records the run time and paths; AC-08.4's `../bin/run` from `docs` is reproduced by a runner scenario run from a subfolder with `../` paths, whose output file is outside that subfolder and shown in full, and a file elsewhere by an output path in a second temporary folder | DEC-22, DEC-26, page 9 picks 46 and 48 | A no-argument run would write into the project's `output/` under a time-based name; the stand-in is the same technique page 9 uses for the total check | Writing into the project's `output/` during tests; stubbing the clock |
-| 4 | AC-09.7 is checked by `default_path` for two run times one second apart, and by two runner runs on the same files giving the same report (apart from the output line) and the same output file | DEC-03, DEC-27 | Proves both halves without a real one-second wait or a clock stub | Sleeping one second between two real runs |
-| 5 | AC-08.3's "same format as the balances file" is also checked by behaviour: the AC-08.2 output file, read back as a balances file, loads the three accounts with their final balances | DEC-27 | DEC-27 says the output exists so the next day's run can use it; reading it back proves that directly | Comparing the format by eye only |
-| 6 | The problem count is singular for one problem: `(1 problem)` in the `Error:` line and `1 problem` in the log line | DEC-12, page 2 AC-01.8 | Page 2 already writes `1 problem` in the log line; the same word form in both places | `(1 problems)` |
-| 7 | Each run-stopping error's message is the text after `Error: `; the `Runner` adds only `Error: ` and the log line, and never rewrites the message. Which class holds the log text is the plan's choice | Brief rule 4, DEC-25, DEC-28 | One owner per message, as the domain owns its messages | The `Runner` building every message from the error's data |
-| 8 | A transfers row with the wrong number of fields: in the log, a missing field is left out together with its separator (1 field gives `Line <N> rejected: <masked from> malformed_row`); in the report, the pattern `malformed_row: <K> fields, expected 3` is used for every count, including 1 | DEC-28, page 2 pick 12, FR-08 layout | Page 2 says missing fields are left out and gives one pattern for the report | A dangling `->`; a singular `1 field` (a second wording not on page 2) |
-| 9 | Page 2 criteria that give only part of a file are completed as stated in each scenario: AC-01.3 line 4 `12345,50.00`; AC-01.6 line 1 `1212343433335665,50.00`; AC-01.7 header followed by `balances.csv`; AC-01.9 lines 1, 2, 4 to 7; AC-01.2 compared with the plain file; AC-08.3 folders `out/new/` | FR-01, FR-08 | Each completion is the smallest file that shows the criterion's point; it adds no behaviour | Other contents |
-| 10 | Tests match `<reason from the system>` as any non-empty text after the fixed part | DEC-23, DEC-25 | The system's wording differs by operating system | Comparing one system's wording |
-| 11 | The test for an input file that exists but cannot be opened uses a way that works on every operating system the suite runs on (for example a folder at the input path, which exists but cannot be read as a file); the plan picks it | DEC-23, NFR-06 | Removing read permission does not work on Windows, or when the tests run as an administrator | A test that runs only on some systems |
-| 12 | One rule shows every path the user sees (report, messages, log lines): relative to the current folder, or in full outside it; the plan picks where that rule lives, and `ReportPrinter` uses it for the output line | Page 2 pick 15, page 6 pick 41, DEC-26 | One rule for every path, as page 2 says | Showing paths as typed in messages |
-| 13 | `LOG_LEVEL` is compared in any letter case, without trimming spaces; any other value, including ` info `, falls back to warn | DEC-28 | DEC-28 accepts only `warn` and `info` in any letter case | Trimming the value |
-| 14 | `002` creates `data/` with copies of the two sample files, and `spec/fixtures/sample/` with the same copies | DEC-22, DEC-34 | `bin/run` with no arguments needs `data/`; the end-to-end spec needs the copies; `003` adds no test data beyond these | Reading `docs/challenge/` directly (rejected by DEC-22) |
-| 15 | The start check for the output path fails only when a file exists there; an existing folder passes it and fails when written | DEC-25, page 2 pick 14 | Page 2 says a folder gives "cannot write output file", not "already exists" | Failing a folder at the start check |
-| 16 | A transfers file whose first row already cannot be read stops with `UnreadableFile`, not `NoTransfers` | DEC-04, DEC-20 | The file has a row the library cannot read, so it is not empty; the reader raises before any row is given | Treating it as an empty file |
-| 17 | A single-row example is line 1 of `transfers.csv`, its only row, and Templates A and R give the rest of standard output; derived lines are marked **(derived)** | DEC-21, DEC-26, DEC-29 | The brief asks for every stream in every scenario; deriving from the FR-08 layout adds no behaviour; matches `001` | Leaving streams unstated |
-| 18 | Tabs around a value are trimmed like spaces; spaces and tabs inside a value are kept (clarification 1) | DEC-04, DEC-05, FR-01, FR-02 | DEC-05 already treats spaces and tabs alike as blank; trimming only spaces would make `<tab>100.00` an invalid amount for a character the user cannot see | Trimming spaces only; removing whitespace inside a value |
-| 19 | The duplicate known gap covers any first copy that is not added because of its own problem: an invalid or negative balance, or the wrong number of fields (clarification 2) | DEC-12, page 6 known gap, page 6 pick 30 | Page 6 states the gap for "the invalid row" in general; the account is added only from a row with no problem, so every such row leaves the same gap; the run stops either way | Remembering numbers from rows that were not added (rejected by page 6 pick 30) |
-| 20 | At info level, a run stopped after the start checks keeps the `Run started` line and any row lines already logged, and logs no `Run ended`; a run stopped by the arguments or start checks logs no info line (clarification 3) | DEC-28, FR-013 order, page 2 AC-09.5 | `Run ended` reports a completed run's counts; `Run started` is logged by `ProcessDailyTransfer`, which the runner builds only after the start checks pass | Logging `Run ended` with partial counts for a stopped run |
-| 21 | A missing folder on the output path that cannot be created raises `OutputNotWritable` with the AC-09.4 message; folders already created are left in place (clarification 4) | DEC-25, DEC-27, page 2 pick 14 | It is a case of "the output file cannot be written"; DEC-27 deletes only a partial file, and an empty folder holds no balances | A new message; removing the created folders |
-| 22 | The end-to-end specs turn CR LF into LF in the captured standard output and standard error before comparing; the output file is compared byte for byte (clarification 5) | DEC-34, NFR-04, page 2 pick 17 | Ruby on Windows writes CR LF to a pipe, so a byte comparison of the streams would fail on the developer's machine; page 2 fixes LF only for the output file | Switching standard output to binary mode in the program (new behaviour); comparing the streams only on Linux |
-| 23 | Unless a scenario says otherwise, `transfers.csv` holds the one row `1111234522226789,1212343433335665,10.00`, AC-01.1's file; a scenario that needs a different transfers file, a missing one or a folder of that name says so | FR-01, FR-09, DEC-23 | Every runner scenario runs `bin/run balances.csv transfers.csv`, and the start checks stop the run when `transfers.csv` does not exist (FR-033), so the FR-01 and AC-09.3a scenarios, which say nothing about it, need a file that exists; the smallest valid file adds no behaviour | Leaving the file unstated (the run would stop at the start checks with `file not found`) |
+| <a id="item-1"></a>1 | Runner scenarios run `Runner` in the same process with a temporary folder as the current folder, write the scenario's CSV files into it (not fixture files), and pass `output/final_balances_2026-11-07_143005.csv` as the third argument | Brief rule 4, DEC-30, DEC-34, NFR-06 | The brief asks for every page 2 scenario through the runner with real CSV files and exact streams; this gives page 2's exact output, file paths and output line without reading or stubbing the clock (DEC-30), keeps fixture files for file-level behaviour only and the end-to-end runs at five (DEC-34). The domain rules stay unit-tested once in `001`; these specs check what the runner shows | Stubbing the clock (rejected by DEC-30); a fixture file and an end-to-end run per scenario (rejected by DEC-34); checking only parts of each stream |
+| <a id="item-2"></a>2 | The five end-to-end runs use AC-08.1 (sample files), AC-08.2 (mixed rejections), AC-02.3 (all rejected: header only), AC-01.4 (invalid balances) and AC-09.2 with 1 argument; each runs in a temporary folder as the current folder, with the default output name as the third argument | DEC-34, NFR-06, page 9 pick 48 | They are the page 2 criteria that print every stream in full for each kind DEC-34 names; the default name as the third argument keeps page 2's exact `Output file:` line | Other criteria; running from the project root (writes into the project's `output/`) |
+| <a id="item-3"></a>3 | AC-09.1 is checked in the `Runner` spec with a stand-in `ProcessDailyTransfer` that records the run time and paths; AC-08.4's `../bin/run` from `docs` is reproduced by a runner scenario run from a subfolder with `../` paths, whose output file is outside that subfolder and shown in full, and a file elsewhere by an output path in a second temporary folder | DEC-22, DEC-26, page 9 picks 46 and 48 | A no-argument run would write into the project's `output/` under a time-based name; the stand-in is the same technique page 9 uses for the total check | Writing into the project's `output/` during tests; stubbing the clock |
+| <a id="item-4"></a>4 | AC-09.7 is checked by `default_path` for two run times one second apart, and by two runner runs on the same files giving the same report (apart from the output line) and the same output file | DEC-03, DEC-27 | Proves both halves without a real one-second wait or a clock stub | Sleeping one second between two real runs |
+| <a id="item-5"></a>5 | AC-08.3's "same format as the balances file" is also checked by behaviour: the AC-08.2 output file, read back as a balances file, loads the three accounts with their final balances | DEC-27 | DEC-27 says the output exists so the next day's run can use it; reading it back proves that directly | Comparing the format by eye only |
+| <a id="item-6"></a>6 | The problem count is singular for one problem: `(1 problem)` in the `Error:` line and `1 problem` in the log line | DEC-12, page 2 AC-01.8 | Page 2 already writes `1 problem` in the log line; the same word form in both places | `(1 problems)` |
+| <a id="item-7"></a>7 | Each run-stopping error's message is the text after `Error: `; the `Runner` adds only `Error: ` and the log line, and never rewrites the message. Which class holds the log text is the plan's choice | Brief rule 4, DEC-25, DEC-28 | One owner per message, as the domain owns its messages | The `Runner` building every message from the error's data |
+| <a id="item-8"></a>8 | A transfers row with the wrong number of fields: in the log, a missing field is left out together with its separator (1 field gives `Line <N> rejected: <masked from> malformed_row`); in the report, the pattern `malformed_row: <K> fields, expected 3` is used for every count, including 1 | DEC-28, page 2 pick 12, FR-08 layout | Page 2 says missing fields are left out and gives one pattern for the report | A dangling `->`; a singular `1 field` (a second wording not on page 2) |
+| <a id="item-9"></a>9 | Page 2 criteria that give only part of a file are completed as stated in each scenario: AC-01.3 line 4 `12345,50.00`; AC-01.6 line 1 `1212343433335665,50.00`; AC-01.7 header followed by `balances.csv`; AC-01.9 lines 1, 2, 4 to 7; AC-01.2 compared with the plain file; AC-08.3 folders `out/new/` | FR-01, FR-08 | Each completion is the smallest file that shows the criterion's point; it adds no behaviour | Other contents |
+| <a id="item-10"></a>10 | Tests match `<reason from the system>` as any non-empty text after the fixed part | DEC-23, DEC-25 | The system's wording differs by operating system | Comparing one system's wording |
+| <a id="item-11"></a>11 | The test for an input file that exists but cannot be opened uses a way that works on every operating system the suite runs on (for example a folder at the input path, which exists but cannot be read as a file); the plan picks it | DEC-23, NFR-06 | Removing read permission does not work on Windows, or when the tests run as an administrator | A test that runs only on some systems |
+| <a id="item-12"></a>12 | One rule shows every path the user sees (report, messages, log lines): relative to the current folder, or in full outside it; the plan picks where that rule lives, and `ReportPrinter` uses it for the output line | Page 2 pick 15, page 6 pick 41, DEC-26 | One rule for every path, as page 2 says | Showing paths as typed in messages |
+| <a id="item-13"></a>13 | `LOG_LEVEL` is compared in any letter case, without trimming spaces; any other value, including ` info `, falls back to warn | DEC-28 | DEC-28 accepts only `warn` and `info` in any letter case | Trimming the value |
+| <a id="item-14"></a>14 | `002` creates `data/` with copies of the two sample files, and `spec/fixtures/sample/` with the same copies | DEC-22, DEC-34 | `bin/run` with no arguments needs `data/`; the end-to-end spec needs the copies; `003` adds no test data beyond these | Reading `docs/challenge/` directly (rejected by DEC-22) |
+| <a id="item-15"></a>15 | The start check for the output path fails only when a file exists there; an existing folder passes it and fails when written | DEC-25, page 2 pick 14 | Page 2 says a folder gives "cannot write output file", not "already exists" | Failing a folder at the start check |
+| <a id="item-16"></a>16 | A transfers file whose first row already cannot be read stops with `UnreadableFile`, not `NoTransfers` | DEC-04, DEC-20 | The file has a row the library cannot read, so it is not empty; the reader raises before any row is given | Treating it as an empty file |
+| <a id="item-17"></a>17 | A single-row example is line 1 of `transfers.csv`, its only row, and Templates A and R give the rest of standard output; derived lines are marked **(derived)** | DEC-21, DEC-26, DEC-29 | The brief asks for every stream in every scenario; deriving from the FR-08 layout adds no behaviour; matches `001` | Leaving streams unstated |
+| <a id="item-18"></a>18 | Tabs around a value are trimmed like spaces; spaces and tabs inside a value are kept (clarification 1) | DEC-04, DEC-05, FR-01, FR-02 | DEC-05 already treats spaces and tabs alike as blank; trimming only spaces would make `<tab>100.00` an invalid amount for a character the user cannot see | Trimming spaces only; removing whitespace inside a value |
+| <a id="item-19"></a>19 | The duplicate known gap covers any first copy that is not added because of its own problem: an invalid or negative balance, or the wrong number of fields (clarification 2) | DEC-12, page 6 known gap, page 6 pick 30 | Page 6 states the gap for "the invalid row" in general; the account is added only from a row with no problem, so every such row leaves the same gap; the run stops either way | Remembering numbers from rows that were not added (rejected by page 6 pick 30) |
+| <a id="item-20"></a>20 | At info level, a run stopped after the start checks keeps the `Run started` line and any row lines already logged, and logs no `Run ended`; a run stopped by the arguments or start checks logs no info line (clarification 3) | DEC-28, FR-013 order, page 2 AC-09.5 | `Run ended` reports a completed run's counts; `Run started` is logged by `ProcessDailyTransfer`, which the runner builds only after the start checks pass | Logging `Run ended` with partial counts for a stopped run |
+| <a id="item-21"></a>21 | A missing folder on the output path that cannot be created raises `OutputNotWritable` with the AC-09.4 message; folders already created are left in place (clarification 4) | DEC-25, DEC-27, page 2 pick 14 | It is a case of "the output file cannot be written"; DEC-27 deletes only a partial file, and an empty folder holds no balances | A new message; removing the created folders |
+| <a id="item-22"></a>22 | The end-to-end specs turn CR LF into LF in the captured standard output and standard error before comparing; the output file is compared byte for byte (clarification 5) | DEC-34, NFR-04, page 2 pick 17 | Ruby on Windows writes CR LF to a pipe, so a byte comparison of the streams would fail on the developer's machine; page 2 fixes LF only for the output file | Switching standard output to binary mode in the program (new behaviour); comparing the streams only on Linux |
+| <a id="item-23"></a>23 | Unless a scenario says otherwise, `transfers.csv` holds the one row `1111234522226789,1212343433335665,10.00`, AC-01.1's file; a scenario that needs a different transfers file, a missing one or a folder of that name says so | FR-01, FR-09, DEC-23 | Every runner scenario runs `bin/run balances.csv transfers.csv`, and the start checks stop the run when `transfers.csv` does not exist (FR-033), so the FR-01 and AC-09.3a scenarios, which say nothing about it, need a file that exists; the smallest valid file adds no behaviour | Leaving the file unstated (the run would stop at the start checks with `file not found`) |
