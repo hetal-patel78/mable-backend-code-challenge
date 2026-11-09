@@ -130,8 +130,6 @@ $env:Path = [Environment]::GetEnvironmentVariable('Path','User') + ';' + [Enviro
 
 **`bundle install` fails to build a gem's native extension (Windows).** The MSYS2 development tool chain is missing. Run `ridk install`, choose option 3, then run `bundle install` again.
 
-**RuboCop reports `Carriage return character missing` (Windows).** RuboCop's default `Layout/EndOfLine` setting expects CRLF line endings on Windows. A checkout made with Git's `core.autocrlf` set to `false` or `input` keeps the repository's LF endings, so every file is reported. Clone again with `git clone -c core.autocrlf=true ...`, the Git for Windows default.
-
 **The output file name from Docker shows the wrong time.** The container uses UTC unless `TZ` is set. Pass your own time zone, for example `-e TZ=Australia/Sydney`, as in [With Docker](#with-docker).
 
 **The run stops because the output file already exists.** An output file is never overwritten. Give a new output path, or move the old file. With the default name, this happens only when two runs start in the same second; run again.

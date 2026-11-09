@@ -630,13 +630,13 @@ The end-to-end test on the sample files checks these exact values.
 **Rule**
 - SimpleCov reports test coverage. The README shows the figure, and the `coverage/` folder is in `.gitignore`.
 - There is no minimum coverage that fails the build. **[assistant's pick]**
-- RuboCop runs with its default settings and `rubocop-rspec`. Every offence is fixed before submission.
+- RuboCop runs with its default settings and `rubocop-rspec`, except that `Layout/EndOfLine` is turned off: Git handles line endings, and on Windows the cop expects CRLF, so a download with LF files, such as a GitHub ZIP, would fail it. Every offence is fixed before submission.
 - A GitHub Actions workflow runs RSpec and RuboCop on every push.
 - A Dockerfile is a fallback, not the main way to run the program. It uses the official Ruby image matching `.ruby-version`, copies the project in, runs `bundle install`, and by default runs `bin/run` on the sample files. It is tested from a clean checkout before submission.
 
 **Reason:** a coverage report is evidence for "has good coverage", and RuboCop enforces short, readable methods. Docker helps a reviewer who has no Ruby 3.4 or cannot get `bundle install` working.
 
-**Rejected:** a coverage threshold (a rule nobody asked for); Docker as the main way to run.
+**Rejected:** a coverage threshold (a rule nobody asked for); Docker as the main way to run; forcing LF line endings with `.gitattributes` instead of turning the cop off (every existing Windows checkout would need checking out again).
 
 **From:** X11, C7, S11.
 

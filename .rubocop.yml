@@ -1,2 +1,6 @@
 plugins:
   - rubocop-rspec
+
+# Git handles line endings. On Windows this cop expects CRLF, so a download with LF files fails it.
+Layout/EndOfLine:
+  Enabled: false
