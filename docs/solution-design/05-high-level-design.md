@@ -33,6 +33,7 @@ flowchart LR
     PDT -- "rows in, results out" --> IO
     IO --> Out
     IO --> Screen
+    Run -- "error messages" --> Screen
     PDT -- "each transfer" --> TS
     TS -- "find, withdraw, deposit" --> Models
 ```

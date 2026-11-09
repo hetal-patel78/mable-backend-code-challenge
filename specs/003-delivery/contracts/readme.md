@@ -4,7 +4,7 @@ What the repository root `README.md` must hold, in order, and the README check t
 
 ## Sections, in order
 
-The README opens with the title `# Mable Back End Code Challenge` and at most two sentences on what the program does (load one company's starting balances from a CSV file, apply one day's transfers from a second, never letting a balance go below $0). Then:
+The README opens with the title `# Mable Back End Code Challenge` and at most two sentences on what the program does (load one company's opening balances from a CSV file, apply one day's transfers from a second, never letting a balance go below $0). Then:
 
 ### 1. `## Build, test and run` (FR-001 to FR-005)
 

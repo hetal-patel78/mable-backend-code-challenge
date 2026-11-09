@@ -165,7 +165,7 @@ A reviewer runs the challenge's two sample files with `bin/run` and no arguments
 
      - The closing balance of every account ([DEC-35](../../docs/design-analysis/design-decisions.md#dec-35)):
 
-       | Account | Starting balance | Closing balance |
+       | Account | Opening balance | Closing balance |
        |---|---:|---:|
        | 1111234522226789 | 5000.00 | 4820.50 |
        | 1111234522221234 | 10000.00 | 9974.40 |
@@ -180,9 +180,9 @@ A reviewer runs the challenge's two sample files with `bin/run` and no arguments
 
 ### User Story 2 - The balances file is loaded, or every problem in it is reported (Priority: P1)
 
-The program loads every account and its starting balance from the balances file, accepting the common CSV forms. If the file has any problem, the run stops before any transfer, listing every problem with its physical line number, so the user can fix them all at once ([FR-01](../../docs/solution-design/02-functional-requirements.md#fr-01-load-the-balances-file); [DEC-04](../../docs/design-analysis/design-decisions.md#dec-04) to [DEC-12](../../docs/design-analysis/design-decisions.md#dec-12), [DEC-31](../../docs/design-analysis/design-decisions.md#dec-31)).
+The program loads every account and its opening balance from the balances file, accepting the common CSV forms. If the file has any problem, the run stops before any transfer, listing every problem with its physical line number, so the user can fix them all at once ([FR-01](../../docs/solution-design/02-functional-requirements.md#fr-01-load-the-balances-file); [DEC-04](../../docs/design-analysis/design-decisions.md#dec-04) to [DEC-12](../../docs/design-analysis/design-decisions.md#dec-12), [DEC-31](../../docs/design-analysis/design-decisions.md#dec-31)).
 
-**Why this priority**: every transfer depends on the starting balances, so doubtful balances must never be used.
+**Why this priority**: every transfer depends on the opening balances, so doubtful balances must never be used.
 
 **Independent Test**: `LoadBalances` with a fake reader giving rows from memory and a real `AccountRepository` (unit); `BalancesCsvReader` with fixture files (integration); the runner scenarios below with real CSV files.
 
