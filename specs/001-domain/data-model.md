@@ -15,20 +15,20 @@ classDiagram
     TransferService ..> Transfer : applies
 ```
 
-`TransferResult` stands alone: it holds a line number, the row's fields and one reason code, not domain objects. It is specified here (FR-022 to FR-025) and lives in `lib/application/` as the application's record of each row's outcome (DEC-19), kept by `002`.
+`TransferResult` stands alone: it holds a line number, the row's fields and one reason code, not domain objects. It is specified here ([FR-022](spec.md#fr-022) to [FR-025](spec.md#fr-025)) and lives in [`lib/application/`](../../lib/application/) as the application's record of each row's outcome ([DEC-19](../../docs/design-analysis/design-decisions.md#dec-19)), kept by `002`.
 
 ## One home per rule (FR-028, NFR-05)
 
 | Rule | Lives in | Error | Decision |
 |---|---|---|---|
-| Exactly 16 digits, kept as text | `AccountNumber` | `InvalidAccountNumber` | DEC-08 |
-| Money format, at most 2 decimals, never rounded | `Money` | `InvalidAmount` | DEC-09 |
-| Transfer amount above $0 | `Transfer` | `InvalidAmount` | DEC-10 |
-| From and to accounts differ | `Transfer` | `SameAccount` | DEC-13 |
-| No overdraft; exactly $0.00 allowed | `Account#withdraw` | `InsufficientFunds` | DEC-13 |
-| Opening balance not negative; $0.00 allowed | `Account.check_opening_balance` | `NegativeBalance` | DEC-10, DEC-11 |
-| No duplicate account | `AccountRepository#add` | `DuplicateAccount` | DEC-11, DEC-31 |
-| Unknown account; never created | `AccountRepository#find` | `UnknownAccount` | DEC-17, DEC-31 |
+| Exactly 16 digits, kept as text | `AccountNumber` | `InvalidAccountNumber` | [DEC-08](../../docs/design-analysis/design-decisions.md#dec-08) |
+| Money format, at most 2 decimals, never rounded | `Money` | `InvalidAmount` | [DEC-09](../../docs/design-analysis/design-decisions.md#dec-09) |
+| Transfer amount above $0 | `Transfer` | `InvalidAmount` | [DEC-10](../../docs/design-analysis/design-decisions.md#dec-10) |
+| From and to accounts differ | `Transfer` | `SameAccount` | [DEC-13](../../docs/design-analysis/design-decisions.md#dec-13) |
+| No overdraft; exactly $0.00 allowed | `Account#withdraw` | `InsufficientFunds` | [DEC-13](../../docs/design-analysis/design-decisions.md#dec-13) |
+| Opening balance not negative; $0.00 allowed | `Account.check_opening_balance` | `NegativeBalance` | [DEC-10](../../docs/design-analysis/design-decisions.md#dec-10), [DEC-11](../../docs/design-analysis/design-decisions.md#dec-11) |
+| No duplicate account | `AccountRepository#add` | `DuplicateAccount` | [DEC-11](../../docs/design-analysis/design-decisions.md#dec-11), [DEC-31](../../docs/design-analysis/design-decisions.md#dec-31) |
+| Unknown account; never created | `AccountRepository#find` | `UnknownAccount` | [DEC-17](../../docs/design-analysis/design-decisions.md#dec-17), [DEC-31](../../docs/design-analysis/design-decisions.md#dec-31) |
 
 ## Entities
 
@@ -36,67 +36,67 @@ classDiagram
 
 | Member | Type | Meaning |
 |---|---|---|
-| `AccountNumber.new(text)` or `AccountNumber.new(text:)` | String | A `Data` record with the one member `text`; raises `InvalidAccountNumber` unless `text` matches `\A[0-9]{16}\z` (R4) |
+| `AccountNumber.new(text)` or `AccountNumber.new(text:)` | String | A `Data` record with the one member `text`; raises `InvalidAccountNumber` unless `text` matches `\A[0-9]{16}\z` ([R4](research.md#r4)) |
 | `text`, `to_s` | String | The full text, leading zeros kept |
 | `==`, `eql?`, `hash` | | From `Data`: equal when the text is equal |
 
-- Validation: "exactly 16 characters, each a digit 0 to 9" (FR-001). No check digit; no masking (FR-002).
-- Frozen once built, by `Data` (D19). The member names are decided in plan.md D23.
+- Validation: "exactly 16 characters, each a digit 0 to 9" ([FR-001](spec.md#fr-001)). No check digit; no masking ([FR-002](spec.md#fr-002)).
+- Frozen once built, by `Data` ([D19](plan.md#d19)). The member names are decided in plan.md [D23](plan.md#d23).
 
 ### `Money` (value)
 
 | Member | Type | Meaning |
 |---|---|---|
-| `Money.amount(text)` | String | A transfer amount; messages use the word `amount` (D4) |
-| `Money.balance(text)` | String | An opening balance; messages use the word `balance` (D4) |
-| `Money.new(value, text = nil)` | `BigDecimal`, String | Builds a value; used by the two class methods and by `+` and `-`; raises `ArgumentError` (`Money needs a BigDecimal, got <class>`) for a value that is not a `BigDecimal` (D5) |
+| `Money.amount(text)` | String | A transfer amount; messages use the word `amount` ([D4](plan.md#d4)) |
+| `Money.balance(text)` | String | An opening balance; messages use the word `balance` ([D4](plan.md#d4)) |
+| `Money.new(value, text = nil)` | `BigDecimal`, String | Builds a value; used by the two class methods and by `+` and `-`; raises `ArgumentError` (`Money needs a BigDecimal, got <class>`) for a value that is not a `BigDecimal` ([D5](plan.md#d5)) |
 | `text` | String | The text as written when one was given; for a computed value (no written text), the same as `to_s` |
-| `to_s` | String | Exactly 2 decimal places, no leading zeros before the units digit (R6) |
+| `to_s` | String | Exactly 2 decimal places, no leading zeros before the units digit ([R6](research.md#r6)) |
 | `+`, `-` | `Money` | Exact sum or difference, as a computed `Money` |
-| `==`, `eql?`, `hash` | | By value only, so `-0` equals `0` (R7); `hash` is `value.zero? ? BigDecimal('0').hash : value.hash`, so `-0` and `0` hash alike |
-| `negative?` | Boolean | A minus sign was written (checked only when there is written text), or the value is below 0 (R7) |
+| `==`, `eql?`, `hash` | | By value only, so `-0` equals `0` ([R7](research.md#r7)); `hash` is `value.zero? ? BigDecimal('0').hash : value.hash`, so `-0` and `0` hash alike |
+| `negative?` | Boolean | A minus sign was written (checked only when there is written text), or the value is below 0 ([R7](research.md#r7)) |
 | `positive?` | Boolean | The value is above 0 |
 
-- Validation, in order (R5): empty text, "`<label> is empty`"; `-?digits.digits{3,}`, "`<label> "<text>" has more than 2 decimal places`"; anything not `-?digits(.d{1,2})?`, "`<label> "<text>" is not a valid amount`".
-- `Money` does not decide whether a negative value is allowed (FR-004). No upper limit (DEC-09). Frozen (D19).
+- Validation, in order ([R5](research.md#r5)): empty text, "`<label> is empty`"; `-?digits.digits{3,}`, "`<label> "<text>" has more than 2 decimal places`"; anything not `-?digits(.d{1,2})?`, "`<label> "<text>" is not a valid amount`".
+- `Money` does not decide whether a negative value is allowed ([FR-004](spec.md#fr-004)). No upper limit ([DEC-09](../../docs/design-analysis/design-decisions.md#dec-09)). Frozen ([D19](plan.md#d19)).
 
 ### `Account` (aggregate root)
 
 | Member | Type | Meaning |
 |---|---|---|
-| `Account.check_opening_balance(balance)` | `Money` | Raises `NegativeBalance` when `balance.negative?`; otherwise returns nothing (D7) |
-| `Account.new(number, balance)` | `AccountNumber`, `Money` | Runs `check_opening_balance`, then holds both (D6) |
+| `Account.check_opening_balance(balance)` | `Money` | Raises `NegativeBalance` when `balance.negative?`; otherwise returns nothing ([D7](plan.md#d7)) |
+| `Account.new(number, balance)` | `AccountNumber`, `Money` | Runs `check_opening_balance`, then holds both ([D6](plan.md#d6)) |
 | `number` | `AccountNumber` | |
 | `balance` | `Money` | The current balance |
-| `withdraw(money)` | `Money` | Raises `ArgumentError` for an amount of $0 or less (D24); raises `InsufficientFunds` when `(balance - money).negative?`, leaving the balance unchanged; otherwise sets `balance` to `balance - money` |
-| `deposit(money)` | `Money` | Raises `ArgumentError` for an amount of $0 or less (D24); otherwise sets `balance` to `balance + money`; cannot fail for a valid transfer |
+| `withdraw(money)` | `Money` | Raises `ArgumentError` for an amount of $0 or less ([D24](plan.md#d24)); raises `InsufficientFunds` when `(balance - money).negative?`, leaving the balance unchanged; otherwise sets `balance` to `balance - money` |
+| `deposit(money)` | `Money` | Raises `ArgumentError` for an amount of $0 or less ([D24](plan.md#d24)); otherwise sets `balance` to `balance + money`; cannot fail for a valid transfer |
 
-- State: the balance is the only data in the domain that changes, and only through `withdraw` and `deposit` (FR-010).
-- `withdraw` and `deposit` raise `ArgumentError` for an amount of $0 or less, a guard against programming errors; the amount-above-$0 rule, with `InvalidAmount`, stays in `Transfer` (FR-012; the spec clarification of 2026-11-09).
+- State: the balance is the only data in the domain that changes, and only through `withdraw` and `deposit` ([FR-010](spec.md#fr-010)).
+- `withdraw` and `deposit` raise `ArgumentError` for an amount of $0 or less, a guard against programming errors; the amount-above-$0 rule, with `InvalidAmount`, stays in `Transfer` ([FR-012](spec.md#fr-012); the spec clarification of 2026-11-09).
 
 ### `Transfer` (value)
 
 | Member | Type | Meaning |
 |---|---|---|
-| `Transfer.new(from:, to:, amount:)` | `AccountNumber`, `AccountNumber`, `Money` | Raises `InvalidAmount` unless `amount.positive?`; then `SameAccount` when `from == to` (D8) |
+| `Transfer.new(from:, to:, amount:)` | `AccountNumber`, `AccountNumber`, `Money` | Raises `InvalidAmount` unless `amount.positive?`; then `SameAccount` when `from == to` ([D8](plan.md#d8)) |
 | `from`, `to`, `amount` | | The three values, the members of a `Data` record |
 
-- No lookup, no balance, no `Account` (FR-009). Equal to a transfer with equal values; frozen (D19).
+- No lookup, no balance, no `Account` ([FR-009](spec.md#fr-009)). Equal to a transfer with equal values; frozen ([D19](plan.md#d19)).
 
 ### `TransferResult` (application record, in `lib/application/`)
 
 | Member | Type | Meaning |
 |---|---|---|
-| `TransferResult::REASON_CODES` | frozen Array of Symbol | `[:malformed_row, :invalid_account_number, :invalid_amount, :same_account, :unknown_account, :insufficient_funds]`, in DEC-19 order (D10) |
+| `TransferResult::REASON_CODES` | frozen Array of Symbol | `[:malformed_row, :invalid_account_number, :invalid_amount, :same_account, :unknown_account, :insufficient_funds]`, in [DEC-19](../../docs/design-analysis/design-decisions.md#dec-19) order ([D10](plan.md#d10)) |
 | `TransferResult.applied(line_number:, fields:)` | Integer, Array of String | An applied result |
-| `TransferResult.rejected(line_number:, fields:, reason:, header_hint: nil)` | Integer, Array of String, Symbol, String or nil | A rejected result; `ArgumentError` when `reason` is not in `REASON_CODES` (D9, D10, D11) |
+| `TransferResult.rejected(line_number:, fields:, reason:, header_hint: nil)` | Integer, Array of String, Symbol, String or nil | A rejected result; `ArgumentError` when `reason` is not in `REASON_CODES` ([D9](plan.md#d9), [D10](plan.md#d10), [D11](plan.md#d11)) |
 | `line_number` | Integer | As given |
 | `fields` | frozen Array of String | Every field of the row, in order, as given; any number of fields |
 | `reason` | Symbol or nil | nil when applied |
 | `header_hint` | String or nil | Only on a rejected result, and only when given |
 | `applied?`, `rejected?` | Boolean | |
 
-- It never formats itself (FR-025). A `Data` record built only through `applied` and `rejected` (`new` and `[]` are private); frozen (D19).
+- It never formats itself ([FR-025](spec.md#fr-025)). A `Data` record built only through `applied` and `rejected` (`new` and `[]` are private); frozen ([D19](plan.md#d19)).
 
 ### `AccountRepository`
 
@@ -108,21 +108,21 @@ classDiagram
 | `find(account_number)` | `AccountNumber` | The held `Account` (the same object), or `UnknownAccount`; never adds one |
 | `all` | Array of `Account` | In the order added |
 
-- Storage: one `Hash` keyed by `account.number`, the `AccountNumber` itself (R8). In memory for one run; no line numbers (FR-018).
-- Cost: `add`, `include?`, `find` O(1); `all` O(m), each account once (FR-033, FR-035).
+- Storage: one `Hash` keyed by `account.number`, the `AccountNumber` itself ([R8](research.md#r8)). In memory for one run; no line numbers ([FR-018](spec.md#fr-018)).
+- Cost: `add`, `include?`, `find` O(1); `all` O(m), each account once ([FR-033](spec.md#fr-033), [FR-035](spec.md#fr-035)).
 
 ### `TransferService`
 
 | Member | Type | Meaning |
 |---|---|---|
-| `TransferService.new(repository)` | `AccountRepository` | (D12) |
+| `TransferService.new(repository)` | `AccountRepository` | ([D12](plan.md#d12)) |
 | `apply(transfer)` | `Transfer` | `find(from)`, `find(to)`, `withdraw`, `deposit`; returns nil; lets `UnknownAccount` and `InsufficientFunds` pass with both balances unchanged |
 
-- O(1) per transfer: two lookups, the checks, two balance changes (FR-034). No rows, results, logs or undo (FR-020).
+- O(1) per transfer: two lookups, the checks, two balance changes ([FR-034](spec.md#fr-034)). No rows, results, logs or undo ([FR-020](spec.md#fr-020)).
 
 ### Domain errors
 
-All seven are direct subclasses of `StandardError` in `lib/domain/errors.rb` (D3), with no line number and no reason code (FR-026, FR-027). Who builds the message (D21):
+All seven are direct subclasses of `StandardError` in [`lib/domain/errors.rb`](../../lib/domain/errors.rb) ([D3](plan.md#d3)), with no line number and no reason code ([FR-026](spec.md#fr-026), [FR-027](spec.md#fr-027)). Who builds the message ([D21](plan.md#d21)):
 
 | Error | Built with | Message |
 |---|---|---|
