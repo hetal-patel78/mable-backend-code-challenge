@@ -48,7 +48,8 @@ class Runner
     1
   end
 
-  # An unset LOG_LEVEL is nil, and nil.to_s is "", so anything but info, in any case, gives warn.
+  # Only "info", in any letter case, gives info. Anything else gives warn, and so does an unset LOG_LEVEL:
+  # it is nil, and nil.to_s is "".
   def log_level
     @env['LOG_LEVEL'].to_s.casecmp?('info') ? Logger::INFO : Logger::WARN
   end

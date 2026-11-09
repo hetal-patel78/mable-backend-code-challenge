@@ -29,7 +29,8 @@ class LoadBalances
   def read(path)
     @reader.each_row(path) { |row| load_row(row) }
   rescue UnreadableFile => e
-    # An error with no line number is about the whole file and stops the load; one with a line becomes a problem.
+    # An error with no line number is about the whole file and is raised. One with a line number stops reading there
+    # and becomes the last problem, reported with the problems found before it.
     raise unless e.line_number
 
     @problems << at_line(e.line_number, e.line_problem)
