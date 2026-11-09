@@ -74,6 +74,8 @@ flowchart LR
 |---|---|---|
 | List only the rejected transfers | Shorter report | The user cannot check every row against the file ([DEC-26](../../design-analysis/design-decisions.md#dec-26)) |
 | Leave out the final balances, because they are in the output CSV | Shorter report | "Runs and provides feedback" is a rubric item; the user sees the result at once ([DEC-26](../../design-analysis/design-decisions.md#dec-26)) |
+| Show only the closing balances, without the opening balances | Narrower table | The user would need the balances file to check the day ([DEC-26](../../design-analysis/design-decisions.md#dec-26)) |
+| Show each account's balance after every transfer line | Shows each step | Long and repetitive; the opening and closing balances are enough to check the day ([DEC-26](../../design-analysis/design-decisions.md#dec-26)) |
 | Mask account numbers on screen | Hides full numbers | Harder to check the result by eye; masking is for logs only ([DEC-26](../../design-analysis/design-decisions.md#dec-26), [DEC-29](../../design-analysis/design-decisions.md#dec-29)) |
 | Show the output path as typed, or relative to the project root | No path work | Wrong when the command is run from another folder ([DEC-26](../../design-analysis/design-decisions.md#dec-26)) |
 | Always show the full output path | Never ambiguous | Long; the path relative to the current folder is enough ([DEC-26](../../design-analysis/design-decisions.md#dec-26)) |

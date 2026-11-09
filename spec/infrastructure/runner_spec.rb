@@ -264,9 +264,10 @@ RSpec.describe Runner do
           Total after: 150.00
 
         Final balances
-          1111234522226789  95.00
-          1212343433335665  55.00
-          0000123412341234  0.00
+          Account           Opening  Closing
+          1111234522226789   100.00    95.00
+          1212343433335665    50.00    55.00
+          0000123412341234     0.00     0.00
 
         Output file: output/final_balances_2026-11-07_143005.csv
       STDOUT
@@ -306,9 +307,10 @@ RSpec.describe Runner do
                         Warning: All transfers were rejected; check this is the right file.
 
                         Final balances
-                          1111234522226789  100.00
-                          1212343433335665  50.00
-                          0000123412341234  0.00
+                          Account           Opening  Closing
+                          1111234522226789   100.00   100.00
+                          1212343433335665    50.00    50.00
+                          0000123412341234     0.00     0.00
 
                         Output file: output/final_balances_2026-11-07_143005.csv
                       STDOUT
@@ -494,9 +496,10 @@ RSpec.describe Runner do
           Total after: 150.00
 
         Final balances
-          1111234522226789  60.00
-          1212343433335665  50.00
-          0000123412341234  40.00
+          Account           Opening  Closing
+          1111234522226789   100.00    60.00
+          1212343433335665    50.00    50.00
+          0000123412341234     0.00    40.00
 
         Output file: output/final_balances_2026-11-07_143005.csv
       STDOUT
@@ -544,9 +547,10 @@ RSpec.describe Runner do
           Total after: 150.00
 
         Final balances
-          1111234522226789  0.00
-          1212343433335665  80.00
-          0000123412341234  70.00
+          Account           Opening  Closing
+          1111234522226789   100.00     0.00
+          1212343433335665    50.00    80.00
+          0000123412341234     0.00    70.00
 
         Output file: output/final_balances_2026-11-07_143005.csv
       STDOUT
@@ -569,7 +573,7 @@ RSpec.describe Runner do
 
       it_behaves_like 'a completed run',
                       stdout: template_a(transfer: '1212343433335665 -> 1111234522226789  10.00',
-                                         balances: %w[10.00 70.00 70.00])
+                                         balances: %w[10.00 70.00 70.00], openings: %w[0.00 80.00 70.00])
     end
 
     describe 'AC-08.3 a third argument with missing folders (DEC-27)' do
@@ -961,9 +965,10 @@ RSpec.describe Runner do
           Total after: 150.00
 
         Final balances
-          1111234522226789  0.00
-          1212343433335665  80.00
-          0000123412341234  70.00
+          Account           Opening  Closing
+          1111234522226789   100.00     0.00
+          1212343433335665    50.00    80.00
+          0000123412341234     0.00    70.00
 
         Output file: output/final_balances_2026-11-07_143005.csv
       STDOUT
@@ -1043,8 +1048,9 @@ RSpec.describe Runner do
           Total after: 150.00
 
         Final balances
-          0000123412341234  40.00
-          1111234522226789  110.00
+          Account           Opening  Closing
+          0000123412341234    50.00    40.00
+          1111234522226789   100.00   110.00
 
         Output file: output/final_balances_2026-11-07_143005.csv
       STDOUT

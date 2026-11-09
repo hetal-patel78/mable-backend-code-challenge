@@ -55,12 +55,15 @@ Summary
   Total after: 150.00
 
 Final balances
-  1111234522226789  <balance 1>
-  1212343433335665  <balance 2>
-  0000123412341234  <balance 3>
+  Account           Opening  Closing
+  1111234522226789  <opening 1>  <balance 1>
+  1212343433335665  <opening 2>  <balance 2>
+  0000123412341234  <opening 3>  <balance 3>
 
 Output file: output/final_balances_2026-11-07_143005.csv
 ```
+
+where `<opening 1>` to `<opening 3>` are the balances file's balances (`100.00`, `50.00`, `0.00` for `balances.csv`) and `<balance 1>` to `<balance 3>` the closing balances. Every opening and closing balance in these scenarios is at most 7 characters, so each is right-aligned to the width of its heading, `Opening` or `Closing` (DEC-26).
 
 **Template R** (a single rejected row of `transfers.csv` with `balances.csv`): standard output is exactly
 
@@ -79,9 +82,10 @@ Summary
 Warning: All transfers were rejected; check this is the right file.
 
 Final balances
-  1111234522226789  100.00
-  1212343433335665  50.00
-  0000123412341234  0.00
+  Account           Opening  Closing
+  1111234522226789   100.00   100.00
+  1212343433335665    50.00    50.00
+  0000123412341234     0.00     0.00
 
 Output file: output/final_balances_2026-11-07_143005.csv
 ```
@@ -137,11 +141,12 @@ A reviewer runs the challenge's two sample files with `bin/run` and no arguments
          Total after: 66750.00
 
        Final balances
-         1111234522226789  4820.50
-         1111234522221234  9974.40
-         2222123433331212  1550.00
-         1212343433335665  1725.60
-         3212343433335755  48679.50
+         Account            Opening   Closing
+         1111234522226789   5000.00   4820.50
+         1111234522221234  10000.00   9974.40
+         2222123433331212    550.00   1550.00
+         1212343433335665   1200.00   1725.60
+         3212343433335755  50000.00  48679.50
 
        Output file: output/final_balances_2026-11-07_143005.csv
        ```
@@ -357,9 +362,10 @@ The program reads the transfers file one row at a time, in file order, gives eac
          Total after: 150.00
 
        Final balances
-         1111234522226789  95.00
-         1212343433335665  55.00
-         0000123412341234  0.00
+         Account           Opening  Closing
+         1111234522226789   100.00    95.00
+         1212343433335665    50.00    55.00
+         0000123412341234     0.00     0.00
 
        Output file: output/final_balances_2026-11-07_143005.csv
        ```
@@ -402,9 +408,10 @@ The program reads the transfers file one row at a time, in file order, gives eac
        Warning: All transfers were rejected; check this is the right file.
 
        Final balances
-         1111234522226789  100.00
-         1212343433335665  50.00
-         0000123412341234  0.00
+         Account           Opening  Closing
+         1111234522226789   100.00   100.00
+         1212343433335665    50.00    50.00
+         0000123412341234     0.00     0.00
 
        Output file: output/final_balances_2026-11-07_143005.csv
        ```
@@ -471,9 +478,10 @@ The program reads the transfers file one row at a time, in file order, gives eac
          Total after: 150.00
 
        Final balances
-         1111234522226789  60.00
-         1212343433335665  50.00
-         0000123412341234  40.00
+         Account           Opening  Closing
+         1111234522226789   100.00    60.00
+         1212343433335665    50.00    50.00
+         0000123412341234     0.00    40.00
 
        Output file: output/final_balances_2026-11-07_143005.csv
        ```
@@ -531,9 +539,10 @@ At the end of a completed run the program checks that the total of all balances 
          Total after: 150.00
 
        Final balances
-         1111234522226789  0.00
-         1212343433335665  80.00
-         0000123412341234  70.00
+         Account           Opening  Closing
+         1111234522226789   100.00     0.00
+         1212343433335665    50.00    80.00
+         0000123412341234     0.00    70.00
 
        Output file: output/final_balances_2026-11-07_143005.csv
        ```
@@ -568,7 +577,7 @@ At the end of a completed run the program checks that the total of all balances 
      ```
 
      **When** `bin/run balances.csv transfers.csv` runs at the run time 2026-11-07 14:30:05, **Then**:
-     - Standard output: Template A with `1212343433335665 -> 1111234522226789  10.00` and the balances `10.00`, `70.00`, `70.00` **(derived)**.
+     - Standard output: Template A with `1212343433335665 -> 1111234522226789  10.00`, the opening balances `0.00`, `80.00`, `70.00` and the balances `10.00`, `70.00`, `70.00` **(derived)**.
      - Standard error: (nothing)
      - Exit status: 0
 3. **AC-08.4 The output path is shown relative to where the command was run, or in full when the file is outside that folder** (FR-08; DEC-26).
@@ -590,7 +599,7 @@ At the end of a completed run the program checks that the total of all balances 
      - Exit status: 1
    - Test, split across two specs (page 9 pick 46): the `ProcessDailyTransfer` spec passes a fake repository whose total changes after the transfers, a fake reporter and the real `FinalBalancesCsvWriter` with an output path in a temporary folder, and checks that `TotalChanged` is raised with the message `the total of all balances changed from 66750.00 to 66749.00. No output file was written.`, that the file does not exist and that the reporter was never called. The `Runner` spec stubs `ProcessDailyTransfer.new` to return a stand-in whose run raises that `TotalChanged`, and checks standard output (nothing), the two standard error lines above and exit status 1.
 5. **The report is printed once, after the output file is written** (FR-08; DEC-26).
-   - **Given** a completed run, **When** `ProcessDailyTransfer` finishes, **Then** the reporter was called exactly once, with a `DayResult` holding the `TransferResult`s in file order, the totals before and after, the final accounts in load order and the output path, and the output file already existed at that moment.
+   - **Given** a completed run, **When** `ProcessDailyTransfer` finishes, **Then** the reporter was called exactly once, with a `DayResult` holding the `TransferResult`s in file order, the totals before and after, the opening balances, the final accounts in load order and the output path, and the output file already existed at that moment.
 6. **AC-09.4 An output file that cannot be written stops the run** (FR-08, FR-09; DEC-25, DEC-27; page 2 pick 14).
    - **Given** `balances.csv`, the `transfers.csv` of AC-01.1, and a third argument `out` that names an existing folder, **When** `bin/run balances.csv transfers.csv out` runs, **Then** no file is left behind, and:
      - Standard output: (nothing)
@@ -718,7 +727,7 @@ The page 2 scenarios of FR-03 to FR-06 are owned by `001-domain`. This spec runs
 
    | Criterion | Row | Standard output | Standard error |
    |---|---|---|---|
-   | AC-03.1 | `1111234522226789,1212343433335665,30.00` | A, with the transfers line `  Line 1  applied  1111234522226789 -> 1212343433335665  30.00` and the final balances lines `  1111234522226789  70.00`, `  1212343433335665  80.00` and `  0000123412341234  0.00` | (nothing) |
+   | AC-03.1 | `1111234522226789,1212343433335665,30.00` | A, with the transfers line `  Line 1  applied  1111234522226789 -> 1212343433335665  30.00` and the closing balances 70.00, 80.00 and 0.00 (openings 100.00, 50.00 and 0.00) | (nothing) |
    | AC-03.3 | `12345,1212343433335665,abc` | R: `  Line 1  rejected  12345 -> 1212343433335665  abc  invalid_account_number` **(derived)** | `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: *2345 -> ************5665 abc invalid_account_number` **(derived)** |
    | AC-03.3 | `1111234522226789,1111234522226789,0` | R: `  Line 1  rejected  1111234522226789 -> 1111234522226789  0  invalid_amount` **(derived)** | `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************6789 -> ************6789 0 invalid_amount` **(derived)** |
    | AC-03.3 | `9999888877776666,9999888877776666,5.00` | R: `  Line 1  rejected  9999888877776666 -> 9999888877776666  5.00  same_account` **(derived)** | `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************6666 -> ************6666 5.00 same_account` **(derived)** |
@@ -731,7 +740,7 @@ The page 2 scenarios of FR-03 to FR-06 are owned by `001-domain`. This spec runs
    | Criterion | Row | Standard output | Standard error |
    |---|---|---|---|
    | AC-04.1 | `1111234522226789,1212343433335665,100.01` | R: `  Line 1  rejected  1111234522226789 -> 1212343433335665  100.01  insufficient_funds` | `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************6789 -> ************5665 100.01 insufficient_funds`, then `W, [<timestamp> #<pid>]  WARN -- : All transfers were rejected; check this is the right file.` |
-   | AC-04.2 | `1111234522226789,1212343433335665,100.00` | A: `1111234522226789 -> 1212343433335665  100.00` **(derived)**; final balances `1111234522226789  0.00`, `1212343433335665  150.00` (written as `  1212343433335665  150.00` in the output) and `0000123412341234  0.00` | (nothing) |
+   | AC-04.2 | `1111234522226789,1212343433335665,100.00` | A: `1111234522226789 -> 1212343433335665  100.00` **(derived)**; closing balances 0.00, 150.00 and 0.00 (openings 100.00, 50.00 and 0.00) | (nothing) |
    | AC-04.3 | `0000123412341234,1111234522226789,0.01` | R: `  Line 1  rejected  0000123412341234 -> 1111234522226789  0.01  insufficient_funds` **(derived)** | `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************1234 -> ************6789 0.01 insufficient_funds` **(derived)** |
 
    - Exit status: 0 for every row of this table.
@@ -883,7 +892,7 @@ Each has a planned test (DEC-34); the level is given in brackets.
 **Running the day ([FR-02](../../docs/solution-design/02-functional-requirements.md#fr-02-read-the-transfers-file), [FR-07](../../docs/solution-design/02-functional-requirements.md#fr-07-the-order-transfers-are-applied-in), [FR-08](../../docs/solution-design/02-functional-requirements.md#fr-08-the-end-of-day-result-and-its-output))**
 
 - **FR-012** (FR-02, FR-07, NFR-06; DEC-28, DEC-30; page 6 picks 34, 35): `ProcessDailyTransfer` MUST take in its constructor the run time (defaulting to the current time), the balances reader, the transfers reader, the writer, the repository, the reporter and the logger, and MUST create `LoadBalances` and `TransferService` itself from the parts it was given. It MUST run with the balances path, the transfers path and the output path; when the output path is left out, it MUST use `FinalBalancesCsvWriter.default_path` for its run time.
-- **FR-013** (FR-02, FR-07, FR-08; DEC-15, DEC-24, DEC-26, DEC-28; page 6): `ProcessDailyTransfer` MUST, in order: (1) log the run start and load the balances through `LoadBalances`, then add up the total before from `AccountRepository#all`; (2) read each transfers row in file order; (3) turn each row into a `TransferResult` (FR-014); (4) log each result; (5) raise `NoTransfers` if there were no rows, and log the all-rejected warning if every row was rejected; (6) add up the total after from `all` and raise `TotalChanged` if it differs from the total before; (7) write the output file through the writer; (8) print the report through the reporter, once; (9) log the run end; and return the `DayResult`. When a run-stopping error is raised after step 1 began, the lines already logged stay and the run end is not logged (clarified, item 20).
+- **FR-013** (FR-02, FR-07, FR-08; DEC-15, DEC-24, DEC-26, DEC-28; page 6): `ProcessDailyTransfer` MUST, in order: (1) log the run start and load the balances through `LoadBalances`, then note each account's opening balance from `AccountRepository#all` and add them up for the total before; (2) read each transfers row in file order; (3) turn each row into a `TransferResult` (FR-014); (4) log each result; (5) raise `NoTransfers` if there were no rows, and log the all-rejected warning if every row was rejected; (6) add up the total after from `all` and raise `TotalChanged` if it differs from the total before; (7) write the output file through the writer; (8) print the report through the reporter, once; (9) log the run end; and return the `DayResult`. When a run-stopping error is raised after step 1 began, the lines already logged stay and the run end is not logged (clarified, item 20).
 - **FR-014** (FR-02, FR-07; DEC-14, DEC-16, DEC-19; page 7.1): for each row, `ProcessDailyTransfer` MUST give a row marked with the wrong number of fields the reason `malformed_row` without building any domain object; otherwise it MUST build the from `AccountNumber`, then the to `AccountNumber`, then the `Money` amount, then the `Transfer`, and hand it to `TransferService`. It MUST turn `InvalidAccountNumber` into `invalid_account_number`, `InvalidAmount` into `invalid_amount`, `SameAccount` into `same_account`, `UnknownAccount` into `unknown_account` and `InsufficientFunds` into `insufficient_funds`, carry the header hint from a marked row into the rejected `TransferResult`, and go on to the next row. A domain error MUST never leave `ProcessDailyTransfer`.
 - **FR-015** (FR-07; DEC-15, DEC-16): each row MUST be applied once, in file order; a rejected row MUST NOT be retried; two equal rows MUST be two transfers.
 - **FR-016** (FR-02; DEC-20): `NoTransfers` MUST be raised, after the balances are loaded, when the transfers file has no rows, with the message `the transfers file has no transfers: <path>`.
@@ -892,7 +901,7 @@ Each has a planned test (DEC-34); the level is given in brackets.
 - **FR-019** (FR-08; DEC-25, DEC-26): the writer MUST be called only after the total check passes, and the reporter only after the output file is written, exactly once per completed run, and never when the run stops.
 - **FR-020** (FR-09; DEC-28, DEC-29): `ProcessDailyTransfer` MUST log through the logger it was given, in these texts (the log format adds the level and timestamp): info `Run started: balances <balances path>, transfers <transfers path>`; info `Line <N> applied: <masked from> -> <masked to> <amount with 2 decimal places>`; warn `Line <N> rejected: <masked from> -> <masked to> <amount as written> <reason code>`; warn `All transfers were rejected; check this is the right file.`; info `Run ended: processed <p>, applied <a>, rejected <r>`, followed, when <r> is above 0, by ` (<code> <count>, ...)` for each reason code that occurred, in DEC-19 order, separated by `, `.
 - **FR-021** (FR-09; DEC-28, DEC-29; page 2 picks 11, 12; page 6 pick 37): in a rejected row's warn line, an empty amount MUST be shown as `""`; for a row marked with the wrong number of fields, the fields MUST be taken by position (from, to, amount), fields the row does not have left out with their separator (decided in the run, item 8), and fields after the third not logged. The header hint MUST NOT appear in a log line. Masking MUST be a private step of `ProcessDailyTransfer`: every character except the last 4 becomes `*`, and a value of 4 characters or fewer, including an empty value, is `****`.
-- **FR-022** (FR-08; DEC-26): `DayResult` MUST hold the `TransferResult`s in file order, the totals before and after, the final accounts in load order, and the output path, and MUST NOT format, print or change anything.
+- **FR-022** (FR-08; DEC-26): `DayResult` MUST hold the `TransferResult`s in file order, the totals before and after, the opening balance of each account by account number (taken before any transfer is applied), the final accounts in load order, and the output path, and MUST NOT format, print or change anything.
 - **FR-023** (FR-02, FR-07, FR-08; DEC-30): `ProcessDailyTransfer` MUST NOT create its own readers, writer, repository, reporter or logger; read the clock when a run time is given; write to standard output except through the reporter; parse CSV; check arguments or file existence; print error messages; or set the exit status.
 
 **The output file ([FR-08](../../docs/solution-design/02-functional-requirements.md#fr-08-the-end-of-day-result-and-its-output))**
@@ -903,7 +912,7 @@ Each has a planned test (DEC-34); the level is given in brackets.
 
 **The report ([FR-08](../../docs/solution-design/02-functional-requirements.md#fr-08-the-end-of-day-result-and-its-output))**
 
-- **FR-027** (FR-08; DEC-21, DEC-26): `ReportPrinter` MUST print the report on standard output from a `DayResult`, in five parts in this order, separated by one empty line, with two spaces between the parts of a line and money with exactly 2 decimal places: (1) `Transfers` then, per row, `  Line <N>  applied  <from> -> <to>  <amount>` or `  Line <N>  rejected  <from> -> <to>  <amount as written>  <reason code>`, or for a row with the wrong number of fields `  Line <N>  rejected  malformed_row: <K> fields, expected 3`; (2) `Summary` then `  Processed: <p>`, `  Applied: <a>`, `  Rejected: <r>`, then `    <reason code>: <count>` for each reason that occurred in DEC-19 order, then `  Total before: <total>` and `  Total after: <total>`; (3) only when every row was rejected, `Warning: All transfers were rejected; check this is the right file.`; (4) `Final balances` then `  <full account number>  <balance>` per account in load order; (5) `Output file: <path>`.
+- **FR-027** (FR-08; DEC-21, DEC-26): `ReportPrinter` MUST print the report on standard output from a `DayResult`, in five parts in this order, separated by one empty line, with two spaces between the parts of a line and money with exactly 2 decimal places: (1) `Transfers` then, per row, `  Line <N>  applied  <from> -> <to>  <amount>` or `  Line <N>  rejected  <from> -> <to>  <amount as written>  <reason code>`, or for a row with the wrong number of fields `  Line <N>  rejected  malformed_row: <K> fields, expected 3`; (2) `Summary` then `  Processed: <p>`, `  Applied: <a>`, `  Rejected: <r>`, then `    <reason code>: <count>` for each reason that occurred in DEC-19 order, then `  Total before: <total>` and `  Total after: <total>`; (3) only when every row was rejected, `Warning: All transfers were rejected; check this is the right file.`; (4) `Final balances`, then the header row `Account`, `Opening`, `Closing`, then per account in load order its full account number, its opening balance and its closing balance, each line starting with two spaces, each column as wide as its widest value or heading, two spaces between columns, the account number left-aligned and the amounts right-aligned (DEC-26), for example `  Account           Opening  Closing` and `  1111234522226789   100.00    90.00`; (5) `Output file: <path>`.
 - **FR-028** (FR-08; DEC-06, DEC-26; page 2 picks 10, 11): in the report, an empty value MUST be shown as `""`; a rejected header-looking row MUST show `: This looks like a header row; files must not have a header.` after its reason code, or `. This looks like a header row; files must not have a header.` after `malformed_row: <K> fields, expected 3`. Account numbers MUST be shown in full.
 - **FR-029** (FR-08; DEC-26; page 6 pick 41): `ReportPrinter` MUST show the output path relative to the current folder when the file is in or below the current folder, and otherwise in full (plan P10). It MUST NOT write to standard error or decide when to print.
 - **FR-030** (FR-01, FR-02, FR-09; page 2 pick 15; page 6 pick 53): every file path in a message or log line MUST be shown by the same rule as the output path in the report (decided in the run, item 12). The rule MUST be worked out only in `infrastructure/`, by the helper `DisplayPath`: the `Runner` MUST give `ProcessDailyTransfer` the balances and transfers paths in their shown form and the output path in full, and the application classes MUST show the paths they are given, so no `application/` file requires `infrastructure/display_path`.
@@ -961,7 +970,7 @@ Names and meanings as on [page 6](../../docs/solution-design/06-components.md) a
 
 - **`LoadBalances`** (application): turns balances rows into `Account`s in the repository, or reports every problem. Remembers where each account first appeared.
 - **`ProcessDailyTransfer`** (application): runs the day with the parts passed in; writes the output file, prints the report through the reporter, and returns a `DayResult`. Masks account numbers in its log lines.
-- **`DayResult`** (application): the `TransferResult`s, the totals before and after, the final accounts in load order and the output path.
+- **`DayResult`** (application): the `TransferResult`s, the totals before and after, the opening balance of each account, the final accounts in load order and the output path.
 - **`InvalidBalancesFile`**, **`NoTransfers`**, **`TotalChanged`** (run-stopping errors, application).
 - **`BalancesCsvReader`**, **`TransfersCsvReader`** (infrastructure): read a CSV file and give each row with its line number, marking a wrong field count and a header-looking first row.
 - **`FinalBalancesCsvWriter`** (infrastructure): `default_path(run_time)`, and writes the output file without ever overwriting one.

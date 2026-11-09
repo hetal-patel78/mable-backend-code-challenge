@@ -5,7 +5,7 @@ This file is the single source of truth for how the solution to the [Mable back-
 How to read it:
 
 - Each decision has a stable ID (`DEC-01`, `DEC-02` and so on). Link to one as `design-decisions.md#dec-nn`.
-- Each decision gives the **rule**, the **reason**, the options **rejected**, and **From**: the review findings and answers it comes from. D, J, X, C, B and S are the tabs of the review sheet, saved in [`clarifications/`](clarifications/). P-numbers (P4, P6, P7, P11, P12, P14, P15, P19) are prompts in the [design prompt log](../prompts/prompts-design-phase.md), and P27 is a prompt in the [refactor prompt log](../prompts/prompts-refactor-phase.md); R1 to R3 are the questions from the independent review, answered in P14.
+- Each decision gives the **rule**, the **reason**, the options **rejected**, and **From**: the review findings and answers it comes from. D, J, X, C, B and S are the tabs of the review sheet, saved in [`clarifications/`](clarifications/). P-numbers (P4, P6, P7, P11, P12, P14, P15, P19) are prompts in the [design prompt log](../prompts/prompts-design-phase.md), and P27 and P28 are prompts in the [refactor prompt log](../prompts/prompts-refactor-phase.md); R1 to R3 are the questions from the independent review, answered in P14.
 - A rule marked **[assistant's pick]** was decided by the AI assistant, where the developer's answers left a small detail open. Its reason and rejected options are in [To review](#to-review) or, once the developer agreed it, in [Agreed by the developer](#agreed-by-the-developer).
 
 ## Contents
@@ -434,20 +434,22 @@ The report is printed on stdout once, at the end of a completed run, after the o
 1. each transfer in file order: line number, applied or rejected, from account, to account, amount, and the reason if rejected;
 2. a summary: the number of transfers processed (data rows, not blank lines; a header row counts), applied and rejected, the count per rejection reason, and the total of all balances before and after;
 3. the warning from [DEC-21](#dec-21), when every transfer was rejected;
-4. the final balances of all accounts, in the order they were loaded;
+4. the final balances of all accounts, in the order they were loaded, each account's opening balance (before the day's transfers) next to its closing balance; an account with no applied transfer shows the same opening and closing balance;
 5. the path of the output CSV.
 
 - Account numbers are shown in full. They are masked only in the logs ([DEC-29](#dec-29)).
 - The reason is shown as its reason code ([DEC-19](#dec-19)), for example `insufficient_funds`. **[assistant's pick]**
 - The output path is shown relative to the folder the command was run from, or in full if the file is outside that folder. This holds for a typed path and for the default path.
 - A header row in the transfers file counts as processed and rejected. **[assistant's pick]**
-- The exact layout is set in the solution design.
+- The final balances are a table under the title `Final balances`: a header row `Account`, `Opening`, `Closing`, then one row per account. Each column is as wide as its widest value or heading, with two spaces between columns; account numbers are left-aligned and amounts right-aligned, so the decimal points line up. **[assistant's pick]**
+- The output CSV holds only the closing balances ([DEC-27](#dec-27)).
+- The rest of the exact layout is set in the solution design.
 
-**Reason:** "runs and provides feedback" is a rubric item. Full account numbers let the user check the result against the input files by eye.
+**Reason:** "runs and provides feedback" is a rubric item. Full account numbers let the user check the result against the input files by eye. The opening balance next to the closing balance lets the user check the day without opening the balances file.
 
-**Rejected:** listing only the rejected transfers; leaving out the balances because they are in the output CSV; masking account numbers on screen; showing the output path as typed or relative to the project root (wrong when the command is run from another folder); always showing the full path (long).
+**Rejected:** listing only the rejected transfers; leaving out the balances because they are in the output CSV; showing only the closing balances; a balance after each transfer line; masking account numbers on screen; showing the output path as typed or relative to the project root (wrong when the command is run from another folder); always showing the full path (long).
 
-**From:** C6, J10, X8, X2, S6, P4, R3 in P14, Page 4 of the handwritten analysis.
+**From:** C6, J10, X8, X2, S6, P4, R3 in P14, Page 4 of the handwritten analysis, P28.
 
 <a id="dec-27"></a>
 ### DEC-27 Output CSV of final balances
@@ -718,6 +720,7 @@ The README gives:
 | Decision | Pick | Reason | Rejected |
 |---|---|---|---|
 | [DEC-31](#dec-31) | The repository's membership method is named `include?` | It is Ruby's usual name for a membership question, as on `Hash` and `Array` | `exists?`, `has_account?` |
+| [DEC-26](#dec-26) | The final balances are a table with the headings `Account`, `Opening` and `Closing`, each column as wide as its widest value or heading, amounts right-aligned, two spaces between columns, under the title `Final balances` | Right-aligned amounts line up their decimal points, so an account's two balances, and the balances of different accounts, can be compared by eye; the headings say which balance is which; two spaces match the rest of the report; the title still names what the output file holds | Values two spaces apart with no padding (amounts of different widths do not line up); left-aligned amounts; a table with borders; a new title such as `Balances` |
 
 <a id="agreed-by-the-developer"></a>
 ## Agreed by the developer

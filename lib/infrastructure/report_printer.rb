@@ -5,8 +5,10 @@ require_relative '../application/day_result'
 require_relative 'display_path'
 require_relative 'transfers_csv_reader'
 
-# Prints the report of a completed day: the transfers, the summary, the final balances and the output file.
+# Prints the report of a completed day: the transfers, the summary, the opening and final balances and the output file.
 class ReportPrinter
+  BALANCE_HEADINGS = %w[Account Opening Closing].freeze
+
   def initialize(output: $stdout, current_folder: Dir.pwd)
     @output = output
     @current_folder = current_folder
@@ -59,7 +61,17 @@ class ReportPrinter
   end
 
   def final_balances(day_result)
-    ['Final balances', *day_result.accounts.map { |account| "  #{account.number}  #{account.balance}" }]
+    rows = day_result.accounts.map do |account|
+      [account.number, day_result.opening_balances.fetch(account.number), account.balance].map(&:to_s)
+    end
+    ['Final balances', *table([BALANCE_HEADINGS, *rows])]
+  end
+
+  def table(rows)
+    widths = rows.transpose.map { |column| column.map(&:length).max }
+    rows.map do |number, opening, closing|
+      "  #{number.ljust(widths[0])}  #{opening.rjust(widths[1])}  #{closing.rjust(widths[2])}"
+    end
   end
 
   def output_line(day_result)

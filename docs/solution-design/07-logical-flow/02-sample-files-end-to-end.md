@@ -44,7 +44,7 @@ sequenceDiagram
     LB->>BR: read every row
     BR-->>LB: rows for lines 1 to 5, each with its line number
     LB->>Repo: for each row: include? (no), then add: 5 accounts, no problems found
-    P->>Repo: all, then add up the total before: 66750.00
+    P->>Repo: all, then note each opening balance and add them up for the total before: 66750.00
     P->>TR: read the transfers file
     loop each row, in file order (lines 1 to 4)
         TR-->>P: next row with its line number

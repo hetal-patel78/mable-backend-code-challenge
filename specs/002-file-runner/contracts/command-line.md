@@ -48,12 +48,13 @@ Summary
 Warning: All transfers were rejected; check this is the right file.      (only when every row was rejected, followed by an empty line)
 
 Final balances
-  <account number>  <balance>       (each account, load order)
+  Account           Opening  Closing
+  <account number>  <opening>  <closing>       (each account, load order)
 
 Output file: <path>
 ```
 
-An empty value is shown as `""`. Account numbers are in full. Money has exactly 2 decimal places.
+An empty value is shown as `""`. Account numbers are in full. Money has exactly 2 decimal places. In `Final balances`, `<opening>` is the balance before the day's transfers and `<closing>` the balance after them; each column is as wide as its widest value or heading, with two spaces between columns, the account number left-aligned and the amounts and their headings right-aligned (DEC-26).
 
 ## Log lines
 

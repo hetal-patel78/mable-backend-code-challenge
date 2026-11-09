@@ -61,9 +61,10 @@ The company asks for an amount to move from one of its accounts to another. When
          Line 1  applied  1111234522226789 -> 1212343433335665  30.00
        ...
        Final balances
-         1111234522226789  70.00
-         1212343433335665  80.00
-         0000123412341234  0.00
+         Account           Opening  Closing
+         1111234522226789   100.00    70.00
+         1212343433335665    50.00    80.00
+         0000123412341234     0.00     0.00
        ```
 
      - Standard error: (nothing)
@@ -100,7 +101,7 @@ The company asks for an amount to move from one of its accounts to another. When
 4. **Two equal transfers are both applied** (FR-03; DEC-16).
    - **Given** the three accounts above, **When** two `Transfer`s from `1111234522226789` to `0000123412341234` of `20.00` are applied one after the other, **Then** both are applied and the balances are 60.00, 50.00 and 40.00 (domain outcome). There is no duplicate check.
    - Run outcome: covered by AC-07.1 on page 2 (FR-07, owned by `002`); line 1 (`0000123412341234,1212343433335665,20.00`) is rejected as `insufficient_funds`.
-     - Standard output contains `Final balances`, `  1111234522226789  60.00`, `  1212343433335665  50.00`, `  0000123412341234  40.00`.
+     - Standard output contains `Final balances`, `  Account           Opening  Closing`, `  1111234522226789   100.00    60.00`, `  1212343433335665    50.00    50.00`, `  0000123412341234     0.00    40.00`.
      - Standard error: `W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************1234 -> ************5665 20.00 insufficient_funds` **(derived)**.
      - Exit status: 0
 
@@ -136,7 +137,16 @@ The company may empty an account to exactly $0.00, but no transfer may take an a
 2. **AC-04.2 Exactly $0 is applied** (FR-04; DEC-13).
    - **Given** the three accounts, **When** a `Transfer` from `1111234522226789` to `1212343433335665` of `100.00` is applied, **Then** no error is raised and the balances are 0.00, 150.00 and 0.00 (domain outcome).
    - Run outcome, with `transfers.csv` holding `1111234522226789,1212343433335665,100.00`:
-     - Standard output contains `  Line 1  applied  1111234522226789 -> 1212343433335665  100.00` **(derived)** and the final balances `  1111234522226789  0.00`, `  1212343433335665  150.00` and `  0000123412341234  0.00`.
+     - Standard output contains `  Line 1  applied  1111234522226789 -> 1212343433335665  100.00` **(derived)** and the final balances, with the opening balances 100.00, 50.00 and 0.00 and the closing balances 0.00, 150.00 and 0.00:
+
+       ```
+       Account           Opening  Closing
+       1111234522226789   100.00     0.00
+       1212343433335665    50.00   150.00
+       0000123412341234     0.00     0.00
+       ```
+
+       (each line is indented two spaces in the output)
      - Standard error: (nothing)
      - Exit status: 0 (a completed run, [DEC-25](../../docs/design-analysis/design-decisions.md#dec-25))
 3. **AC-04.3 An account already at $0.00 cannot pay anything** (FR-04; DEC-10, DEC-13).
@@ -310,11 +320,12 @@ Every amount and balance is exact after any number of transfers, with no fractio
 
    ```
    Final balances
-     1111234522226789  4820.50
-     1111234522221234  9974.40
-     2222123433331212  1550.00
-     1212343433335665  1725.60
-     3212343433335755  48679.50
+     Account            Opening   Closing
+     1111234522226789   5000.00   4820.50
+     1111234522221234  10000.00   9974.40
+     2222123433331212    550.00   1550.00
+     1212343433335665   1200.00   1725.60
+     3212343433335755  50000.00  48679.50
    ```
 
 ---

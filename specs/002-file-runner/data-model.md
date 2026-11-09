@@ -45,6 +45,7 @@ classDiagram
 | Total before equals total after | `ProcessDailyTransfer` | `TotalChanged` | DEC-24 |
 | Masking in log lines | `ProcessDailyTransfer` (private) | log text | DEC-29 |
 | Counts processed, applied, rejected, per reason | `DayResult` | numbers | DEC-19, DEC-26 |
+| Opening balance next to closing balance | `ProcessDailyTransfer` (takes them after loading), `DayResult#opening_balances`, `ReportPrinter` (the table) | the `Final balances` table | DEC-26 |
 | Default output name; never overwrite; folders created; LF; partial file removed | `FinalBalancesCsvWriter` | `OutputNotWritable` | DEC-25, DEC-27 |
 | Report layout | `ReportPrinter` | standard output | DEC-26 |
 | A path shown relative or in full | `DisplayPath` | text | DEC-26 |
@@ -113,8 +114,8 @@ classDiagram
 | Member | Type | Meaning |
 |---|---|---|
 | `DayResult::ALL_REJECTED_WARNING` | String | `All transfers were rejected; check this is the right file.` |
-| `DayResult.new(results:, total_before:, total_after:, accounts:, output_path:)` | Array of `TransferResult`, `Money`, `Money`, Array of `Account`, String | |
-| `results`, `total_before`, `total_after`, `accounts`, `output_path` | | As given; results in file order, accounts in load order; `output_path` is the real path (plan P11), shown only by `ReportPrinter` |
+| `DayResult.new(results:, total_before:, total_after:, opening_balances:, accounts:, output_path:)` | Array of `TransferResult`, `Money`, `Money`, `Hash` of `AccountNumber` to `Money`, Array of `Account`, String | |
+| `results`, `total_before`, `total_after`, `opening_balances`, `accounts`, `output_path` | | As given; results in file order, opening balances taken before any transfer is applied (DEC-26), accounts in load order; `output_path` is the real path (plan P11), shown only by `ReportPrinter` |
 | `processed_count`, `applied_count`, `rejected_count` | Integer | Rows, applied rows, rejected rows |
 | `rejected_counts` | `Hash` of Symbol to Integer | Only the codes that occurred, in `TransferResult::REASON_CODES` order |
 | `all_rejected?` | Boolean | At least one row, and every row rejected |

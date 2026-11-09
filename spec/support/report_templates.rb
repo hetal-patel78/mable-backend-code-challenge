@@ -4,17 +4,14 @@
 module ReportTemplates
   DEFAULT_OUTPUT_FILE = 'output/final_balances_2026-11-07_143005.csv'
 
-  def template_a(transfer:, balances:, output_file: DEFAULT_OUTPUT_FILE)
+  def template_a(transfer:, balances:, openings: %w[100.00 50.00 0.00], output_file: DEFAULT_OUTPUT_FILE)
     <<~REPORT
       Transfers
         Line 1  applied  #{transfer}
 
       #{template_summary(applied: 1)}
 
-      Final balances
-        1111234522226789  #{balances[0]}
-        1212343433335665  #{balances[1]}
-        0000123412341234  #{balances[2]}
+      #{template_balances(openings, balances)}
 
       Output file: #{output_file}
     REPORT
@@ -30,9 +27,10 @@ module ReportTemplates
       Warning: All transfers were rejected; check this is the right file.
 
       Final balances
-        1111234522226789  100.00
-        1212343433335665  50.00
-        0000123412341234  0.00
+        Account           Opening  Closing
+        1111234522226789   100.00   100.00
+        1212343433335665    50.00    50.00
+        0000123412341234     0.00     0.00
 
       Output file: #{output_file}
     REPORT
@@ -54,11 +52,12 @@ module ReportTemplates
         Total after: 66750.00
 
       Final balances
-        1111234522226789  4820.50
-        1111234522221234  9974.40
-        2222123433331212  1550.00
-        1212343433335665  1725.60
-        3212343433335755  48679.50
+        Account            Opening   Closing
+        1111234522226789   5000.00   4820.50
+        1111234522221234  10000.00   9974.40
+        2222123433331212    550.00   1550.00
+        1212343433335665   1200.00   1725.60
+        3212343433335755  50000.00  48679.50
 
       Output file: #{output_file}
     REPORT
@@ -70,6 +69,13 @@ module ReportTemplates
   end
 
   private
+
+  def template_balances(openings, closings)
+    rows = %w[1111234522226789 1212343433335665 0000123412341234].each_with_index.map do |number, index|
+      "  #{number}  #{openings[index].rjust(7)}  #{closings[index].rjust(7)}"
+    end
+    ['Final balances', '  Account           Opening  Closing', *rows].join("\n")
+  end
 
   def template_summary(applied:, reason: nil)
     lines = ['Summary', '  Processed: 1', "  Applied: #{applied}", "  Rejected: #{1 - applied}"]

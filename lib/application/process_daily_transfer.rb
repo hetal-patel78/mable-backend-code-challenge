@@ -29,9 +29,9 @@ class ProcessDailyTransfer
     output_path ||= FinalBalancesCsvWriter.default_path(@run_time)
     @logger.info("Run started: balances #{balances_path}, transfers #{transfers_path}")
     LoadBalances.new(@balances_reader, @repository).call(balances_path)
-    total_before = total
+    opening_balances = take_opening_balances
     results = apply_transfers(transfers_path)
-    day_result = close_day(results, total_before, output_path)
+    day_result = close_day(results, opening_balances, output_path)
     @reporter.print(day_result)
     @logger.info(run_ended(day_result))
     day_result
@@ -83,17 +83,18 @@ class ProcessDailyTransfer
     [from && mask(from), to && "-> #{mask(to)}", amount && (amount.empty? ? '""' : amount)].compact
   end
 
-  def close_day(results, total_before, output_path)
-    total_after = total
+  def take_opening_balances
+    @repository.all.to_h { |account| [account.number, account.balance] }
+  end
+
+  def close_day(results, opening_balances, output_path)
+    total_before = opening_balances.values.reduce(:+)
+    total_after = @repository.all.map(&:balance).reduce(:+)
     raise TotalChanged.new(total_before, total_after) unless total_after == total_before
 
     @writer.write(@repository.all, output_path)
     DayResult.new(results: results, total_before: total_before, total_after: total_after,
-                  accounts: @repository.all, output_path: output_path)
-  end
-
-  def total
-    @repository.all.map(&:balance).reduce(:+)
+                  opening_balances: opening_balances, accounts: @repository.all, output_path: output_path)
   end
 
   def run_ended(day_result)

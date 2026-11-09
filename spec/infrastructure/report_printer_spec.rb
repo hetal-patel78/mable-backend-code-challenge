@@ -11,15 +11,24 @@ RSpec.describe ReportPrinter do
   def sample_day(output_path)
     rows = [%w[1111234522226789 1212343433335665 500.00], %w[3212343433335755 2222123433331212 1000.00],
             %w[3212343433335755 1111234522226789 320.50], %w[1111234522221234 1212343433335665 25.60]]
-    finals = { '1111234522226789' => '4820.50', '1111234522221234' => '9974.40', '2222123433331212' => '1550.00',
-               '1212343433335665' => '1725.60', '3212343433335755' => '48679.50' }
-    day_result(rows, finals.map { |number, closing| account(number, closing) }, output_path)
+    balances = { '1111234522226789' => %w[5000.00 4820.50], '1111234522221234' => %w[10000.00 9974.40],
+                 '2222123433331212' => %w[550.00 1550.00], '1212343433335665' => %w[1200.00 1725.60],
+                 '3212343433335755' => %w[50000.00 48679.50] }
+    day_result(rows, balances, output_path)
   end
 
-  def day_result(rows, accounts, output_path)
+  def day_result(rows, balances, output_path)
     results = rows.each.with_index(1).map { |fields, line| TransferResult.applied(line_number: line, fields: fields) }
     DayResult.new(results: results, total_before: balance('66750.00'), total_after: balance('66750.00'),
-                  accounts: accounts, output_path: output_path)
+                  opening_balances: openings_of(balances), accounts: accounts_of(balances), output_path: output_path)
+  end
+
+  def openings_of(balances)
+    balances.to_h { |number, (opening, _)| [account_number(number), balance(opening)] }
+  end
+
+  def accounts_of(balances)
+    balances.map { |number, (_, closing)| account(number, closing) }
   end
 
   def printed(day, folder = project)
@@ -66,10 +75,11 @@ RSpec.describe ReportPrinter do
       TransferResult.applied(line_number: line, fields: fields)
     end
 
-    def day_of(results, balances = %w[100.00 50.00 0.00])
-      accounts = %w[1111234522226789 1212343433335665 0000123412341234].zip(balances).map { |pair| account(*pair) }
+    def day_of(results, closings = %w[100.00 50.00 0.00])
+      balances = %w[1111234522226789 1212343433335665 0000123412341234].zip(%w[100.00 50.00 0.00].zip(closings))
       DayResult.new(results: results, total_before: balance('150.00'), total_after: balance('150.00'),
-                    accounts: accounts, output_path: sample_output_path)
+                    opening_balances: openings_of(balances), accounts: accounts_of(balances),
+                    output_path: sample_output_path)
     end
 
     def line_of(result)
@@ -92,9 +102,10 @@ RSpec.describe ReportPrinter do
           Total after: 150.00
 
         Final balances
-          1111234522226789  95.00
-          1212343433335665  55.00
-          0000123412341234  0.00
+          Account           Opening  Closing
+          1111234522226789   100.00    95.00
+          1212343433335665    50.00    55.00
+          0000123412341234     0.00     0.00
 
         Output file: output/final_balances_2026-11-07_143005.csv
       REPORT
