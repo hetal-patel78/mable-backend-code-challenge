@@ -2,6 +2,7 @@
 
 require 'application/log_messages'
 require 'application/day_result'
+require 'application/transfer_result'
 
 RSpec.describe LogMessages do
   def applied(*fields, line: 1)

@@ -34,7 +34,7 @@ Every choice below is already made in `design-decisions.md`, on [page 5](../../d
 
 **Constraints**: RuboCop default settings plus `rubocop-rspec`, zero offences, so at most 10 lines per method, 5 parameters per method (keywords counted) and 100 lines per class (NFR-05, owned by `001`; research R8). Standard output carries only the report (DEC-26). Exact messages are copied from the spec's [run-stopping messages table](spec.md#run-stopping-messages) and the domain's messages from `001`'s [contract](../001-domain/contracts/domain-api.md), never rewritten.
 
-**Scale/Scope**: one company's accounts and one day's transfers (DEC-02, DEC-32); 4 application files, 9 infrastructure files, `bin/run`, 11 spec files, 5 end-to-end specs, and the fixture files DEC-34 lists.
+**Scale/Scope**: one company's accounts and one day's transfers (DEC-02, DEC-32); 6 application files, 9 infrastructure files, `bin/run`, 13 spec files, 5 end-to-end specs, and the fixture files DEC-34 lists.
 
 ## Constitution Check
 
@@ -93,6 +93,7 @@ lib/
 │   ├── load_balances.rb                 # LoadBalances
 │   ├── day_result.rb                    # DayResult
 │   ├── log_messages.rb                  # LogMessages (page 6 pick 37)
+│   ├── transfer_result.rb               # TransferResult (specified in 001; P31)
 │   └── process_daily_transfer.rb        # ProcessDailyTransfer
 └── infrastructure/
     ├── errors.rb                        # UnreadableFile, OutputNotWritable
@@ -117,6 +118,7 @@ spec/
 │   ├── load_balances_spec.rb
 │   ├── day_result_spec.rb
 │   ├── log_messages_spec.rb
+│   ├── transfer_result_spec.rb
 │   └── process_daily_transfer_spec.rb
 ├── infrastructure/
 │   ├── row_spec.rb
@@ -200,6 +202,7 @@ Names and details that page 6 and the page 10 glossary leave open, and small tec
 | P28 | The start check for the output path uses `File.file?`; the start checks for the input files use `File.exist?` | DEC-23, DEC-25, spec items 11 and 15 | A folder at the output path must pass the start check and fail when written; a folder at an input path exists and fails when opened | `File.exist?` for the output path |
 | P29 | `CsvRows` reads with `CSV.open` and `csv.shift`, one row at a time | DEC-32, DEC-05, DEC-07, research R1 | DEC-32 says the transfers file is read one row at a time with Ruby's CSV library (`CSV.open`, one row per `shift`), so the physical line number of each row is kept (DEC-07); after each `shift`, `csv.line` gives the raw line that DEC-05's blank test and the physical-line count need | A block-style read that yields only the parsed rows (no line number, no raw line) |
 | P30 | `CsvRows` sets the opened file to read bytes (`csv.to_io.set_encoding(Encoding::BINARY)`, after `bom\|utf-8` has dropped any byte-order mark) and checks each row's raw line as UTF-8 itself, raising `UnreadableFile.at_line` at the first row that is not valid text; each field is then taken as UTF-8 text | DEC-04, DEC-07, DEC-32, FR-005, research R1, R2 | The csv gem checks the encoding of everything it has sampled to find the line ending (the whole of a small file) before giving the first row, so bytes that are not UTF-8 on line 2 would stop the read before line 1 is given, against FR-005; checking each row keeps `CSV.open`, one row per `shift`, and gives the rows before the bad line first | Relying on the gem's `InvalidEncodingError` (raised before any row, with a row count rather than a physical line); a fixed `row_sep` to stop the sampling (breaks CR LF files); reading lines by hand (DEC-04 and DEC-32 name the CSV library) |
+| P31 | `TransferResult` lives in `lib/application/transfer_result.rb`, as the application's record of each row's outcome, and is a `Data` record (`line_number`, `fields`, `reason`, `header_hint`) whose `initialize` keeps a frozen copy of the fields; `new` and `[]` are private, so `applied` and `rejected` stay the only ways to build one; `REASON_CODES` is set after the block | DEC-19, DEC-30 (P34, P35), `001` FR-022 to FR-025 and plan D9 to D11, page 10 pick 57 | Only the application builds and reads it; `Data` gives equality and freezing with nothing written by hand, in the form of `Row` and `DayResult` | Keeping it in `lib/domain/` (the domain never builds one); a public `new` |
 
 ## Complexity Tracking
 

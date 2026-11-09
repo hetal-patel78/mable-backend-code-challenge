@@ -156,9 +156,10 @@ $env:Path = [Environment]::GetEnvironmentVariable('Path','User') + ';' + [Enviro
 - Light domain-driven design: the rules live inside the models (`AccountNumber`, `Money`, `Transfer`, `Account`, `AccountRepository`), with plain names and no ceremony.
 - The code is in three folders:
   - `lib/domain` holds the models and their rules: what a valid account number and amount are, and that a balance never goes below $0.
-  - `lib/application` holds the use cases: loading the balances (`LoadBalances`) and running the day (`ProcessDailyTransfer`), with the day's results and the text of its log lines (`LogMessages`, except the all-rejected warning, whose text `DayResult` owns).
+  - `lib/application` holds the use cases: loading the balances (`LoadBalances`) and running the day (`ProcessDailyTransfer`), with each row's outcome (`TransferResult`), the day's results and the text of its log lines (`LogMessages`, except the all-rejected warning, whose text `DayResult` owns).
   - `lib/infrastructure` holds what touches the outside world: the CSV readers and writer, the report printer and the `Runner` that `bin/run` starts.
 - `AccountRepository` keeps the accounts in memory, keyed by `AccountNumber`, with `add`, `include?`, `find` and `all`.
+- The values compared by their data (`AccountNumber` and `Transfer` in the domain, `TransferResult` in the application) are Ruby `Data` records, so they are equal by content and never change. `Money` keeps its own equality, because `10.5` and `10.50` are the same amount.
 - `ProcessDailyTransfer` is given its parts as one `ProcessDailyTransfer::Parts` value, each by name (the readers, the writer, the repository, the report printer and the logger), and the run time, so the tests pass fakes.
 - Every check runs before any balance changes, so each transfer is all or nothing. An account also refuses a deposit or withdrawal of $0 or less with `ArgumentError`, a guard against programming errors: a transfer with such an amount is already rejected as `invalid_amount`.
 - Money is a `Money` value on `BigDecimal`, never floating point, and never rounded.
@@ -213,7 +214,7 @@ The prompts that shaped them are in [`docs/prompts/`](docs/prompts/).
 |---|---|
 | `bin/run` | The command that starts the program |
 | `lib/domain/` | The models and their rules |
-| `lib/application/` | The use cases: loading the balances and running the day |
+| `lib/application/` | The use cases: loading the balances and running the day, with each row's outcome |
 | `lib/infrastructure/` | The CSV readers and writer, the report printer and the runner |
 | `spec/` | The RSpec tests, with their fixture files |
 | `data/` | The two sample CSV files that `bin/run` uses with no arguments |

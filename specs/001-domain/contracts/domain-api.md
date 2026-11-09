@@ -15,9 +15,10 @@ Code files are under `lib/domain/` and load their own dependencies. A caller req
 | `domain/money` | `Money` |
 | `domain/account` | `Account` |
 | `domain/transfer` | `Transfer` |
-| `domain/transfer_result` | `TransferResult` |
 | `domain/account_repository` | `AccountRepository` |
 | `domain/transfer_service` | `TransferService` |
+
+`TransferResult` (FR-022 to FR-025) is not a domain class: it is the application's record of each row's outcome, in `application/transfer_result`, and its members are in `002`'s [components contract](../../002-file-runner/contracts/components-api.md).
 
 ## Members
 
@@ -40,10 +41,6 @@ Code files are under `lib/domain/` and load their own dependencies. A caller req
 | `account.deposit(money)` | | never for an amount above $0; `ArgumentError` as for `withdraw` otherwise |
 | `Transfer.new(from:, to:, amount:)` | a `Transfer`, a `Data` record equal to another with equal values | `InvalidAmount`: `amount "<text>" must be greater than 0.00`; then `SameAccount`: `account <number> cannot transfer to itself` |
 | `transfer.from`, `transfer.to`, `transfer.amount` | `AccountNumber`, `AccountNumber`, `Money` | |
-| `TransferResult::REASON_CODES` | `[:malformed_row, :invalid_account_number, :invalid_amount, :same_account, :unknown_account, :insufficient_funds]` | |
-| `TransferResult.applied(line_number:, fields:)` | a `TransferResult` | |
-| `TransferResult.rejected(line_number:, fields:, reason:, header_hint: nil)` | a `TransferResult` | `ArgumentError` for a reason not in `REASON_CODES` |
-| `result.line_number`, `result.fields`, `result.reason`, `result.header_hint`, `result.applied?`, `result.rejected?` | as given; `reason` and `header_hint` nil when not set | |
 | `AccountRepository.new` | an empty repository | |
 | `repository.add(account)` | | `DuplicateAccount`: `account <number> appears more than once` |
 | `repository.include?(account_number)` | Boolean | |

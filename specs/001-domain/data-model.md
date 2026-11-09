@@ -15,7 +15,7 @@ classDiagram
     TransferService ..> Transfer : applies
 ```
 
-`TransferResult` stands alone: it holds a line number, the row's fields and one reason code, not domain objects.
+`TransferResult` stands alone: it holds a line number, the row's fields and one reason code, not domain objects. It is specified here (FR-022 to FR-025) and lives in `lib/application/` as the application's record of each row's outcome (DEC-19), kept by `002`.
 
 ## One home per rule (FR-028, NFR-05)
 
@@ -83,7 +83,7 @@ classDiagram
 
 - No lookup, no balance, no `Account` (FR-009). Equal to a transfer with equal values; frozen (D19).
 
-### `TransferResult` (domain result)
+### `TransferResult` (application record, in `lib/application/`)
 
 | Member | Type | Meaning |
 |---|---|---|
@@ -96,7 +96,7 @@ classDiagram
 | `header_hint` | String or nil | Only on a rejected result, and only when given |
 | `applied?`, `rejected?` | Boolean | |
 
-- It never formats itself (FR-025). Frozen (D19).
+- It never formats itself (FR-025). A `Data` record built only through `applied` and `rejected` (`new` and `[]` are private); frozen (D19).
 
 ### `AccountRepository`
 

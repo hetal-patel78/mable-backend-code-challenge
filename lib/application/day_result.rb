@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../domain/transfer_result'
+require_relative 'transfer_result'
 
 # The day's outcome: every transfer result in file order, the totals, the opening balances, the final accounts
 # and the output path.

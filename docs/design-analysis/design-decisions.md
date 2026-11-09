@@ -5,7 +5,7 @@ This file is the single source of truth for how the solution to the [Mable back-
 How to read it:
 
 - Each decision has a stable ID (`DEC-01`, `DEC-02` and so on). Link to one as `design-decisions.md#dec-nn`.
-- Each decision gives the **rule**, the **reason**, the options **rejected**, and **From**: the review findings and answers it comes from. D, J, X, C, B and S are the tabs of the review sheet, saved in [`clarifications/`](clarifications/). P-numbers (P4, P6, P7, P11, P12, P14, P15, P19) are prompts in the [design prompt log](../prompts/prompts-design-phase.md), and P27 and P28 are prompts in the [refactor prompt log](../prompts/prompts-refactor-phase.md); R1 to R3 are the questions from the independent review, answered in P14.
+- Each decision gives the **rule**, the **reason**, the options **rejected**, and **From**: the review findings and answers it comes from. D, J, X, C, B and S are the tabs of the review sheet, saved in [`clarifications/`](clarifications/). P-numbers (P4, P6, P7, P11, P12, P14, P15, P19) are prompts in the [design prompt log](../prompts/prompts-design-phase.md), and P27, P28, P30, P33, P34 and P35 are prompts in the [refactor prompt log](../prompts/prompts-refactor-phase.md); R1 to R3 are the questions from the independent review, answered in P14.
 - A rule marked **[assistant's pick]** was decided by the AI assistant, where the developer's answers left a small detail open. Its reason and rejected options are in [To review](#to-review) or, once the developer agreed it, in [Agreed by the developer](#agreed-by-the-developer).
 
 ## Contents
@@ -309,7 +309,7 @@ A transfer that leaves exactly $0.00 is applied: with $100.00 in account A, a tr
 ### DEC-19 Transfer results and rejection reasons
 
 **Rule**
-- Each transfer produces a `TransferResult`: applied, or rejected with its reason code. It is a domain result, not a DTO. The summary counts are the results grouped by reason code ([DEC-26](#dec-26)).
+- Each transfer produces a `TransferResult`: applied, or rejected with its reason code. It is the application's record of each row's outcome, with the row's line number and its values as written, kept for the report and the log. The summary counts are the results grouped by reason code ([DEC-26](#dec-26)).
 - Every rejected transfer has exactly one reason code: the first check it fails, in this order. **[assistant's pick]**
 
   | Order | Reason code | When |
@@ -325,7 +325,7 @@ A transfer that leaves exactly $0.00 is applied: with $100.00 in account A, a tr
 
 **Rejected:** counting only applied and rejected.
 
-**From:** X8, Page 4 of the handwritten analysis.
+**From:** X8, Page 4 of the handwritten analysis, P35.
 
 <a id="dec-20"></a>
 ### DEC-20 An empty transfers file stops the run
@@ -522,6 +522,7 @@ The report is printed on stdout once, at the end of a completed run, after the o
   - the repository: no duplicate on add, unknown account on find ([DEC-31](#dec-31)).
 - Class and file names are plain domain words such as `Account`, `Money` and `Transfer`. There are no base classes, no suffixes such as `AggregateRoot` or `ValueObject`, and no domain events, factories or commands.
 - The code is organised in three folders: `domain`, `application` and `infrastructure`. A new folder is added only when it holds several files.
+- A value that is equal to another with the same data, and never changes, is a Ruby `Data` record: `AccountNumber` and `Transfer` in the domain, and `TransferResult` in the application. `Money` keeps its own equality, which ignores how the amount was written.
 - The class that runs the day takes the run time as a constructor argument, defaulting to the current time. **[assistant's pick]** `bin/run` passes nothing; tests pass a fixed time so the output file name is known.
 - The runner reads the clock once. When no output path is given, it gets the default path for that time from the output writer ([DEC-27](#dec-27)), checks it at the start, and passes the same run time and output path to the class that runs the day.
 - The class that runs the day takes its six parts (the balances reader, the transfers reader, the output writer, the repository, the report printer and the logger) as one parameter object that names each part.

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'application/day_result'
+require 'application/transfer_result'
 
 RSpec.describe DayResult do
   def applied(line)

@@ -124,6 +124,18 @@ classDiagram
 
 - Class methods only; it holds no state and writes to no logger or stream.
 
+### `TransferResult` (application; plan P31; `001` FR-022 to FR-025)
+
+| Member | Type | Meaning |
+|---|---|---|
+| `TransferResult::REASON_CODES` | frozen Array of Symbol | `[:malformed_row, :invalid_account_number, :invalid_amount, :same_account, :unknown_account, :insufficient_funds]`, in DEC-19 order |
+| `TransferResult.applied(line_number:, fields:)` | Integer, Array of String | An applied result |
+| `TransferResult.rejected(line_number:, fields:, reason:, header_hint: nil)` | Integer, Array of String, Symbol, String or nil | A rejected result; `ArgumentError` when `reason` is not in `REASON_CODES` |
+| `line_number`, `fields`, `reason`, `header_hint` | Integer, frozen Array of String, Symbol or nil, String or nil | As given; every field of the row, in order; `reason` nil when applied; `header_hint` only on a rejected result, and only when given |
+| `applied?`, `rejected?` | Boolean | |
+
+- The application's record of one transfers row's outcome (DEC-19). A `Data` value: frozen, equal by content; `new` and `[]` are private, so `applied` and `rejected` are the only ways to build one. It never formats itself (`001` FR-025).
+
 ### `DayResult` (application; plan P7)
 
 | Member | Type | Meaning |

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'domain/transfer_result'
+require 'application/transfer_result'
 
 RSpec.describe TransferResult do
   let(:fields) { %w[1111234522226789 1212343433335665 30.00] }
@@ -8,6 +8,27 @@ RSpec.describe TransferResult do
   it 'lists the six reason codes in order (DEC-19)' do
     expect(described_class::REASON_CODES)
       .to eq(%i[malformed_row invalid_account_number invalid_amount same_account unknown_account insufficient_funds])
+  end
+
+  describe 'as a Data record' do
+    it 'has the members line_number, fields, reason and header_hint, in that order' do
+      expect(described_class.members).to eq(%i[line_number fields reason header_hint])
+    end
+
+    it 'is equal to a result built from the same values' do
+      expect(described_class.applied(line_number: 1, fields: fields))
+        .to eq(described_class.applied(line_number: 1, fields: fields.dup))
+    end
+
+    it 'is frozen' do
+      expect(described_class.applied(line_number: 1, fields: fields)).to be_frozen
+    end
+
+    %i[new []].each do |name|
+      it "cannot be built with #{name}, only with applied or rejected" do
+        expect { described_class.public_send(name, 1, fields) }.to raise_error(NoMethodError)
+      end
+    end
   end
 
   describe '.applied' do
@@ -71,6 +92,11 @@ RSpec.describe TransferResult do
     it 'refuses a reason outside the list' do
       expect { described_class.rejected(line_number: 1, fields: fields, reason: :overdrawn) }
         .to raise_error(ArgumentError)
+    end
+
+    it 'refuses a reason outside the list when a result is copied with with' do
+      applied = described_class.applied(line_number: 1, fields: fields)
+      expect { applied.with(reason: :bogus) }.to raise_error(ArgumentError, 'unknown reason code :bogus')
     end
 
     it 'keeps a header hint (DEC-06)' do

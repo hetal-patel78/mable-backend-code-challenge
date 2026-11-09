@@ -6,7 +6,7 @@
 
 ## Summary
 
-Build the project skeleton (Ruby 3.4, Bundler, RSpec, SimpleCov, RuboCop with `rubocop-rspec`) and the domain layer in `lib/domain/`: `AccountNumber`, `Money`, `Account`, `Transfer`, `TransferResult`, `AccountRepository`, `TransferService` and the seven domain errors. Each business rule lives in exactly one model ([DEC-30](../../docs/design-analysis/design-decisions.md#dec-30)), money is exact on `BigDecimal` ([DEC-09](../../docs/design-analysis/design-decisions.md#dec-09)), and a transfer finds both accounts, withdraws and then deposits, so it is all or nothing ([DEC-18](../../docs/design-analysis/design-decisions.md#dec-18)). The domain has no file, clock, terminal, logger or line number; it is tested test-first by calling it directly with builders ([DEC-34](../../docs/design-analysis/design-decisions.md#dec-34)). The application and infrastructure layers, `bin/run` and the end-to-end runs are built by `002-file-runner`, which uses the public members fixed in [contracts/domain-api.md](contracts/domain-api.md).
+Build the project skeleton (Ruby 3.4, Bundler, RSpec, SimpleCov, RuboCop with `rubocop-rspec`) and the domain layer in `lib/domain/`: `AccountNumber`, `Money`, `Account`, `Transfer`, `AccountRepository`, `TransferService` and the seven domain errors. `TransferResult` (FR-022 to FR-025), the application's record of each row's outcome, is specified here but lives in `lib/application/` and is kept by `002-file-runner` (DEC-19). Each business rule lives in exactly one model ([DEC-30](../../docs/design-analysis/design-decisions.md#dec-30)), money is exact on `BigDecimal` ([DEC-09](../../docs/design-analysis/design-decisions.md#dec-09)), and a transfer finds both accounts, withdraws and then deposits, so it is all or nothing ([DEC-18](../../docs/design-analysis/design-decisions.md#dec-18)). The domain has no file, clock, terminal, logger or line number; it is tested test-first by calling it directly with builders ([DEC-34](../../docs/design-analysis/design-decisions.md#dec-34)). The application and infrastructure layers, `bin/run` and the end-to-end runs are built by `002-file-runner`, which uses the public members fixed in [contracts/domain-api.md](contracts/domain-api.md).
 
 Owns: FR-03, FR-04, FR-05, FR-06, NFR-01, NFR-02, NFR-05.
 
@@ -30,7 +30,7 @@ Every choice below is already made in `design-decisions.md` or on [page 5](../..
 
 **Constraints**: money never passes through floating point, is never rounded or truncated, and has no upper limit (DEC-09, NFR-01). RuboCop default settings plus `rubocop-rspec`, zero offences, so at most 10 lines per method (DEC-36, NFR-05). The domain must not read files, print, log, read the clock or know line numbers (DEC-30).
 
-**Scale/Scope**: one company's accounts and one day's transfers (DEC-02, DEC-32); 7 domain classes, 7 errors, about 8 code files and 7 spec files.
+**Scale/Scope**: one company's accounts and one day's transfers (DEC-02, DEC-32); 6 domain classes, 7 errors, 7 code files and 6 spec files.
 
 ## Constitution Check
 
@@ -88,7 +88,6 @@ lib/
     ├── money.rb              # Money
     ├── account.rb            # Account
     ├── transfer.rb           # Transfer
-    ├── transfer_result.rb    # TransferResult
     ├── account_repository.rb # AccountRepository
     └── transfer_service.rb   # TransferService
 
@@ -101,12 +100,11 @@ spec/
     ├── money_spec.rb
     ├── account_spec.rb
     ├── transfer_spec.rb
-    ├── transfer_result_spec.rb
     ├── account_repository_spec.rb
     └── transfer_service_spec.rb
 ```
 
-Added later, not by this spec: `lib/application/`, `lib/infrastructure/`, `bin/run`, `data/`, `spec/application/`, `spec/infrastructure/`, `spec/acceptance/`, `spec/fixtures/` (`002`); the README's content, CI workflow and Dockerfile (`003`); the completed `PLATFORMS` list of `Gemfile.lock` (`003`, plan item 2, which changes no gem version).
+Added later, not by this spec: `lib/application/` (including `transfer_result.rb`, `002` Phase 14), `lib/infrastructure/`, `bin/run`, `data/`, `spec/application/`, `spec/infrastructure/`, `spec/acceptance/`, `spec/fixtures/` (`002`); the README's content, CI workflow and Dockerfile (`003`); the completed `PLATFORMS` list of `Gemfile.lock` (`003`, plan item 2, which changes no gem version).
 
 **Structure Decision**: a single Ruby project with code under `lib/` in the three layer folders of DEC-30, of which this spec creates `lib/domain/` only, and specs under `spec/` mirroring the code, one spec file per class (DEC-34). The errors hold only their messages, so `errors.rb` has no spec file; each error and its exact message are tested in the spec of the class that raises it (D3, D21).
 
@@ -118,7 +116,6 @@ The public members, their arguments and the exact messages are in [contracts/dom
 - **`Money.amount(text)` / `Money.balance(text)`**: parse text by the DEC-09 pattern into a `BigDecimal`; the class method names the word used in messages (`amount` or `balance`); `text` is the text as written when one was given and `to_s` otherwise; `negative?` is true when a minus sign was written (checked only when there is written text) or the amount is below 0; `positive?`; `+`, `-`, `<=>` with `Comparable`; equality by amount; `to_s` with exactly 2 decimals (FR-003 to FR-007).
 - **`Account.new(number, balance)`**: runs `Account.check_opening_balance(balance)` (raises `NegativeBalance`); `withdraw(money)` checks before it changes; `deposit(money)` cannot fail for a valid transfer; both raise `ArgumentError` for an amount of $0 or less (FR-010 to FR-013; D24).
 - **`Transfer.new(from:, to:, amount:)`**: a `Data` record with the members `from`, `to` and `amount`; `InvalidAmount` unless `amount.positive?`, then `SameAccount` if `from == to` (FR-008, FR-009).
-- **`TransferResult.applied(line_number:, fields:)` / `TransferResult.rejected(line_number:, fields:, reason:, header_hint: nil)`**: `REASON_CODES` in DEC-19 order (FR-022 to FR-025).
 - **`AccountRepository`**: a `Hash` keyed by `AccountNumber`; `add`, `include?`, `find`, `all` (FR-014 to FR-018, FR-033).
 - **`TransferService.new(repository)#apply(transfer)`**: find from, find to, withdraw, deposit (FR-019 to FR-021, FR-034).
 
@@ -158,7 +155,7 @@ Names and details that page 6 and the page 10 glossary leave open, and small tec
 | D16 | Every code and spec file starts with `# frozen_string_literal: true`, and every class has a one-line comment saying what it is (from the page 10 glossary) | DEC-30, DEC-36, FR-032 | RuboCop's defaults require both; a one-line "what it is" is not design reasoning, which stays in the README | Disabling `Style/Documentation` (changes the defaults) |
 | D17 | Specs follow `rubocop-rspec` defaults: one expectation per example, a short `attempt(error_class)` helper that runs a refused call and rescues only that error, and balances compared as one array | DEC-34, DEC-36 | Keeps tests orthogonal and the style check clean without changing settings | `aggregate_failures` everywhere; disabling `RSpec/MultipleExpectations` |
 | D18 | "`deposit` is never called" (AC-04.1, AC-05.1) is proven by the to account's balance staying unchanged, not by a spy | DEC-18, DEC-34 | Tests the outcome, not the internals, and stays valid if the method is renamed | Message spies on `Account` |
-| D19 | `AccountNumber`, `Money`, `Transfer` and `TransferResult` freeze themselves when built; `TransferResult#fields` is a frozen copy | page 6 (value models never change) | A value that cannot change cannot be broken by a caller | Leaving them mutable |
+| D19 | `AccountNumber`, `Money`, `Transfer` and `TransferResult` cannot change once built: `AccountNumber`, `Transfer` and `TransferResult` are `Data` records, frozen by Ruby, and `Money` freezes itself; `TransferResult#fields` is a frozen copy | page 6 (value models never change), DEC-30 | A value that cannot change cannot be broken by a caller | Leaving them mutable |
 | D20 | SimpleCov starts at the top of `spec_helper.rb`, before any code is loaded, with `add_filter '/spec/'` | DEC-36, FR-040 | Coverage counts only the code, and every file is measured | A `.simplecov` file (one more file) |
 | D21 | An error with one message form builds its message from the values it is given: `InvalidAccountNumber.new(text)`, `SameAccount.new(account_number)`, `NegativeBalance.new(balance)`, `UnknownAccount.new(account_number)`, `DuplicateAccount.new(account_number)`, `InsufficientFunds.new(account_number, amount, balance)`. `InvalidAmount` has four message forms from two raisers (`Money`, `Transfer`), so it is raised with its full message | DEC-12, DEC-30, FR-027 | Each message has one owner in the domain. `LoadBalances` (`002`) reports a duplicate before the balance check, without calling `add` (DEC-12, page 6 step 3), so it takes the text as `DuplicateAccount.new(number).message` instead of writing it again | Every raiser building the message (the duplicate text would be written twice, in `AccountRepository` and in `LoadBalances`); one `InvalidAmount` subclass per form (four classes for one error) |
 | D22 | The seven error classes have no spec file of their own: each message is checked, with its class, in the spec of the class that raises it (the `AccountNumber`, `Money`, `Transfer`, `Account`, `AccountRepository` and `TransferService` specs) | DEC-34 | DEC-34 says one spec file per class and that each rule is tested once, where it belongs; an error class holds no rule of its own, only the wording of its message, and that wording is the observable result of the rule that raises it, so a separate file would test it twice | A `spec/domain/errors_spec.rb` |

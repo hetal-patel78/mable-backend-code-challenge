@@ -9,7 +9,7 @@ This is the updated high-level design that replaces the developer's handwritten 
 The code is split into three folders ([DEC-30](../design-analysis/design-decisions.md#dec-30)):
 
 - **Infrastructure** (`infrastructure/`): everything that touches the outside world. It reads the CSV files, writes the output file, prints the report and runs the command.
-- **Application** (`application/`): runs one day. It loads the balances, applies each transfer in file order, writes the output and prints the report through the parts it is given.
+- **Application** (`application/`): runs one day. It loads the balances, applies each transfer in file order, keeps each row's outcome as a `TransferResult`, writes the output and prints the report through the parts it is given.
 - **Domain** (`domain/`): the business rules. A *domain model* is a class named after a business idea, such as `Account` or `Money`, that holds its own rules. The domain knows nothing about files, line numbers, the screen or the logger.
 
 ## Diagram 1: what the Runner builds and passes in
@@ -78,7 +78,7 @@ flowchart LR
     Repo["AccountRepository"]
     Acc["Account<br/>(aggregate root)"]
     Tr["Transfer"]
-    Res["TransferResult"]
+    Res["TransferResult<br/>(application)"]
     AN["AccountNumber"]
     M["Money"]
 
@@ -106,7 +106,7 @@ Each rule lives in the model that owns the data it checks, and each model raises
 | `Account` | the opening balance is not negative; a withdrawal must not take the balance below $0; exactly $0.00 is allowed; a deposit or withdrawal of $0 or less is a programming error ([DEC-10](../design-analysis/design-decisions.md#dec-10), [DEC-11](../design-analysis/design-decisions.md#dec-11), [DEC-13](../design-analysis/design-decisions.md#dec-13), [DEC-18](../design-analysis/design-decisions.md#dec-18)) |
 | `AccountRepository` | no duplicate account on add; unknown account on find; accounts kept in load order ([DEC-31](../design-analysis/design-decisions.md#dec-31)) |
 
-`TransferService` finds both accounts, then withdraws, then deposits. Every check runs before any balance changes, so a transfer is all or nothing ([DEC-18](../design-analysis/design-decisions.md#dec-18)). Each transfer ends as a `TransferResult`: applied, or rejected with one reason code ([DEC-19](../design-analysis/design-decisions.md#dec-19)). `ProcessDailyTransfer` turns each domain error into its reason code ([DEC-19](../design-analysis/design-decisions.md#dec-19)); the mapping is in the [errors table on page 6](06-components.md#errors-and-who-raises-them). Why `Account` is the aggregate root is explained on [page 6](06-components.md).
+`TransferService` finds both accounts, then withdraws, then deposits. Every check runs before any balance changes, so a transfer is all or nothing ([DEC-18](../design-analysis/design-decisions.md#dec-18)). `ProcessDailyTransfer` records each transfer's outcome as a `TransferResult`, the application's record of the row: applied, or rejected with one reason code ([DEC-19](../design-analysis/design-decisions.md#dec-19)). `ProcessDailyTransfer` turns each domain error into its reason code ([DEC-19](../design-analysis/design-decisions.md#dec-19)); the mapping is in the [errors table on page 6](06-components.md#errors-and-who-raises-them). Why `Account` is the aggregate root is explained on [page 6](06-components.md).
 
 ## Diagram 4: where the results and errors go
 

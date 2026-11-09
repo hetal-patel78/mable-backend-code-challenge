@@ -10,9 +10,10 @@ Code files load their own dependencies with `require_relative`, and only those w
 |---|---|---|
 | `application/errors` | `InvalidBalancesFile`, `NoTransfers`, `TotalChanged` | |
 | `application/load_balances` | `LoadBalances` | `domain/account_number`, `domain/money`, `domain/account`, `domain/errors`, `application/errors`, `infrastructure/errors` |
-| `application/day_result` | `DayResult` | `domain/transfer_result` |
+| `application/transfer_result` | `TransferResult` | |
+| `application/day_result` | `DayResult` | `application/transfer_result` |
 | `application/log_messages` | `LogMessages` | `domain/money` |
-| `application/process_daily_transfer` | `ProcessDailyTransfer` | `application/load_balances`, `application/log_messages`, `application/day_result`, `application/errors`, `domain/account_number`, `domain/money`, `domain/errors`, `domain/transfer`, `domain/transfer_result`, `domain/transfer_service`, `infrastructure/final_balances_csv_writer` (for `default_path`) |
+| `application/process_daily_transfer` | `ProcessDailyTransfer` | `application/load_balances`, `application/log_messages`, `application/day_result`, `application/errors`, `application/transfer_result`, `domain/account_number`, `domain/money`, `domain/errors`, `domain/transfer`, `domain/transfer_service`, `infrastructure/final_balances_csv_writer` (for `default_path`) |
 | `infrastructure/errors` | `UnreadableFile`, `OutputNotWritable` | `infrastructure/display_path` |
 | `infrastructure/row` | `Row` | |
 | `infrastructure/csv_rows` | `CsvRows` | `csv`, `infrastructure/row`, `infrastructure/errors` |
@@ -57,6 +58,10 @@ Code files load their own dependencies with `require_relative`, and only those w
 | `LogMessages.rejected(result)` | `Line <N> rejected: <masked from> -> <masked to> <amount as written> <reason code>`, with only the fields the row has | |
 | `LogMessages.run_ended(day_result)` | `Run ended: processed <p>, applied <a>, rejected <r>`, then ` (<code> <count>, ...)` when <r> is above 0 | |
 | `LogMessages.mask(value)` | the value with every character except the last 4 as `*`, or `****` | |
+| `TransferResult::REASON_CODES` | `[:malformed_row, :invalid_account_number, :invalid_amount, :same_account, :unknown_account, :insufficient_funds]` | |
+| `TransferResult.applied(line_number:, fields:)` | a `TransferResult`, a frozen `Data` value | |
+| `TransferResult.rejected(line_number:, fields:, reason:, header_hint: nil)` | a `TransferResult`, a frozen `Data` value | `ArgumentError` for a reason not in `REASON_CODES` |
+| `result.line_number`, `result.fields`, `result.reason`, `result.header_hint`, `result.applied?`, `result.rejected?` | as given; `reason` and `header_hint` nil when not set | |
 | `DayResult.new(results:, total_before:, total_after:, opening_balances:, accounts:, output_path:)` | a `DayResult` | |
 | `result.results`, `.total_before`, `.total_after`, `.opening_balances`, `.accounts`, `.output_path` | as given | |
 | `result.processed_count`, `.applied_count`, `.rejected_count` | Integer | |

@@ -7,7 +7,7 @@ The code has three folders ([DEC-30](../design-analysis/design-decisions.md#dec-
 Six terms used below:
 
 - An **aggregate root** is the one model that owns a piece of changing data and guards its rules. Other code may change that data only by asking the root.
-- A **value** model (such as `Money`) holds data that never changes once it is built. Two values with the same content are equal.
+- A **value** model (such as `Money`) holds data that never changes once it is built. Two values with the same content are equal. `AccountNumber`, `Transfer` and `TransferResult` are Ruby `Data` records, Ruby's built-in form of such a value ([DEC-30](../design-analysis/design-decisions.md#dec-30)); `Money` keeps its own equality, which ignores how the amount was written.
 - A **repository** is the one place that holds the accounts and finds them by number.
 - **Passed in** means a class is given the parts it uses when it is created, instead of creating them itself. A test can then pass a fake part in their place.
 - A **reason code** is a short fixed word that says why a transfer was rejected, such as `insufficient_funds` ([DEC-19](../design-analysis/design-decisions.md#dec-19)).
@@ -41,7 +41,7 @@ A filled diamond (`*--`) means the part belongs to that model alone; an open dia
 
 ## Why `Account` is the aggregate root
 
-- **It owns the only data that changes.** Every other domain model is a value, a result, or a helper that only finds accounts (`AccountRepository`) or moves money between them (`TransferService`). A balance is the one thing a run changes.
+- **It owns the only data that changes.** Every other domain model is a value or a helper that only finds accounts (`AccountRepository`) or moves money between them (`TransferService`). A balance is the one thing a run changes.
 - **It guards the main rule.** "No balance below $0" is a rule about one account's balance, so it lives in `Account#withdraw` ([DEC-13](../design-analysis/design-decisions.md#dec-13), [DEC-30](../design-analysis/design-decisions.md#dec-30)).
 - **Nothing else can change a balance.** The repository hands out `Account`s, and the only way to change one is `withdraw` or `deposit`. So the rule cannot be bypassed.
 - **`Transfer` is not the root.** It owns no balance. It is a request that touches two accounts, and `TransferService` carries it out by asking each account in turn ([DEC-18](../design-analysis/design-decisions.md#dec-18)).
@@ -114,13 +114,6 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
 - **Out:** a value holding the three, equal to another transfer with the same accounts and amount. It raises `InvalidAmount` for an amount of $0 or less, then `SameAccount` for the same account on both sides. It checks the amount first, so a row with both problems gets `invalid_amount`, as the order in [DEC-19](../design-analysis/design-decisions.md#dec-19) requires.
 - **Does not:** look up accounts, check balances or change anything. It does not hold `Account` objects.
 
-### `TransferResult`
-
-- **Responsibility:** the outcome of one transfers row: applied, or rejected with exactly one reason code ([DEC-19](../design-analysis/design-decisions.md#dec-19)). A domain result, not a DTO (a "data transfer object", a plain data carrier between layers).
-- **In:** the line number, the row's values as written (after trimming), and applied or a reason code. A rejected header-looking row also carries the header message ([DEC-06](../design-analysis/design-decisions.md#dec-06)). **(assistant's pick)**
-- **Out:** whether it was applied, its reason code, and its values for the report and the log.
-- **Does not:** format itself for the screen or the log; that is `ReportPrinter`'s and `ProcessDailyTransfer`'s job.
-
 ### `AccountRepository`
 
 - **Responsibility:** holds the run's accounts in memory and is the one place for the duplicate and unknown-account rules ([DEC-31](../design-analysis/design-decisions.md#dec-31)).
@@ -187,6 +180,12 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
   - `mask`: every character except the last 4 becomes `*`; a value of 4 characters or fewer, including an empty value, is `****`.
 - **Does not:** write to the logger or any stream; decide when a line is logged or at which level; show the header hint.
 
+### `TransferResult`
+
+- **Responsibility:** the application's record of one transfers row's outcome: applied, or rejected with exactly one reason code ([DEC-19](../design-analysis/design-decisions.md#dec-19)). `ProcessDailyTransfer` builds one per row and keeps it for the report and the log.
+- **In:** the line number, the row's values as written (after trimming), and applied or a reason code. A rejected header-looking row also carries the header message ([DEC-06](../design-analysis/design-decisions.md#dec-06)). **(assistant's pick)** It is built only through `TransferResult.applied` and `TransferResult.rejected`.
+- **Out:** whether it was applied, its reason code, and its values for the report and the log. A `Data` record: equal to another result with the same data, and never changed once built.
+- **Does not:** format itself for the screen or the log; that is `ReportPrinter`'s and [`LogMessages`](#logmessages)' job.
 
 ### `DayResult`
 

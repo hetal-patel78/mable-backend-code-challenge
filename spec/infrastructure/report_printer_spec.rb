@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
-require 'infrastructure/csv_rows'
 require 'infrastructure/report_printer'
+require 'application/day_result'
+require 'application/transfer_result'
+require 'infrastructure/csv_rows'
 
 RSpec.describe ReportPrinter do
   let(:project) { File.join(Dir.tmpdir, 'report_printer', 'project') }

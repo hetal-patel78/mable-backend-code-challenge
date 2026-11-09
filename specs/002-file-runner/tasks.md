@@ -514,7 +514,16 @@
 
 ### Tests (write first)
 
+- [X] T115 Move `spec/domain/transfer_result_spec.rb` to `spec/application/transfer_result_spec.rb` with `git mv` and require `'application/transfer_result'`; add a `describe 'as a Data record'`: `members` is `%i[line_number fields reason header_hint]`; a result is equal to one built from the same values; it is frozen; `new` and `[]` raise `NoMethodError` (only `applied` and `rejected` build one) [`001` FR-022 to FR-025; DEC-19, DEC-30; P34, P35; plan P31]
 - [X] T118 Make each spec require the file of every class it names, besides the class under test: `day_result_spec.rb`, `log_messages_spec.rb` and `report_printer_spec.rb` add `'application/transfer_result'` (and `report_printer_spec.rb` `'application/day_result'`); `load_balances_spec.rb` adds `'application/errors'` and `'infrastructure/errors'`; `process_daily_transfer_spec.rb` adds `'application/day_result'` and `'application/errors'`; `csv_rows_spec.rb` and `transfers_csv_reader_spec.rb` add `'infrastructure/errors'`; `runner_spec.rb` adds the files of `AccountRepository`, `Money`, `ProcessDailyTransfer`, the run-stopping errors, the readers, the writer and the report printer (depends on T116, which edits `csv_rows_spec.rb` too) [DEC-34; P36; plan P1]
+- [X] T119 Run `bundle exec rspec` and confirm that the spec files requiring `'application/transfer_result'` fail to load because the file does not exist yet, and, run without them, that only the new `csv_rows_spec.rb` example fails (`UnreadableFile` raised instead of the caller's error) (depends on T115 to T118)
+
+### Implementation
+
+- [X] T120 Move `lib/domain/transfer_result.rb` to `lib/application/transfer_result.rb` with `git mv`; `lib/application/day_result.rb` and `lib/application/process_daily_transfer.rb` require `'transfer_result'` from their own folder (depends on T119) [DEC-19; P35; plan P31]
+- [X] T121 Rewrite `lib/application/transfer_result.rb` as `TransferResult = Data.define(:line_number, :fields, :reason, :header_hint)`, with `initialize(line_number:, fields:, reason: nil, header_hint: nil)` keeping a frozen copy of the fields; `applied` and `rejected` (with its `REASON_CODES` check) build it through `new`, and `new` and `[]` are private; `applied?` and `rejected?`; `TransferResult::REASON_CODES` set after the block (depends on T120) [DEC-19, DEC-30; P34; plan P31; page 10 pick 57]
+- [X] T130 Add to `spec/application/transfer_result_spec.rb`, in `describe '.rejected'`, an example that `applied.with(reason: :bogus)` raises `ArgumentError` with `unknown reason code :bogus`, and confirm it fails before T131 (depends on T121) [DEC-19; P35]
+- [X] T131 In `lib/application/transfer_result.rb`, move the `REASON_CODES` check from `.rejected` into `initialize` (a `nil` reason, for an applied row, is allowed), so every way of building a result, `Data#with` included, is checked with the same `ArgumentError` message; `.applied`, `.rejected` and the private `new` and `[]` stay (depends on T130) [DEC-19; P35]
 
 ---
 
@@ -639,4 +648,4 @@ The MVP is the end of Phase 3: `bin/run` on the challenge's sample files gives t
 - `[P]` tasks touch different files and depend on no unfinished task.
 - Commit after each task or small group of tasks, naming what it covers.
 - Never weaken a test or change an expected message, line or balance to match the code; they come from the spec and page 2.
-- The domain (`lib/domain/`) is `001`'s and is not changed here; if a domain behaviour seems wrong, stop and report it.
+- The domain (`lib/domain/`) is `001`'s and is not changed here, except that Phase 14 moves `TransferResult` out of it into `lib/application/` (P35); if a domain behaviour seems wrong, stop and report it.
