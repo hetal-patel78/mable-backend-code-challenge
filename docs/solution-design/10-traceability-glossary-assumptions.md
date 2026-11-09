@@ -4,11 +4,7 @@ Purpose: link every requirement to its decisions, components and tests, define e
 
 ## Traceability
 
-Each requirement is listed with the decisions it comes from, the components and errors that implement it, and the kind of test that proves it. The test kinds follow [DEC-34](../design-analysis/design-decisions.md#dec-34) and the [testing strategy](09-considerations.md#testing-strategy):
-
-- **Unit**: a spec for one domain or application class, using builders and fakes, with no fixture files (the total-check spec writes to a temporary folder).
-- **Integration**: a spec for an infrastructure class (readers, writer, `ReportPrinter`, `Runner`), using fixture files or a temporary folder.
-- **End-to-end**: runs `bin/run` and checks the report, the output file and the exit status.
+Each requirement is listed with the decisions it comes from, the components and errors that implement it, and the kind of test that proves it. The test kinds, unit, integration and end-to-end, are defined in the [glossary](#glossary) and follow [DEC-34](../design-analysis/design-decisions.md#dec-34) and the [testing strategy](09-considerations.md#testing-strategy).
 
 ### Functional requirements
 
@@ -44,7 +40,7 @@ Each term is defined once here. Component details are on the [components page](0
 | Term | Meaning |
 |---|---|
 | Account number | Exactly 16 digits, kept as text so leading zeros stay ([DEC-08](../design-analysis/design-decisions.md#dec-08)). |
-| Aggregate root | The one model that owns a piece of changing data and guards its rules. Here it is `Account`. |
+| Aggregate root | The one model that owns a piece of changing data and guards its rules; other code may change that data only by asking it. Here it is `Account`. |
 | Applied | A transfer that passed every check and moved the money. |
 | Assistant's pick | A small detail the decisions leave open, decided by the AI assistant and listed below for the developer to review. |
 | Balances file | The CSV file of opening balances: `account number,balance`, no header. |

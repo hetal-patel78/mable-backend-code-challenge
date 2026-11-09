@@ -34,7 +34,7 @@ flowchart LR
 
 ## Full domain-driven design
 
-**Description.** Use the complete vocabulary and structure of DDD: base classes such as `AggregateRoot` or `ValueObject`, name suffixes, domain events, factories, commands, data transfer objects (DTOs, plain data carriers between layers) and mappers.
+**Description.** Use the complete vocabulary and structure of DDD: base classes such as `AggregateRoot` or `ValueObject`, name suffixes, domain events, factories, commands, data transfer objects (DTOs) and mappers.
 
 **Pros**
 - Familiar to teams that already work this way.

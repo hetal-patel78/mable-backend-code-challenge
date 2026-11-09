@@ -36,7 +36,7 @@ flowchart LR
 - Full control over every error message.
 
 **Cons**
-- Quoted values, Windows (CRLF) line endings, a missing final newline and a byte-order mark (an invisible marker some editors put at the start of a file) all need handling and tests.
+- Quoted values, Windows (CRLF) line endings, a missing final newline and a byte-order mark all need handling and tests.
 - More code, more chances of a parsing bug, and no gain for the rubric.
 
 **Cost.** O(m + n) time over the lines of both files, in both designs.

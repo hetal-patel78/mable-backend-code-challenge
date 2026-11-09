@@ -4,14 +4,7 @@ What each component is responsible for, what it takes in and gives back, and wha
 
 The code has three folders ([DEC-30](../design-analysis/design-decisions.md#dec-30)): `domain/` holds the business rules, `application/` runs the day using those rules, and `infrastructure/` deals with files, the screen and the command line. The [high-level design](05-high-level-design.md) shows how they fit together, including what the `Runner` builds and passes in; the [logical flow](07-logical-flow/README.md) shows them working in order.
 
-Six terms used below:
-
-- An **aggregate root** is the one model that owns a piece of changing data and guards its rules. Other code may change that data only by asking the root.
-- A **value** model (such as `Money`) holds data that never changes once it is built. Two values with the same content are equal. `AccountNumber`, `Transfer`, `TransferResult`, `DayResult`, `ProcessDailyTransfer::Parts` and `Row` are Ruby `Data` records, Ruby's built-in form of such a value ([DEC-30](../design-analysis/design-decisions.md#dec-30)); `Money` keeps its own equality, which ignores how the amount was written.
-- A **repository** is the one place that holds the accounts and finds them by number.
-- **Passed in** means a class is given the parts it uses when it is created, instead of creating them itself. A test can then pass a fake part in their place.
-- A **reason code** is a short fixed word that says why a transfer was rejected, such as `insufficient_funds` ([DEC-19](../design-analysis/design-decisions.md#dec-19)).
-- **Masked** means an account value shown in the logs with all but its last 4 characters hidden, as `************6789`; the full rule is under [`LogMessages`](#logmessages) ([DEC-29](../design-analysis/design-decisions.md#dec-29)).
+The terms used below (aggregate root, value model, repository, passed in, reason code, masked account number) are defined in the [glossary](10-traceability-glossary-assumptions.md#glossary). `AccountNumber`, `Transfer`, `TransferResult`, `DayResult`, `ProcessDailyTransfer::Parts` and `Row` are Ruby `Data` records, Ruby's built-in form of a value model ([DEC-30](../design-analysis/design-decisions.md#dec-30)); `Money` keeps its own equality, which ignores how the amount was written.
 
 ---
 
@@ -95,7 +88,7 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
 
 ### `Money`
 
-- **Responsibility:** one exact amount on `BigDecimal` (Ruby's exact decimal number type), with at most 2 decimal places ([DEC-09](../design-analysis/design-decisions.md#dec-09)).
+- **Responsibility:** one exact amount on `BigDecimal`, with at most 2 decimal places ([DEC-09](../design-analysis/design-decisions.md#dec-09)).
 - **In:** text in the format of [DEC-09](../design-analysis/design-decisions.md#dec-09), including a leading minus sign.
 - **Out:** a value that can be added, subtracted and compared, and its text with exactly 2 decimal places. Raises `InvalidAmount` for empty text, text that is not a number, or more than 2 decimal places. It records that a minus sign was written, so `-0.00` counts as negative. **(assistant's pick)**
 - **Does not:** round or truncate; use floating point; accept `+100`, `1e3`, `$100` or any other format outside [DEC-09](../design-analysis/design-decisions.md#dec-09); decide whether a negative amount is allowed.
@@ -205,7 +198,7 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
 
 ### `BalancesCsvReader` and `TransfersCsvReader`
 
-- **Responsibility:** read a file with Ruby's CSV library, opened as `bom|utf-8` so a byte-order mark (an invisible marker some editors put at the start of a file) is ignored, and give each row with its physical line number ([DEC-04](../design-analysis/design-decisions.md#dec-04), [DEC-07](../design-analysis/design-decisions.md#dec-07)). Both read through the shared helper [`CsvRows`](#infrastructure-helpers-csvrows-row-and-displaypath), which gives each row as a `Row`.
+- **Responsibility:** read a file with Ruby's CSV library, opened as `bom|utf-8` so a byte-order mark is ignored, and give each row with its physical line number ([DEC-04](../design-analysis/design-decisions.md#dec-04), [DEC-07](../design-analysis/design-decisions.md#dec-07)). Both read through the shared helper [`CsvRows`](#infrastructure-helpers-csvrows-row-and-displaypath), which gives each row as a `Row`.
 - **In:** a file path.
 - **Out:** each row's values, trimmed, with its line number. A row with the wrong number of fields is marked as such, and a header-looking first row is marked with the header hint ([DEC-06](../design-analysis/design-decisions.md#dec-06)). A file that cannot be opened raises `UnreadableFile` with the reason from the system. A file the CSV library cannot read past a line raises `UnreadableFile` naming that line, after giving every row before it. `BalancesCsvReader` reads the whole file; `TransfersCsvReader` gives one row at a time ([DEC-32](../design-analysis/design-decisions.md#dec-32)).
 - **Does not:** check account numbers or amounts; build domain models; skip a header ([DEC-06](../design-analysis/design-decisions.md#dec-06)); check whether the file exists (the `Runner` does).
@@ -214,7 +207,7 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
 
 - **Responsibility:** names and writes the final balances file ([DEC-27](../design-analysis/design-decisions.md#dec-27)).
 - **In:** the run time, for the class method `FinalBalancesCsvWriter.default_path(run_time)`, the method name being the **(assistant's pick)**; then, for an instance, the accounts in load order and the output path.
-- **Out:** `default_path` gives `output/final_balances_YYYY-MM-DD_HHMMSS.csv` for the run time. Writing gives the file, in the balances input format, with LF (line feed only) line endings, on every operating system **(assistant's pick)**, reason on [page 9](09-considerations.md#portability-and-ci). It creates missing folders and creates the file only if it does not exist at that moment. If the file appears after the start checks, it raises `OutputNotWritable` with the reason from the system and leaves that file unchanged **(assistant's pick)**. If the file cannot be created or writing fails partway, it deletes any partial file and raises `OutputNotWritable` with the reason from the system ([DEC-25](../design-analysis/design-decisions.md#dec-25)).
+- **Out:** `default_path` gives `output/final_balances_YYYY-MM-DD_HHMMSS.csv` for the run time. Writing gives the file, in the balances input format, with LF line endings, on every operating system **(assistant's pick)**, reason on [page 9](09-considerations.md#portability-and-ci). It creates missing folders and creates the file only if it does not exist at that moment. If the file appears after the start checks, it raises `OutputNotWritable` with the reason from the system and leaves that file unchanged **(assistant's pick)**. If the file cannot be created or writing fails partway, it deletes any partial file and raises `OutputNotWritable` with the reason from the system ([DEC-25](../design-analysis/design-decisions.md#dec-25)).
 - **Does not:** overwrite a file; read the clock; decide whether the run completed; print anything.
 
 ### `ReportPrinter`

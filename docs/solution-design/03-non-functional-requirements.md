@@ -4,21 +4,7 @@ Purpose: the qualities the program must have beyond what it does (accuracy, cost
 
 This page says only *what* each target is. How the design meets it is in [Considerations](09-considerations.md), and which component and test prove it is in [Traceability](10-traceability-glossary-assumptions.md).
 
-Terms used below:
-
-- **RSpec** is the Ruby testing tool the challenge asks for.
-- RSpec's **documentation format** prints each test's name as a sentence, grouped under what it describes.
-- A **gem** is a packaged Ruby library.
-- **`bundle install`** installs the gems the project lists, at the locked versions.
-- **RuboCop** is a style checker: a tool that checks the code follows standard layout and naming rules.
-- **SimpleCov** measures test coverage, the share of the code the tests run.
-- **Docker** packages the program with the right Ruby version, so it runs without installing Ruby.
-- **Continuous integration (CI)** is a service that runs the tests on every change.
-- A **unit test** checks one rule in one part of the code.
-- An **integration test** checks an infrastructure class with real files: a small prepared file (a fixture file) or a temporary folder.
-- An **end-to-end test** runs the whole program and checks its report, output file and exit status.
-- A **growth rate** says how the time or memory a step needs changes as its input gets bigger. "Grows in proportion to the rows" means twice the rows take about twice the time. "The same however many accounts there are" means the size does not matter.
-- A **design review** is a reviewer reading the design and the code against a stated target. Cost and scale are checked this way. There is no timing test, because timings depend on the machine and a day's file is small ([DEC-32](../design-analysis/design-decisions.md#dec-32)).
+The terms used below, such as RSpec, RuboCop, SimpleCov, CI, unit, integration and end-to-end tests, growth rate and design review, are defined in the [glossary](10-traceability-glossary-assumptions.md#glossary). Cost and scale are checked by design review, with no timing test, because timings depend on the machine and a day's file is small ([DEC-32](../design-analysis/design-decisions.md#dec-32)).
 
 ## Summary
 
@@ -124,7 +110,7 @@ These targets follow the rubric's items on domain models, separation of concerns
 
 Decisions: [DEC-34](../design-analysis/design-decisions.md#dec-34), [DEC-36](../design-analysis/design-decisions.md#dec-36), [DEC-24](../design-analysis/design-decisions.md#dec-24), [DEC-30](../design-analysis/design-decisions.md#dec-30), [DEC-28](../design-analysis/design-decisions.md#dec-28).
 
-Three kinds of test are used: unit tests, integration tests and end-to-end tests (see the terms at the top of this page).
+Three kinds of test are used: unit tests, integration tests and end-to-end tests (defined in the [glossary](10-traceability-glossary-assumptions.md#glossary)).
 
 **Targets**
 - The tests must be written with RSpec and must all pass, in random order.

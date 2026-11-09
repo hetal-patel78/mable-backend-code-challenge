@@ -91,7 +91,7 @@ flowchart LR
     Tr --> M
 ```
 
-An *aggregate root* is the one model that guards a group of data and the rules on it; here `Account` guards its balance. `BigDecimal` is Ruby's exact decimal number type. A *reason code* is a short fixed word that says why a transfer was rejected, such as `insufficient_funds`.
+*Aggregate root*, `BigDecimal` and *reason code* are defined in the [glossary](10-traceability-glossary-assumptions.md#glossary); here `Account` is the aggregate root that guards its balance.
 
 Each rule lives in the model that owns the data it checks, and each model raises its own error when the rule is broken ([DEC-30](../design-analysis/design-decisions.md#dec-30)). Which error each model raises is in the [errors table on page 6](06-components.md#errors-and-who-raises-them).
 
@@ -124,7 +124,7 @@ flowchart LR
     Run -- "error message and<br/>error log line" --> StdErr
 ```
 
-*stdout* (standard output) is where the program prints its normal result. *stderr* (standard error) is a separate stream for errors and log lines, so the two can be kept apart. `DayResult` holds everything the report needs about a completed run.
+*stdout* and *stderr* (standard output and standard error) are defined in the [glossary](10-traceability-glossary-assumptions.md#glossary). `DayResult` holds everything the report needs about a completed run.
 
 - **A rejected transfer is not an error that stops the run.** The reader marks a row with the wrong number of fields, or a domain model raises an error that has a reason code. `ProcessDailyTransfer` turns that into a rejected `TransferResult` with its reason code, logs it at warn level ([DEC-28](../design-analysis/design-decisions.md#dec-28)), and goes on to the next row ([DEC-14](../design-analysis/design-decisions.md#dec-14), [DEC-17](../design-analysis/design-decisions.md#dec-17), [DEC-19](../design-analysis/design-decisions.md#dec-19)).
 - **Errors that stop the run go up to the `Runner`.** The five run-stopping errors, and who raises each, are in the [errors table on page 6](06-components.md#errors-and-who-raises-them). For each error that reaches it, the `Runner` prints the plain message on stderr, logs one line at error level, and exits with status 1 ([DEC-25](../design-analysis/design-decisions.md#dec-25), [DEC-28](../design-analysis/design-decisions.md#dec-28)).

@@ -2,7 +2,7 @@
 
 The order in which a run produces its output file, its report and its exit status, for a completed run and for a run that stops.
 
-A run has three outputs: the output CSV file, *standard output* (the normal text channel of a terminal, which carries only the report) and *standard error* (the separate channel for log lines and error messages). The *exit status* is the number the program returns to the shell: 0 or 1 ([DEC-25](../../design-analysis/design-decisions.md#dec-25)).
+A run has three outputs: the output CSV file, standard output, which carries only the report, and standard error, which carries log lines and error messages. It ends with an exit status of 0 or 1 ([DEC-25](../../design-analysis/design-decisions.md#dec-25)). These terms are defined in the [glossary](../10-traceability-glossary-assumptions.md#glossary).
 
 ## A completed run
 
