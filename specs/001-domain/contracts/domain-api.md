@@ -55,5 +55,5 @@ In the messages, `<text>` is the value as given, `<number>` the full account num
 ## What the caller does with them (`002`)
 
 - `ProcessDailyTransfer` builds `AccountNumber.new(from)`, `AccountNumber.new(to)`, `Money.amount(amount)` and `Transfer.new(...)` in that order, calls `TransferService#apply`, and maps each error to the reason code in DEC-19; it builds a `TransferResult` per row.
-- `LoadBalances` builds `AccountNumber.new`, asks `include?` and, for a held number, takes the duplicate text from `DuplicateAccount.new(number).message`; it builds `Money.balance` and calls `Account.check_opening_balance`, then `Account.new` and `add`. It puts `Line N: ` before each message, and ` (first on line M)` after the duplicate text, without changing the domain text.
+- `LoadBalances` builds `AccountNumber.new`, asks `include?` and, for a held number, takes the duplicate text from `DuplicateAccount.new(number).message`; it builds `Money.balance` and calls `Account.check_opening_balance`, then `Account.new` from the values already built, and `add`. It puts `Line N: ` before each message, and ` (first on line M)` after the duplicate text, without changing the domain text.
 - Totals can be added up from `all` with `Money#+`; how is `002`'s choice.

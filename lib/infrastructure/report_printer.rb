@@ -28,14 +28,15 @@ class ReportPrinter
   end
 
   def outcome(result)
-    return "applied  #{values(result.fields, Money.amount(result.fields[2]))}" if result.applied?
+    from, to, amount = result.fields
+    return "applied  #{values(from, to, Money.amount(amount))}" if result.applied?
     return "rejected  #{malformed(result)}" if result.reason == :malformed_row
 
-    "rejected  #{values(result.fields, shown(result.fields[2]))}  #{with_hint(result.reason, ': ', result)}"
+    "rejected  #{values(from, to, shown(amount))}  #{with_hint(result.reason, ': ', result)}"
   end
 
-  def values(fields, amount)
-    "#{shown(fields[0])} -> #{shown(fields[1])}  #{amount}"
+  def values(from, to, amount)
+    "#{shown(from)} -> #{shown(to)}  #{amount}"
   end
 
   def malformed(result)

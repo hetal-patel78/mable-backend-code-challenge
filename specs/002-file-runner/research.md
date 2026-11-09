@@ -31,11 +31,11 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
 
 - **Decision**: for each row, in this order (page 6 `LoadBalances`, FR-007):
   1. `row.wrong_field_count?`: one problem `expected 2 fields, found <K>`, followed by `. <hint>` when `row.header_hint`; next row;
-  2. `AccountNumber.new(fields[0])`, rescuing `InvalidAccountNumber`: a problem with its message, followed by `. <hint>` when `row.header_hint`;
-  3. when the number is valid and `repository.include?(number)`: a problem `DuplicateAccount.new(number).message` followed by ` (first on line <M>)`, where `M` comes from a `Hash` of first lines keyed by `number.to_s`;
-  4. `Money.balance(fields[1])` then `Account.check_opening_balance(money)`, rescuing `InvalidAmount` and `NegativeBalance`: a problem with its message;
-  5. when the row added no problem: `repository.add(Account.new(number, money))` and the row's line recorded as the first line of that number.
-  Each problem is stored as `Line <N>: <problem>`. An `UnreadableFile` with a `line_number` adds `Line <N>: <error.line_problem>` as the last problem; one without a line number is re-raised unchanged. At the end, any problem raises `InvalidBalancesFile.new(problems)`; no row and no problem raises `InvalidBalancesFile.no_rows(path)`.
+  2. with the two fields taken by name (`number_text, balance_text = row.fields`, plan P32), `AccountNumber.new(number_text)`, rescuing `InvalidAccountNumber`: a problem with its message, followed by `. <hint>` when `row.header_hint`;
+  3. when the number is valid and `repository.include?(number)`: a problem `DuplicateAccount.new(number).message` followed by ` (first on line <M>)`, where `M` comes from a `Hash` of first lines keyed by the `AccountNumber`;
+  4. `Money.balance(balance_text)` then `Account.check_opening_balance(money)`, rescuing `InvalidAmount` and `NegativeBalance`: a problem with its message;
+  5. when the row added no problem: `repository.add(Account.new(number, money))`, from the number and money already built in steps 2 and 4 (each value is parsed once), and the row's line recorded as the first line of that number.
+  Each problem is stored as `Line <N>: <problem>`, written by one private method, `at_line`. An `UnreadableFile` with a `line_number` adds `Line <N>: <error.line_problem>` as the last problem; one without a line number is re-raised unchanged. At the end, any problem raises `InvalidBalancesFile.new(problems)`; no row and no problem raises `InvalidBalancesFile.no_rows(path)`.
 - **Rationale**: the order is page 6's, so the problems come out in field order (page 10 picks 6, 13) and the known gap behaves as AC-01.10 and spec clarification 2 state (only an added row records a first line, page 10 pick 30). The duplicate text is taken from the domain error (`001` plan D21), so the domain stays its one owner. Problems are checked before "no rows" so a file whose first line cannot be read reports that line, not "no rows".
 - **Alternatives considered**: catching `DuplicateAccount` from `add` (the balance would have to be checked first, and the duplicate would come after the balance problem, against page 10 pick 13); a separate no-rows error (page 10 pick 32 rejects it).
 

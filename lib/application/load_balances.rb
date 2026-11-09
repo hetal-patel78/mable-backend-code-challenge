@@ -31,47 +31,59 @@ class LoadBalances
   rescue UnreadableFile => e
     raise unless e.line_number
 
-    @problems << "Line #{e.line_number}: #{e.line_problem}"
+    @problems << at_line(e.line_number, e.line_problem)
   end
 
   def load_row(row)
-    row_problems = problems_of(row)
-    return add(row) if row_problems.empty?
-
-    @problems.concat(row_problems.map { |problem| "Line #{row.line_number}: #{problem}" })
+    row_problems = row.wrong_field_count? ? [field_count_problem(row)] : parse(row)
+    @problems.concat(row_problems.map { |problem| at_line(row.line_number, problem) })
   end
 
-  def problems_of(row)
-    return [with_hint(row, "expected #{row.expected_size} fields, found #{row.fields.size}")] if row.wrong_field_count?
-
-    [number_problem(row), balance_problem(row.fields[1])].compact
+  def field_count_problem(row)
+    with_hint(row, "expected #{row.expected_size} fields, found #{row.fields.size}")
   end
 
-  def number_problem(row)
-    number = AccountNumber.new(row.fields[0])
-    duplicate(number) if @repository.include?(number)
+  def parse(row)
+    number_text, balance_text = row.fields
+    problems = []
+    number = account_number(row, number_text, problems)
+    balance = opening_balance(balance_text, problems)
+    add(number, balance, row.line_number) if problems.empty?
+    problems
+  end
+
+  def account_number(row, text, problems)
+    number = AccountNumber.new(text)
+    problems << duplicate(number) if @repository.include?(number)
+    number
   rescue InvalidAccountNumber => e
-    with_hint(row, e.message)
+    problems << with_hint(row, e.message)
+    nil
   end
 
   def duplicate(number)
-    "#{DuplicateAccount.new(number).message} (first on line #{@first_lines.fetch(number.to_s)})"
+    "#{DuplicateAccount.new(number).message} (first on line #{@first_lines.fetch(number)})"
   end
 
-  def balance_problem(text)
-    Account.check_opening_balance(Money.balance(text))
-    nil
+  def opening_balance(text, problems)
+    balance = Money.balance(text)
+    Account.check_opening_balance(balance)
+    balance
   rescue InvalidAmount, NegativeBalance => e
-    e.message
+    problems << e.message
+    nil
   end
 
   def with_hint(row, problem)
     row.header_hint ? "#{problem}. #{row.header_hint}" : problem
   end
 
-  def add(row)
-    number = AccountNumber.new(row.fields[0])
-    @repository.add(Account.new(number, Money.balance(row.fields[1])))
-    @first_lines[number.to_s] = row.line_number
+  def add(number, balance, line_number)
+    @repository.add(Account.new(number, balance))
+    @first_lines[number] = line_number
+  end
+
+  def at_line(line_number, problem)
+    "Line #{line_number}: #{problem}"
   end
 end
