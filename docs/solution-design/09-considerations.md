@@ -100,7 +100,7 @@ Details:
 
 Reasoning:
 
-- `AccountRepository` holds the accounts in a Ruby `Hash` keyed by account number text. A `Hash` finds a key in constant time on average and keeps insertion order, so `all` returns load order with no extra list. **(assistant's pick)** Reason: it gives O(1) `find` and `include?`, and load order, in one native structure. Rejected: an `Array` (O(m) `find`, so the whole run becomes O(m × n)); a `Hash` plus a separate order list (two structures to keep in step).
+- `AccountRepository` holds the accounts in a Ruby `Hash` keyed by the `AccountNumber` itself, which is equal to, and hashes like, another with the same digits (the key, as the developer chose in [P34](../prompts/prompts-refactor-phase.md#p34)). A `Hash` finds a key in constant time on average and keeps insertion order, so `all` returns load order with no extra list. **(assistant's pick)** Reason: it gives O(1) `find` and `include?`, and load order, in one native structure. Rejected: an `Array` (O(m) `find`, so the whole run becomes O(m × n)); a `Hash` plus a separate order list (two structures to keep in step).
 - `BigDecimal` addition and subtraction take time in proportion to the number of digits. Amounts have no upper limit ([DEC-09](../design-analysis/design-decisions.md#dec-09)), so a huge amount costs a little more, but realistic amounts have a handful of digits, so this is treated as constant.
 
 ## Money and rounding

@@ -34,6 +34,28 @@ RSpec.describe AccountNumber do
     end
   end
 
+  describe 'as a Data record' do
+    it 'has the one member text' do
+      expect(described_class.members).to eq(%i[text])
+    end
+
+    it 'checks a number given by keyword the same way (DEC-08)' do
+      expect { described_class.new(text: '12345') }
+        .to raise_error(InvalidAccountNumber, 'account number "12345" must be exactly 16 digits')
+    end
+
+    it 'is frozen' do
+      expect(described_class.new('1111234522226789')).to be_frozen
+    end
+
+    it 'keeps its own frozen copy of the text' do
+      original = +'1111234522226789'
+      number = described_class.new(original)
+      original << 'x'
+      expect(number.text).to be_frozen.and eq('1111234522226789')
+    end
+  end
+
   describe '#==' do
     it 'is equal to a number built from the same text' do
       first = described_class.new('1111234522226789')

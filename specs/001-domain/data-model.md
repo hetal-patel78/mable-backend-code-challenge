@@ -6,7 +6,7 @@ Phase 1 of the [plan](plan.md). Names and meanings are those of [page 6](../../d
 
 ```mermaid
 classDiagram
-    AccountRepository "1" o-- "*" Account : holds, keyed by number text, in load order
+    AccountRepository "1" o-- "*" Account : holds, keyed by AccountNumber, in load order
     Account *-- AccountNumber : number
     Account *-- Money : balance
     Transfer --> AccountNumber : from, to
@@ -36,12 +36,12 @@ classDiagram
 
 | Member | Type | Meaning |
 |---|---|---|
-| `AccountNumber.new(text)` | String | Raises `InvalidAccountNumber` unless `text` matches `\A[0-9]{16}\z` (R4) |
-| `to_s` | String | The full text, leading zeros kept |
-| `==`, `eql?`, `hash` | | Equal when the text is equal |
+| `AccountNumber.new(text)` or `AccountNumber.new(text:)` | String | A `Data` record with the one member `text`; raises `InvalidAccountNumber` unless `text` matches `\A[0-9]{16}\z` (R4) |
+| `text`, `to_s` | String | The full text, leading zeros kept |
+| `==`, `eql?`, `hash` | | From `Data`: equal when the text is equal |
 
 - Validation: "exactly 16 characters, each a digit 0 to 9" (FR-001). No check digit; no masking (FR-002).
-- Frozen once built (D19). The member names are decided in plan.md D23.
+- Frozen once built, by `Data` (D19). The member names are decided in plan.md D23.
 
 ### `Money` (value)
 
@@ -108,7 +108,7 @@ classDiagram
 | `find(account_number)` | `AccountNumber` | The held `Account` (the same object), or `UnknownAccount`; never adds one |
 | `all` | Array of `Account` | In the order added |
 
-- Storage: one `Hash` keyed by `account.number.to_s` (R8). In memory for one run; no line numbers (FR-018).
+- Storage: one `Hash` keyed by `account.number`, the `AccountNumber` itself (R8). In memory for one run; no line numbers (FR-018).
 - Cost: `add`, `include?`, `find` O(1); `all` O(m), each account once (FR-033, FR-035).
 
 ### `TransferService`

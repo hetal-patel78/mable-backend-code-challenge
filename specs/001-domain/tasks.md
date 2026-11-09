@@ -287,12 +287,18 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 ### Tests (write first)
 
 - [X] T052 [P] Add to `spec/domain/account_spec.rb`: `withdraw` and `deposit` each raise `ArgumentError` with `amount <amount> must be greater than 0.00` for an amount of `0.00` and of `-5.00`, described as a programming error; after `attempt(ArgumentError)` with `-5.00` the balance is unchanged (`100.00` for `withdraw`, `0.00` for `deposit`) [FR-010 to FR-012; DEC-18, DEC-30; P33; plan D24]
+- [X] T053 [P] Add to `spec/domain/account_number_spec.rb` a `describe 'as a Data record'`: `members` is `%i[text]`; `AccountNumber.new(text: '12345')` raises `InvalidAccountNumber` with the same message as the positional form; it is frozen. The `==` and `hash` examples stay unchanged [FR-001, FR-002; DEC-08, DEC-30; P34; plan D19, D23]
+- [X] T055 [P] Add to `spec/domain/account_repository_spec.rb`, in `describe '#include?'`: false for the text `'1111234522226789'` of a number it holds, because the key is the `AccountNumber` [FR-015, FR-033; DEC-31; research R8; P34]
 - [X] T056 Add `require 'domain/errors'` to every spec file of `spec/domain/` that names a domain error (`account_number`, `account_repository`, `account`, `money`, `transfer`, `transfer_service`), so each loads what it names without relying on another file's requires (depends on T052 to T055, which edit four of the same files) [DEC-34; P36; plan D13]
 
 ### Implementation
 
 - [X] T058 In `lib/domain/account.rb`, add a private `check_amount(money)` raising `ArgumentError, "amount #{money} must be greater than 0.00"` unless `money.positive?`, called first by `withdraw` and `deposit`; in `withdraw`, work out `balance - money` once into a local and use it for the check and the new balance (depends on T057) [FR-010 to FR-012; DEC-13, DEC-18, DEC-30; P33; plan D24]
+- [X] T059 [P] Rewrite `lib/domain/account_number.rb` as `AccountNumber = Data.define(:text)`, with `initialize(text:)` raising `InvalidAccountNumber` unless the text matches `AccountNumber::PATTERN`, then `super`; `to_s` returns `text`; `AccountNumber::PATTERN` set after the block; no hand-written `==`, `eql?`, `hash` or `freeze`; `AccountNumber.new('...')` still works positionally (depends on T057) [FR-001, FR-002; DEC-08, DEC-30; P34; plan D19, D23, D25]
+- [X] T061 In `lib/domain/account_repository.rb`, key the `Hash` by `account.number` and look up by the `AccountNumber` given, with no `to_s` (depends on T059) [FR-014 to FR-016, FR-033; DEC-31; research R8; P34]
 - [X] T062 [P] In `lib/domain/transfer_service.rb`, remove `require_relative 'account_repository'` and `require_relative 'transfer'`: it only calls methods on the objects it is given. Check every file in `lib/domain/` requires only what it names. Run each changed spec file of `spec/domain/` on its own with `bundle exec rspec <file>` (depends on T056) [DEC-34; P36; plan D13]
+- [X] T065 Add to `spec/domain/account_number_spec.rb`, in `describe 'as a Data record'`, an example that `AccountNumber.new(+'1111222233334444')` has a frozen `text` and that changing the original string afterwards does not change the account number, and confirm it fails before T066 (depends on T059) [FR-001; DEC-08, DEC-30; P34]
+- [X] T066 In `lib/domain/account_number.rb`, after the pattern check, store a frozen copy of the text with `super(text: text.dup.freeze)`, so the `Hash` key in `AccountRepository` cannot change under the repository (depends on T065) [FR-001; DEC-08, DEC-30; P34]
 
 ---
 

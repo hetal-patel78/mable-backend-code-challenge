@@ -531,11 +531,11 @@ The report is printed on stdout once, at the end of a completed run, after the o
   - errors that stop the run: `InvalidBalancesFile`, `NoTransfers`, `UnreadableFile`, `TotalChanged` and `OutputNotWritable`.
 - The design reasoning is explained in the README, not in the code.
 
-**Reason:** the rubric asks for domain models that hold their own logic and for separation of concerns. Light DDD keeps the thinking without the ceremony. Passing the time in keeps the tests independent of the clock. A parameter object names each part where it is built and where it is read, and stays within RuboCop's default limit on parameters. An amount of $0 or less can reach an account only through a mistake in the code, so the account stops it with Ruby's own error rather than a domain error.
+**Reason:** the rubric asks for domain models that hold their own logic and for separation of concerns. Light DDD keeps the thinking without the ceremony. Passing the time in keeps the tests independent of the clock. A parameter object names each part where it is built and where it is read, and stays within RuboCop's default limit on parameters. A `Data` record gives equality by data and a value that cannot change, with no equality or freezing written by hand. An amount of $0 or less can reach an account only through a mistake in the code, so the account stops it with Ruby's own error rather than a domain error.
 
-**Rejected:** full DDD terms and structure (heavy for a small program); tests stubbing `Date.today` or `Time.now` (tests would depend on internals); a `RUN_DATE` environment variable (a second setting); seven keyword parameters (over the default limit); the six parts collected in `**parts` and read through a list of names (the constructor does not name its parts); no amount check in `Account` (a mistake in the code would change a balance silently).
+**Rejected:** full DDD terms and structure (heavy for a small program); tests stubbing `Date.today` or `Time.now` (tests would depend on internals); a `RUN_DATE` environment variable (a second setting); seven keyword parameters (over the default limit); the six parts collected in `**parts` and read through a list of names (the constructor does not name its parts); equality, `hash` and freezing written by hand in each value class (more code for the same behaviour); no amount check in `Account` (a mistake in the code would change a balance silently).
 
-**From:** X5, D12, B4, P19, P30, P33.
+**From:** X5, D12, B4, P19, P30, P33, P34.
 
 <a id="dec-31"></a>
 ### DEC-31 In-memory repository

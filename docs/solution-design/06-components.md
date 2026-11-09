@@ -90,7 +90,7 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
 
 - **Responsibility:** one account number: exactly 16 digits, kept as text so leading zeros stay ([DEC-08](../design-analysis/design-decisions.md#dec-08)).
 - **In:** the text from a file field, already trimmed.
-- **Out:** a value that compares equal to another `AccountNumber` with the same digits, and its full text for the report and the output file. Raises `InvalidAccountNumber` for any other text.
+- **Out:** a value that compares equal to another `AccountNumber` with the same digits, and its full text (`text`, also given by `to_s`) for the report and the output file. Raises `InvalidAccountNumber` for any other text. A `Data` record that checks its text before it is built. **(assistant's pick)**
 - **Does not:** turn the number into an integer; run a check-digit check; mask itself (masking also applies to values that are not valid account numbers, see [`LogMessages`](#logmessages)).
 
 ### `Money`
@@ -125,7 +125,7 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
 
 - **Responsibility:** holds the run's accounts in memory and is the one place for the duplicate and unknown-account rules ([DEC-31](../design-analysis/design-decisions.md#dec-31)).
 - **In:** `add(account)`; `include?(account_number)`; `find(account_number)`; `all`.
-- **Out:** `add` raises `DuplicateAccount` for a number already held. `include?` says whether a number is already held; `LoadBalances` uses it to report a duplicate before checking the balance. The method name `include?` is the **(assistant's pick)**. `find` returns the `Account` or raises `UnknownAccount`. `all` returns the accounts in load order. Adding, checking and finding take the same time however many accounts there are.
+- **Out:** `add` raises `DuplicateAccount` for a number already held. `include?` says whether a number is already held; `LoadBalances` uses it to report a duplicate before checking the balance. The method name `include?` is the **(assistant's pick)**. `find` returns the `Account` or raises `UnknownAccount`. `all` returns the accounts in load order. The accounts are keyed by the `AccountNumber` itself, which is equal to another with the same digits. Adding, checking and finding take the same time however many accounts there are.
 - **Does not:** know line numbers; create an account on `find`; store anything between runs ([DEC-03](../design-analysis/design-decisions.md#dec-03), [DEC-17](../design-analysis/design-decisions.md#dec-17)).
 
 ### `TransferService`

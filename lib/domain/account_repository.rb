@@ -9,18 +9,17 @@ class AccountRepository
   end
 
   def add(account)
-    key = account.number.to_s
-    raise DuplicateAccount, account.number if @accounts.key?(key)
+    raise DuplicateAccount, account.number if @accounts.key?(account.number)
 
-    @accounts[key] = account
+    @accounts[account.number] = account
   end
 
   def include?(account_number)
-    @accounts.key?(account_number.to_s)
+    @accounts.key?(account_number)
   end
 
   def find(account_number)
-    @accounts.fetch(account_number.to_s) { raise UnknownAccount, account_number }
+    @accounts.fetch(account_number) { raise UnknownAccount, account_number }
   end
 
   def all

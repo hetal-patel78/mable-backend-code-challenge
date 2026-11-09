@@ -59,9 +59,9 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
 
 ## R8. Repository storage
 
-- **Decision**: `AccountRepository` keeps a `Hash` from the account number text to the `Account`. `add` uses `key?` before storing; `include?` is `key?`; `find` is `fetch` with a block that raises `UnknownAccount`; `all` is `values`.
-- **Rationale**: page 10 pick 49 and NFR-02: a Ruby `Hash` gives O(1) lookups on average and keeps insertion order, so `all` returns load order with no second list. Keying by text works because `AccountNumber` is equal by text; using the text as the key keeps the `Hash` independent of `AccountNumber#hash`.
-- **Alternatives considered**: an `Array` (O(m) `find`); a `Hash` plus an order list (two structures to keep in step); keying by `AccountNumber` (works, but relies on `eql?` and `hash` for no gain).
+- **Decision**: `AccountRepository` keeps a `Hash` from the `AccountNumber` itself to the `Account`, as the developer chose in the code review (P34). `add` uses `key?` before storing; `include?` is `key?`; `find` is `fetch` with a block that raises `UnknownAccount`; `all` is `values`.
+- **Rationale**: page 10 pick 49 and NFR-02: a Ruby `Hash` gives O(1) lookups on average and keeps insertion order, so `all` returns load order with no second list. `AccountNumber` is a `Data` record, so two built from the same text are `eql?` and hash alike, and the key is the domain value itself, with no `to_s` on every call.
+- **Alternatives considered**: an `Array` (O(m) `find`); a `Hash` plus an order list (two structures to keep in step); keying by the account number's text (`account.number.to_s`; a second form of the same key, converted on every call).
 
 ## R9. All or nothing without undo
 

@@ -32,6 +32,10 @@ RSpec.describe AccountRepository do
       other_object = account_number('1111234522226789')
       expect(repository.include?(other_object)).to be(true)
     end
+
+    it 'is false for the text of a number it holds, as it is keyed by AccountNumber' do
+      expect(repository.include?('1111234522226789')).to be(false)
+    end
   end
 
   describe '#add' do

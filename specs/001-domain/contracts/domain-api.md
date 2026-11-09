@@ -23,9 +23,9 @@ Code files are under `lib/domain/` and load their own dependencies. A caller req
 
 | Call | Returns | Raises, with the exact message |
 |---|---|---|
-| `AccountNumber.new(text)` | an `AccountNumber` | `InvalidAccountNumber`: `account number "<text>" must be exactly 16 digits` |
-| `account_number.to_s` | the full text | |
-| `account_number == other` | true when the text is equal (`eql?` and `hash` too; plan.md D23) | |
+| `AccountNumber.new(text)` or `AccountNumber.new(text:)` | an `AccountNumber`, a `Data` record | `InvalidAccountNumber`: `account number "<text>" must be exactly 16 digits` |
+| `account_number.text`, `account_number.to_s` | the full text | |
+| `account_number == other` | true when the text is equal (`eql?` and `hash` too, from `Data`; plan.md D23) | |
 | `Money.amount(text)` | a `Money` | `InvalidAmount`: `amount is empty`; `amount "<text>" has more than 2 decimal places`; `amount "<text>" is not a valid amount` |
 | `Money.balance(text)` | a `Money` | `InvalidAmount`: `balance is empty`; `balance "<text>" has more than 2 decimal places`; `balance "<text>" is not a valid amount` |
 | `money.to_s` | text with exactly 2 decimals, for example `7.50` | |
