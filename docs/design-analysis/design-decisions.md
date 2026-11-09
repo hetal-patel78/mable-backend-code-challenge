@@ -295,14 +295,15 @@ A transfer that leaves exactly $0.00 is applied: with $100.00 in account A, a tr
 ### DEC-18 Each transfer is all or nothing
 
 **Rule**
-- Every check and lookup is done before any balance changes: both accounts are found, then the withdrawal checks the balance before changing it, and only then the deposit, which cannot fail, is made.
+- Every check and lookup is done before any balance changes: both accounts are found, then the withdrawal checks the balance before changing it, and only then the deposit, which cannot fail for a valid transfer, is made.
 - So a transfer is either fully applied or not applied at all. A rejected transfer leaves both balances unchanged.
+- An account refuses a deposit or withdrawal of $0 or less as a programming error ([DEC-30](#dec-30)). This guard never decides a transfer's outcome: a transfer whose amount is not above $0 is rejected as `invalid_amount` before any account is found ([DEC-19](#dec-19)).
 
 **Reason:** in one in-memory run, checking before changing is enough to make each transfer atomic, with nothing to undo.
 
 **Rejected:** a rollback mechanism, database transactions or sagas (machinery for a problem that cannot happen here; the README lists them as production options).
 
-**From:** X13, Page 4 of the handwritten analysis.
+**From:** X13, Page 4 of the handwritten analysis, P33.
 
 <a id="dec-19"></a>
 ### DEC-19 Transfer results and rejection reasons
@@ -517,7 +518,7 @@ The report is printed on stdout once, at the end of a completed run, after the o
   - `AccountNumber`: exactly 16 digits;
   - `Money`: exact amounts with `BigDecimal`, at most 2 decimal places;
   - `Transfer`: the accounts are different and the amount is above zero;
-  - `Account`: no overdraft;
+  - `Account`: no overdraft, and a deposit or withdrawal of $0 or less is a programming error that raises `ArgumentError` ([DEC-18](#dec-18));
   - the repository: no duplicate on add, unknown account on find ([DEC-31](#dec-31)).
 - Class and file names are plain domain words such as `Account`, `Money` and `Transfer`. There are no base classes, no suffixes such as `AggregateRoot` or `ValueObject`, and no domain events, factories or commands.
 - The code is organised in three folders: `domain`, `application` and `infrastructure`. A new folder is added only when it holds several files.
@@ -530,11 +531,11 @@ The report is printed on stdout once, at the end of a completed run, after the o
   - errors that stop the run: `InvalidBalancesFile`, `NoTransfers`, `UnreadableFile`, `TotalChanged` and `OutputNotWritable`.
 - The design reasoning is explained in the README, not in the code.
 
-**Reason:** the rubric asks for domain models that hold their own logic and for separation of concerns. Light DDD keeps the thinking without the ceremony. Passing the time in keeps the tests independent of the clock. A parameter object names each part where it is built and where it is read, and stays within RuboCop's default limit on parameters.
+**Reason:** the rubric asks for domain models that hold their own logic and for separation of concerns. Light DDD keeps the thinking without the ceremony. Passing the time in keeps the tests independent of the clock. A parameter object names each part where it is built and where it is read, and stays within RuboCop's default limit on parameters. An amount of $0 or less can reach an account only through a mistake in the code, so the account stops it with Ruby's own error rather than a domain error.
 
-**Rejected:** full DDD terms and structure (heavy for a small program); tests stubbing `Date.today` or `Time.now` (tests would depend on internals); a `RUN_DATE` environment variable (a second setting); seven keyword parameters (over the default limit); the six parts collected in `**parts` and read through a list of names (the constructor does not name its parts).
+**Rejected:** full DDD terms and structure (heavy for a small program); tests stubbing `Date.today` or `Time.now` (tests would depend on internals); a `RUN_DATE` environment variable (a second setting); seven keyword parameters (over the default limit); the six parts collected in `**parts` and read through a list of names (the constructor does not name its parts); no amount check in `Account` (a mistake in the code would change a balance silently).
 
-**From:** X5, D12, B4, P19, P30.
+**From:** X5, D12, B4, P19, P30, P33.
 
 <a id="dec-31"></a>
 ### DEC-31 In-memory repository

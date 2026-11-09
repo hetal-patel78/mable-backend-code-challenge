@@ -68,11 +68,11 @@ classDiagram
 | `Account.new(number, balance)` | `AccountNumber`, `Money` | Runs `check_opening_balance`, then holds both (D6) |
 | `number` | `AccountNumber` | |
 | `balance` | `Money` | The current balance |
-| `withdraw(money)` | `Money` | Raises `InsufficientFunds` when `(balance - money).negative?`, leaving the balance unchanged; otherwise sets `balance` to `balance - money` |
-| `deposit(money)` | `Money` | Sets `balance` to `balance + money`; cannot fail |
+| `withdraw(money)` | `Money` | Raises `ArgumentError` for an amount of $0 or less (D24); raises `InsufficientFunds` when `(balance - money).negative?`, leaving the balance unchanged; otherwise sets `balance` to `balance - money` |
+| `deposit(money)` | `Money` | Raises `ArgumentError` for an amount of $0 or less (D24); otherwise sets `balance` to `balance + money`; cannot fail for a valid transfer |
 
 - State: the balance is the only data in the domain that changes, and only through `withdraw` and `deposit` (FR-010).
-- Neither `withdraw` nor `deposit` checks that the amount is above $0 (FR-012, spec clarification 3).
+- `withdraw` and `deposit` raise `ArgumentError` for an amount of $0 or less, a guard against programming errors; the amount-above-$0 rule, with `InvalidAmount`, stays in `Transfer` (FR-012; the spec clarification of 2026-11-09).
 
 ### `Transfer` (value)
 

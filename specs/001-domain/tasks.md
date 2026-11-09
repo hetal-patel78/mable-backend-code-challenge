@@ -286,10 +286,12 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 ### Tests (write first)
 
+- [X] T052 [P] Add to `spec/domain/account_spec.rb`: `withdraw` and `deposit` each raise `ArgumentError` with `amount <amount> must be greater than 0.00` for an amount of `0.00` and of `-5.00`, described as a programming error; after `attempt(ArgumentError)` with `-5.00` the balance is unchanged (`100.00` for `withdraw`, `0.00` for `deposit`) [FR-010 to FR-012; DEC-18, DEC-30; P33; plan D24]
 - [X] T056 Add `require 'domain/errors'` to every spec file of `spec/domain/` that names a domain error (`account_number`, `account_repository`, `account`, `money`, `transfer`, `transfer_service`), so each loads what it names without relying on another file's requires (depends on T052 to T055, which edit four of the same files) [DEC-34; P36; plan D13]
 
 ### Implementation
 
+- [X] T058 In `lib/domain/account.rb`, add a private `check_amount(money)` raising `ArgumentError, "amount #{money} must be greater than 0.00"` unless `money.positive?`, called first by `withdraw` and `deposit`; in `withdraw`, work out `balance - money` once into a local and use it for the check and the new balance (depends on T057) [FR-010 to FR-012; DEC-13, DEC-18, DEC-30; P33; plan D24]
 - [X] T062 [P] In `lib/domain/transfer_service.rb`, remove `require_relative 'account_repository'` and `require_relative 'transfer'`: it only calls methods on the objects it is given. Check every file in `lib/domain/` requires only what it names. Run each changed spec file of `spec/domain/` on its own with `bundle exec rspec <file>` (depends on T056) [DEC-34; P36; plan D13]
 
 ---
@@ -301,6 +303,7 @@ Every edge case in the [spec](spec.md#edge-cases) that falls in this spec's scop
 | Edge case | DEC | Test in |
 |---|---|---|
 | A transfer that leaves exactly $0.00 is applied; one cent more is refused | DEC-13 | T025 (`Account`, once, with the message); T040 proves only the unchanged balances at service level |
+| A deposit or withdrawal of $0 or less reaching `Account` raises `ArgumentError`, a programming error that no transfer reaches | DEC-18, DEC-30 | T052 |
 | A rejected transfer leaves both balances unchanged, for `InvalidAccountNumber`, `InvalidAmount`, `SameAccount`, `UnknownAccount` and `InsufficientFunds` | DEC-18 | T040 |
 | A known from account without enough money and an unknown to account gets `UnknownAccount` | DEC-18, DEC-19 | T040 |
 | A transfer to itself with an amount of 0 gets `InvalidAmount` | DEC-19 | T012 |

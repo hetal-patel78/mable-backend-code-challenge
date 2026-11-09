@@ -66,7 +66,7 @@ Phase 0 of the [plan](plan.md). The Technical Context had no open item: the lang
 ## R9. All or nothing without undo
 
 - **Decision**: `TransferService#apply` runs `find(from)`, `find(to)`, `from_account.withdraw(amount)`, `to_account.deposit(amount)`, in that order, and rescues nothing.
-- **Rationale**: DEC-18 and page 7.1: every lookup and check runs before the first change; `withdraw` compares before it changes; `deposit` cannot fail. So a refused transfer has changed nothing, and the domain error passes to the caller (`ProcessDailyTransfer` in `002`) to become a reason code.
+- **Rationale**: DEC-18 and page 7.1: every lookup and check runs before the first change; `withdraw` compares before it changes; `deposit` cannot fail for a valid transfer, whose amount is above $0 (the `ArgumentError` guard of plan D24 is for programming errors only). So a refused transfer has changed nothing, and the domain error passes to the caller (`ProcessDailyTransfer` in `002`) to become a reason code.
 - **Alternatives considered**: a rollback or a copy of the balances (DEC-18 rejects it; nothing can need undoing).
 
 ## R10. Test helpers

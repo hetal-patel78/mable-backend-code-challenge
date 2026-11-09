@@ -160,7 +160,7 @@ $env:Path = [Environment]::GetEnvironmentVariable('Path','User') + ';' + [Enviro
   - `lib/infrastructure` holds what touches the outside world: the CSV readers and writer, the report printer and the `Runner` that `bin/run` starts.
 - `AccountRepository` keeps the accounts in memory, with `add`, `include?`, `find` and `all`.
 - `ProcessDailyTransfer` is given its parts as one `ProcessDailyTransfer::Parts` value, each by name (the readers, the writer, the repository, the report printer and the logger), and the run time, so the tests pass fakes.
-- Every check runs before any balance changes, so each transfer is all or nothing.
+- Every check runs before any balance changes, so each transfer is all or nothing. An account also refuses a deposit or withdrawal of $0 or less with `ArgumentError`, a guard against programming errors: a transfer with such an amount is already rejected as `invalid_amount`.
 - Money is a `Money` value on `BigDecimal`, never floating point, and never rounded.
 
 The full reasoning is in [`docs/design-analysis/design-decisions.md`](docs/design-analysis/design-decisions.md) and the solution design in [`docs/solution-design/README.md`](docs/solution-design/README.md).

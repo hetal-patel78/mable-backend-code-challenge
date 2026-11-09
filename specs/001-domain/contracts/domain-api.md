@@ -36,8 +36,8 @@ Code files are under `lib/domain/` and load their own dependencies. A caller req
 | `Account.check_opening_balance(balance)` | nil | `NegativeBalance`: `balance "<text>" must not be negative` |
 | `Account.new(number, balance)` | an `Account` | `NegativeBalance` as above |
 | `account.number`, `account.balance` | `AccountNumber`, `Money` | |
-| `account.withdraw(money)` | | `InsufficientFunds`: `account <number> cannot pay <amount> from a balance of <balance>` |
-| `account.deposit(money)` | | never |
+| `account.withdraw(money)` | | `ArgumentError`: `amount <amount> must be greater than 0.00` for an amount of $0 or less (a programming error; plan D24); `InsufficientFunds`: `account <number> cannot pay <amount> from a balance of <balance>` |
+| `account.deposit(money)` | | never for an amount above $0; `ArgumentError` as for `withdraw` otherwise |
 | `Transfer.new(from:, to:, amount:)` | a `Transfer` | `InvalidAmount`: `amount "<text>" must be greater than 0.00`; then `SameAccount`: `account <number> cannot transfer to itself` |
 | `transfer.from`, `transfer.to`, `transfer.amount` | `AccountNumber`, `AccountNumber`, `Money` | |
 | `TransferResult::REASON_CODES` | `[:malformed_row, :invalid_account_number, :invalid_amount, :same_account, :unknown_account, :insufficient_funds]` | |

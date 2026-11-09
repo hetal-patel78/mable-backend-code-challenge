@@ -67,13 +67,38 @@ RSpec.describe Account do
       expect { account('1111234522226789', '5').withdraw(amount('007.50')) }
         .to raise_error(InsufficientFunds, 'account 1111234522226789 cannot pay 7.50 from a balance of 5.00')
     end
+
+    %w[0.00 -5.00].each do |text|
+      it "raises ArgumentError for an amount of #{text}, a programming error (DEC-18, DEC-30)" do
+        expect { holder.withdraw(amount(text)) }
+          .to raise_error(ArgumentError, "amount #{text} must be greater than 0.00")
+      end
+    end
+
+    it 'keeps the balance after an amount that is not above 0.00 (DEC-18)' do
+      attempt(ArgumentError) { holder.withdraw(amount('-5.00')) }
+      expect(holder.balance.to_s).to eq('100.00')
+    end
   end
 
   describe '#deposit' do
+    let(:holder) { account('1111234522226789', '0.00') }
+
     it 'adds the amount to the balance' do
-      holder = account('1111234522226789', '0.00')
       holder.deposit(amount('30.00'))
       expect(holder.balance.to_s).to eq('30.00')
+    end
+
+    %w[0.00 -5.00].each do |text|
+      it "raises ArgumentError for an amount of #{text}, a programming error (DEC-18, DEC-30)" do
+        expect { holder.deposit(amount(text)) }
+          .to raise_error(ArgumentError, "amount #{text} must be greater than 0.00")
+      end
+    end
+
+    it 'keeps the balance after an amount that is not above 0.00 (DEC-18)' do
+      attempt(ArgumentError) { holder.deposit(amount('-5.00')) }
+      expect(holder.balance.to_s).to eq('0.00')
     end
   end
 end

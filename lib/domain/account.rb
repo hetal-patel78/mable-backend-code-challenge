@@ -17,12 +17,21 @@ class Account
   end
 
   def withdraw(money)
-    raise InsufficientFunds.new(number, money, balance) if (balance - money).negative?
+    check_amount(money)
+    remaining = balance - money
+    raise InsufficientFunds.new(number, money, balance) if remaining.negative?
 
-    @balance = balance - money
+    @balance = remaining
   end
 
   def deposit(money)
+    check_amount(money)
     @balance = balance + money
+  end
+
+  private
+
+  def check_amount(money)
+    raise ArgumentError, "amount #{money} must be greater than 0.00" unless money.positive?
   end
 end
