@@ -96,7 +96,7 @@ How to read it:
 ### DEC-05 Blank lines are skipped
 
 **Rule**
-- An empty line, in either file, is skipped. It is not a row, not an error and not counted.
+- An empty line, in either file, is skipped. It is not a row and not an error, and it is not counted as a processed row; it still counts in line numbers ([DEC-07](#dec-07)).
 - A line with only spaces or tabs counts as blank. A line with only commas (for example `,,`) is a row with empty fields, so it is a bad row. **[assistant's pick]**
 
 **Reason:** there is no point stopping a run, or rejecting anything, because of an empty line between valid rows.
