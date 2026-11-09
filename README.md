@@ -221,7 +221,8 @@ The prompts that shaped them are in [`docs/prompts/`](docs/prompts/).
 | `lib/domain/` | The models and their rules |
 | `lib/application/` | The use cases: loading the balances and running the day, with each row's outcome |
 | `lib/infrastructure/` | The CSV readers and writer, the report printer and the runner |
-| `spec/` | The RSpec tests, with their fixture files |
+| `spec/` | **Tests (code):** the RSpec tests, with their fixture files; run with `bundle exec rspec` |
+| `specs/` | **Specifications (documents, not tests):** the GitHub Spec Kit specifications, one folder per spec: spec, plan, tasks and contracts |
 | `data/` | The two sample CSV files that `bin/run` uses with no arguments |
 | `output/` | The output files; created by a run, not committed |
 | `docs/challenge/` | The challenge brief and its two sample CSV files, unchanged |
@@ -229,11 +230,12 @@ The prompts that shaped them are in [`docs/prompts/`](docs/prompts/).
 | `docs/solution-design/` | The solution design: components, flows, alternatives and trade-offs |
 | `docs/spec-kit/` | The brief for the Spec Kit run and the run report |
 | `docs/prompts/` | The prompts given to the AI assistant, one log per phase |
-| `specs/` | The Spec Kit specifications, one folder per spec: spec, plan, tasks and contracts |
 | `.specify/` and `.claude/` | The Spec Kit set-up, including the constitution in `.specify/memory/` |
 | `.github/workflows/ci.yml` | The GitHub Actions workflow that runs RSpec and RuboCop on every push |
 | `Dockerfile` | The Docker image, the alternative way to run the program and the tests |
 | `CLAUDE.md` | Project instructions for the AI assistant |
+
+`spec/` and `specs/` are different things with similar names. `spec/` is where RSpec looks for tests by default. `specs/` is where GitHub Spec Kit keeps its specifications by default: its scripts and `/speckit-*` commands find each spec there, and the specs link to each other and to the decisions by relative paths. Both stay at their tools' default places, so each tool works without extra settings.
 
 ## The challenge
 
