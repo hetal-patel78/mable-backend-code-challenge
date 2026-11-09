@@ -200,12 +200,16 @@ The full report is in `coverage/index.html` after a test run. No minimum figure 
 
 ## How this was built
 
-The design and the code were made with an AI assistant, in four steps:
+The developer used Claude Code as an AI assistant, with a spec-driven process, and made the design decisions. The assistant proposed the small edge-case decisions and listed them for the developer to review; they are marked "assistant's pick" in the decisions.
 
-1. Design analysis: [`docs/design-analysis/design-decisions.md`](docs/design-analysis/design-decisions.md).
-2. Solution design: [`docs/solution-design/README.md`](docs/solution-design/README.md).
-3. GitHub Spec Kit specification: [`.specify/memory/constitution.md`](.specify/memory/constitution.md) and [`specs/`](specs/).
-4. Test-first implementation through the Spec Kit tasks: each spec's `tasks.md` in [`specs/`](specs/).
+The order was:
+
+1. The developer's handwritten analysis ([`docs/design-analysis/handwritten/`](docs/design-analysis/handwritten/)) and the review of the challenge: the review findings and the developer's answers, in [`docs/design-analysis/clarifications/`](docs/design-analysis/clarifications/).
+2. [`design-decisions.md`](docs/design-analysis/design-decisions.md), the single source of truth.
+3. The [solution design](docs/solution-design/README.md).
+4. The GitHub Spec Kit specification: a [constitution](.specify/memory/constitution.md) and three specifications, for the library ([`specs/001-domain`](specs/001-domain/)), the console app ([`specs/002-file-runner`](specs/002-file-runner/)) and the delivery ([`specs/003-delivery`](specs/003-delivery/)).
+5. The code, test first, from the specifications' tasks.
+6. The developer's review of the code, with each change made test first through new tasks.
 
 The prompts that shaped them are in [`docs/prompts/`](docs/prompts/).
 
