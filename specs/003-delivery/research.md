@@ -1,6 +1,6 @@
 # Research: Delivery: README, CI, Docker and the submission
 
-[Phase 0](plan.md#phase-0-research) of the [plan](plan.md). The spec has no `NEEDS CLARIFICATION` item: its [Clarifications](spec.md#clarifications) (session 2026-11-07) and its "Decided in the run" [items 1](spec.md#item-1) to [17](spec.md#item-17) fix every open point. This page records the choice behind each file, with the alternatives, so the tasks can be followed without guessing. "Plan item n" refers to the plan's "Decided in the run" table.
+[Phase 0](plan.md#phase-0-research) of the [plan](plan.md). The spec has no `NEEDS CLARIFICATION` item: its [Clarifications](spec.md#clarifications) (session 2026-11-07) and its "Decided in the run" [items 1](spec.md#item-1) to [18](spec.md#item-18) fix every open point. This page records the choice behind each file, with the alternatives, so the tasks can be followed without guessing. "Plan item n" refers to the plan's "Decided in the run" table.
 
 <a id="r-1"></a>
 ## R-1 The Ruby version in one place, copied once

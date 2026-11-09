@@ -6,7 +6,11 @@ What the repository root [`README.md`](../../../README.md) must hold, in order, 
 
 The README opens with the title `# Mable Back End Code Challenge` and at most two sentences on what the program does (load one company's opening balances from a CSV file, apply one day's transfers from a second, never letting a balance go below $0). Then:
 
-### 1. `## Build, test and run` (FR-001 to FR-005)
+### 1. `## Prerequisites` ([DEC-37](../../../docs/design-analysis/design-decisions.md#dec-37))
+
+The tools needed (Git, and Ruby 3.4 with Bundler, or Docker), with the versions and the command that checks each; how to install Ruby 3.4 on macOS, Linux and Windows; and links to [With Docker](../../../README.md#with-docker) and [Troubleshooting](../../../README.md#troubleshooting).
+
+### 2. `## Build, test and run` (FR-001 to FR-005)
 
 1. `### With Ruby 3.4` ([FR-001](../spec.md#fr-001), [FR-002](../spec.md#fr-002), [FR-003](../spec.md#fr-003); [DEC-01](../../../docs/design-analysis/design-decisions.md#dec-01), [DEC-22](../../../docs/design-analysis/design-decisions.md#dec-22), [DEC-25](../../../docs/design-analysis/design-decisions.md#dec-25), [DEC-27](../../../docs/design-analysis/design-decisions.md#dec-27), [DEC-35](../../../docs/design-analysis/design-decisions.md#dec-35)):
    - Ruby at the version in [`.ruby-version`](../../../.ruby-version); `bundle install`; then [`bin/run`](../../../bin/run).
@@ -29,22 +33,26 @@ The README opens with the title `# Mable Back End Code Challenge` and at most tw
    - your own files must be mounted into the container the same way as `output`, and their paths given as seen inside it ([spec item 6](../spec.md#item-6));
    - on a Linux host the output file may belong to root, because the container runs as the image's default user.
 
-### 2. `## Input files` (FR-006; [DEC-04](../../../docs/design-analysis/design-decisions.md#dec-04), [DEC-06](../../../docs/design-analysis/design-decisions.md#dec-06))
+### 3. `## Input files` (FR-006; [DEC-04](../../../docs/design-analysis/design-decisions.md#dec-04), [DEC-06](../../../docs/design-analysis/design-decisions.md#dec-06))
 
 - Both files are CSV with no header row: balances `account number,balance`; transfers `from account number,to account number,amount`.
 - A header row is a bad row: in the balances file it makes the file invalid and stops the run; in the transfers file that row is rejected and the run continues.
 
-### 3. `## Log level and exit status` (FR-007, FR-008; [DEC-25](../../../docs/design-analysis/design-decisions.md#dec-25), [DEC-28](../../../docs/design-analysis/design-decisions.md#dec-28), [DEC-29](../../../docs/design-analysis/design-decisions.md#dec-29))
+### 4. `## Log level and exit status` (FR-007, FR-008; [DEC-25](../../../docs/design-analysis/design-decisions.md#dec-25), [DEC-28](../../../docs/design-analysis/design-decisions.md#dec-28), [DEC-29](../../../docs/design-analysis/design-decisions.md#dec-29))
 
 - `LOG_LEVEL`: `warn` (the default) or `info`, in any letter case; any other value falls back to `warn`.
 - Log lines go to standard error, with account numbers masked as `************6789`; the report alone goes to standard output.
 - Exit status 0: the run completed, even if some or all transfers were rejected. Exit status 1: the run stopped, for any reason in [AC-09.8](../../../docs/solution-design/02-functional-requirements.md#ac-09-8): wrong arguments, a missing or unreadable input file, an invalid balances file, an empty transfers file, a file that cannot be read past a line, a changed total, an output file that already exists, or an output file that cannot be written.
 
-### 4. `## Assumptions` (FR-009; spec item 10)
+### 5. `## Troubleshooting` ([DEC-37](../../../docs/design-analysis/design-decisions.md#dec-37))
+
+The problems a reviewer is likely to hit when installing and running the program, mostly on Windows, each with its fix.
+
+### 6. `## Assumptions` (FR-009; spec item 10)
 
 The ten rows of [`design-decisions.md` Assumptions](../../../docs/design-analysis/design-decisions.md#assumptions), each with its reason, worded as there, with links to the decisions rewritten to `docs/design-analysis/design-decisions.md#dec-nn`.
 
-### 5. `## Design` (FR-010; [DEC-30](../../../docs/design-analysis/design-decisions.md#dec-30), [DEC-31](../../../docs/design-analysis/design-decisions.md#dec-31), [DEC-18](../../../docs/design-analysis/design-decisions.md#dec-18), [DEC-09](../../../docs/design-analysis/design-decisions.md#dec-09))
+### 7. `## Design` (FR-010; [DEC-30](../../../docs/design-analysis/design-decisions.md#dec-30), [DEC-31](../../../docs/design-analysis/design-decisions.md#dec-31), [DEC-18](../../../docs/design-analysis/design-decisions.md#dec-18), [DEC-09](../../../docs/design-analysis/design-decisions.md#dec-09))
 
 - Light domain-driven design: the rules live inside the models (`AccountNumber`, `Money`, `Transfer`, `Account`, `AccountRepository`), with plain names and no ceremony.
 - The three folders [`lib/domain`](../../../lib/domain), [`lib/application`](../../../lib/application) and [`lib/infrastructure`](../../../lib/infrastructure), and what each does.
@@ -54,32 +62,34 @@ The ten rows of [`design-decisions.md` Assumptions](../../../docs/design-analysi
 - Money as `Money` on `BigDecimal`, never floating point, never rounded.
 - Links to [`docs/design-analysis/design-decisions.md`](../../../docs/design-analysis/design-decisions.md) and [`docs/solution-design/README.md`](../../../docs/solution-design/README.md) for the rest.
 
-### 6. `## Test coverage` (FR-012; [DEC-36](../../../docs/design-analysis/design-decisions.md#dec-36))
+### 8. `## Test coverage` (FR-012; [DEC-36](../../../docs/design-analysis/design-decisions.md#dec-36))
 
 - The line SimpleCov prints, `Line coverage: <covered> / <total> (<percent>%)`, from a full `bundle exec rspec` run on the final code ([plan item 10](../plan.md#item-10)).
 - The full report is in `coverage/index.html` after a test run.
 - No minimum figure is set.
 
-### 7. `## Storage, production and known limitations` (FR-011; [DEC-03](../../../docs/design-analysis/design-decisions.md#dec-03), [DEC-18](../../../docs/design-analysis/design-decisions.md#dec-18), [DEC-32](../../../docs/design-analysis/design-decisions.md#dec-32))
+### 9. `## Storage, production and known limitations` (FR-011; [DEC-03](../../../docs/design-analysis/design-decisions.md#dec-03), [DEC-18](../../../docs/design-analysis/design-decisions.md#dec-18), [DEC-32](../../../docs/design-analysis/design-decisions.md#dec-32))
 
 - (a) Persistent storage: to stay safe to rerun, a version with storage would have to remember which files and transfers were already applied, so a rerun cannot apply a day twice; remembering applied files across runs is out of scope.
 - (b) Production items: very large files (streaming or chunking); a database repository with database transactions or sagas.
 - (c) Known limitations, one line each, from [page 9's risks table](../../../docs/solution-design/09-considerations.md#risks-and-known-limitations) and [page 10](../../../docs/solution-design/10-traceability-glossary-assumptions.md#known-limitations): no memory of earlier runs; results held in memory; an unreadable line in the transfers file discards the whole day; a duplicate account whose first copy has an invalid balance is reported only after that row is fixed; a balances file missing an account rejects every transfer touching it as `unknown_account`; two default-path runs in the same second (the second stops); full account numbers on screen and in the output CSV; the Docker clock is UTC unless `TZ` is set; the total-check failure cannot happen with correct code, so it is tested with fakes.
 
-### 8. `## How this was built` (FR-013; spec item 12)
+### 10. `## How this was built` (FR-013; spec item 12)
 
-- The design and the code were made with an AI assistant, in four steps, each with a link:
-  1. design analysis: [`docs/design-analysis/design-decisions.md`](../../../docs/design-analysis/design-decisions.md);
-  2. solution design: [`docs/solution-design/README.md`](../../../docs/solution-design/README.md);
-  3. GitHub Spec Kit specification: [`.specify/memory/constitution.md`](../../../.specify/memory/constitution.md) and [`specs/`](../../);
-  4. test-first implementation through the Spec Kit tasks: [`specs/`](../../) (each spec's [`tasks.md`](../tasks.md)).
+- The design and the code were made with an AI assistant, which proposed the small decisions marked "assistant's pick" for the developer's review, in six steps, the first four with links:
+  1. the developer's handwritten analysis and the review of the challenge: [`docs/design-analysis/handwritten/`](../../../docs/design-analysis/handwritten/) and [`docs/design-analysis/clarifications/`](../../../docs/design-analysis/clarifications/);
+  2. the decisions: [`docs/design-analysis/design-decisions.md`](../../../docs/design-analysis/design-decisions.md);
+  3. the solution design: [`docs/solution-design/README.md`](../../../docs/solution-design/README.md);
+  4. the GitHub Spec Kit specification: the [constitution](../../../.specify/memory/constitution.md) and the three specifications in [`specs/`](../../);
+  5. the code, test first, from the specifications' tasks;
+  6. the developer's review of the code, with each change made test first through new tasks.
 - The prompts that shaped them are in [`docs/prompts/`](../../../docs/prompts/).
 
-### 9. `## Repository layout` (FR-014)
+### 11. `## Repository layout` (FR-014)
 
 A table of the finished repository's paths and what each holds: [`bin/run`](../../../bin/run), [`lib/domain/`](../../../lib/domain/), [`lib/application/`](../../../lib/application/), [`lib/infrastructure/`](../../../lib/infrastructure/), [`spec/`](../../../spec/), [`data/`](../../../data/), `output/` (created by a run, not committed), [`docs/challenge/`](../../../docs/challenge/), [`docs/design-analysis/`](../../../docs/design-analysis/) (with [`design-decisions.md`](../../../docs/design-analysis/design-decisions.md), `handwritten/` and `clarifications/`), [`docs/solution-design/`](../../../docs/solution-design/), [`docs/spec-kit/`](../../../docs/spec-kit/), [`docs/prompts/`](../../../docs/prompts/), [`specs/`](../../), [`.specify/`](../../../.specify/) and [`.claude/`](../../../.claude/) (the Spec Kit set-up), [`.github/workflows/ci.yml`](../../../.github/workflows/ci.yml), [`Dockerfile`](../../../Dockerfile), [`CLAUDE.md`](../../../CLAUDE.md). [Plan item 16](../plan.md#item-16): the earlier "Status" section and the Google Sheet link are removed.
 
-### 10. `## The challenge` (FR-014)
+### 12. `## The challenge` (FR-014)
 
 A link to [`docs/challenge/MABLE_BACK_END_CODE_TEST.md`](../../../docs/challenge/MABLE_BACK_END_CODE_TEST.md), with the two sample files kept unchanged beside it.
 
@@ -89,7 +99,7 @@ Read the finished README against each item; every item must be "present". The se
 
 | ID | Item | FR | Present when |
 |---|---|---|---|
-| <a id="r-01"></a>R-01 | Build, test and run come first; sections in the order above | [FR-001](../spec.md#fr-001) | Headings appear in the order 1 to 10 |
+| <a id="r-01"></a>R-01 | Build, test and run come first; sections in the order above | [FR-001](../spec.md#fr-001) | Headings appear in the order 1 to 12 |
 | <a id="r-02"></a>R-02 | The three command forms, path rules, default output name, no overwrite, the usage message exactly | [FR-002](../spec.md#fr-002) | All five points present; usage lines equal [AC-09.2](../../../docs/solution-design/02-functional-requirements.md#ac-09-2) |
 | <a id="r-03"></a>R-03 | The sample report exactly as [AC-08.1](../../../docs/solution-design/02-functional-requirements.md#ac-08-1) | [FR-003](../spec.md#fr-003) | Character for character equal, run time `2026-11-07_143005` |
 | <a id="r-04"></a>R-04 | `ruby bin/run` on Windows | [FR-004](../spec.md#fr-004) | Present |
@@ -101,5 +111,5 @@ Read the finished README against each item; every item must be "present". The se
 | <a id="r-10"></a>R-10 | The design reasoning and the links | [FR-010](../spec.md#fr-010) | Every point present; both links resolve |
 | <a id="r-11"></a>R-11 | Storage, production items, known limitations | [FR-011](../spec.md#fr-011) | (a), (b) and the nine limitations present |
 | <a id="r-12"></a>R-12 | Coverage line, `coverage/index.html`, no minimum | [FR-012](../spec.md#fr-012) | Present; figure equals [C-33](../quickstart.md#c-33) |
-| <a id="r-13"></a>R-13 | "How this was built": AI assistant, four steps with links, [`docs/prompts/`](../../../docs/prompts/) | [FR-013](../spec.md#fr-013) | Present; links resolve |
+| <a id="r-13"></a>R-13 | "How this was built": AI assistant, six steps, the first four with links, [`docs/prompts/`](../../../docs/prompts/) | [FR-013](../spec.md#fr-013) | Present; links resolve |
 | <a id="r-14"></a>R-14 | Layout table, challenge link, no "Status" or "To be added", no company whose balances are processed | [FR-014](../spec.md#fr-014) | Present; `grep -n -e 'To be added' -e '## Status' README.md` finds nothing |

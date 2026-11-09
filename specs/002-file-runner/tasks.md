@@ -621,6 +621,21 @@
 
 ---
 
+<a id="phase-18"></a>
+## Phase 18: The documents say what the code does (review of the documents)
+
+**Goal**: every statement in the decisions, the solution design and this spec's documents about the file reading and the runner agrees with the code, which is right in every case; no code changes. Where a statement and the code differ, the code is read first, and the decisions and the code win.
+
+**Independent Test**: each statement below, read against [`lib/`](../../lib/); every relative link and anchor in the changed pages resolves.
+
+- [X] <a id="t148"></a>T148 [P] Word [DEC-32](../../docs/design-analysis/design-decisions.md#dec-32) as the code reads the files: both one row at a time through `CsvRows`, every balances row read and checked before any transfer is read; bring in line the pages that said the balances file is read in full ([pages 3](../../docs/solution-design/03-non-functional-requirements.md), [5](../../docs/solution-design/05-high-level-design.md), [7.2](../../docs/solution-design/07-logical-flow/02-sample-files-end-to-end.md), [8.4](../../docs/solution-design/08-alternatives/04-reading-files.md) and [9](../../docs/solution-design/09-considerations.md)), [page 6](../../docs/solution-design/06-components.md)'s readers, and in this spec [User Story 7](spec.md#us7), [FR-006](spec.md#fr-006), [FR-040](spec.md#fr-040), plan [P4](plan.md#p4) and [P29](plan.md#p29) and research [R1](research.md#r1-reading-a-csv-file-row-by-row-with-its-line-number); [page 9](../../docs/solution-design/09-considerations.md) and the [page 10 glossary](../../docs/solution-design/10-traceability-glossary-assumptions.md#glossary) say `CsvRows` raises `UnreadableFile` [[FR-005](spec.md#fr-005), [FR-006](spec.md#fr-006); [DEC-12](../../docs/design-analysis/design-decisions.md#dec-12), [DEC-32](../../docs/design-analysis/design-decisions.md#dec-32)]
+- [X] <a id="t149"></a>T149 [P] Bring in line with the code: the data model's `LoadBalances` state (the first lines keyed by `AccountNumber`) and `CsvRows` (a row that is not valid UTF-8, raised by `check_text`); [FR-005](spec.md#fr-005) (`CsvRows` checks the UTF-8 text itself); [FR-031](spec.md#fr-031) and research [R7](research.md#r7) (the steps in the order of `Runner#run`: the argument count, the logger, the clock, the paths, the start checks, the parts and the run); research [R2](research.md#r2) (a folder fails while it is opened, and the rescues are around the opening and each `shift`); the [command-line contract](contracts/command-line.md)'s stopped-runs table (the row for a balances file unreadable past a line, as in the spec's [run-stopping messages](spec.md#run-stopping-messages)); [brief](../../docs/spec-kit/spec-kit-brief.md) (the set-up branch, `TransferResult` in the application layer, the `csv`, `bigdecimal` and `logger` gems) [[FR-005](spec.md#fr-005), [FR-031](spec.md#fr-031); [DEC-01](../../docs/design-analysis/design-decisions.md#dec-01), [DEC-04](../../docs/design-analysis/design-decisions.md#dec-04), [DEC-23](../../docs/design-analysis/design-decisions.md#dec-23), [DEC-30](../../docs/design-analysis/design-decisions.md#dec-30)]
+- [X] <a id="t150"></a>T150 Check that every relative link and anchor in the changed pages resolves, and that `bundle exec rspec` and `bundle exec rubocop` are unchanged in result (depends on [T148](#t148), [T149](#t149)) [[SC-005](spec.md#sc-005), [SC-008](spec.md#sc-008)]
+
+**Checkpoint**: the decisions, the solution design and this spec's documents say what the code does; every link resolves.
+
+---
+
 ## Edge cases and their tests
 
 Every edge case in the spec's [Edge Cases](spec.md#edge-cases) list, with the task that tests it.
@@ -694,6 +709,7 @@ Every edge case in the spec's [Edge Cases](spec.md#edge-cases) list, with the ta
 - **[Phase 15](#phase-15) (Comments on code that is not obvious)**: after [Phase 14](#phase-14) and `001` [Phase 11](../001-domain/tasks.md#phase-11).
 - **[Phase 16](#phase-16) (Each rule tested once)**: after [Phase 15](#phase-15); alongside `001` [Phase 12](../001-domain/tasks.md#phase-12).
 - **[Phase 17](#phase-17) (The application layer without infrastructure)**: after [Phase 16](#phase-16).
+- **[Phase 18](#phase-18) (Documents)**: after [Phase 17](#phase-17); no code changes.
 
 ### Within each phase
 
@@ -748,6 +764,7 @@ The MVP is the end of [Phase 3](#phase-3): [`bin/run`](../../bin/run) on the cha
 12. [Phase 15](#phase-15): the application and infrastructure code that is not obvious from reading it is commented, and nothing a user sees changes.
 13. [Phase 16](#phase-16): each rule is tested once, at the layer that owns it; the runner keeps only what a run through it shows, and nothing a user sees changes.
 14. [Phase 17](#phase-17): the application layer requires nothing from the infrastructure layer, and nothing a user sees changes.
+15. [Phase 18](#phase-18): the documents say what the code does; no code changes.
 
 ## Notes
 

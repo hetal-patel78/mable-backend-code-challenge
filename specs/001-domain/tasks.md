@@ -361,6 +361,19 @@ No shared code blocks the stories beyond [Phase 1](#phase-1). Each domain error 
 
 ---
 
+<a id="phase-13"></a>
+## Phase 13: The documents say what the code does (review of the documents)
+
+**Goal**: this spec's documents agree with the code and the decisions, with no code change.
+
+**Independent Test**: each statement below, read against the repository; every relative link and anchor in the changed pages resolves.
+
+- [X] <a id="t080"></a>T080 [P] Bring in line: the [quickstart](quickstart.md)'s step 8 lists the domain files with `git ls-files lib/domain spec/domain spec/spec_helper.rb spec/support/builders.rb`, which holds after `002` too; the plan's separation-of-concerns row says `TransferResult` is in `002`'s application layer; the [requirements checklist](checklists/requirements.md) credits [item 17](spec.md#item-17) to the code review ([P33](../../docs/prompts/prompts-refactor-phase.md#p33)), not to `/speckit-clarify` [[FR-038](spec.md#fr-038); [DEC-30](../../docs/design-analysis/design-decisions.md#dec-30)]
+
+**Checkpoint**: this spec's documents say what the code does; every link resolves.
+
+---
+
 ## Edge cases and their tests
 
 Every edge case in the [spec](spec.md#edge-cases) that falls in this spec's scope, with the task whose test proves it.
@@ -410,6 +423,7 @@ Edge cases owned by `002` and not tested here: blank lines, header rows and the 
 - **[Phase 10](#phase-10) (Domain refactor)**: after [Phase 9](#phase-9); before `002` [Phase 14](../002-file-runner/tasks.md#phase-14), which builds on it.
 - **[Phase 11](#phase-11) (Money review)**: after [Phase 10](#phase-10) and `002` [Phase 14](../002-file-runner/tasks.md#phase-14); before `002` [Phase 15](../002-file-runner/tasks.md#phase-15).
 - **[Phase 12](#phase-12) (Each rule tested once)**: after [Phase 11](#phase-11); alongside `002` [Phase 16](../002-file-runner/tasks.md#phase-16).
+- **[Phase 13](#phase-13) (Documents)**: after [Phase 12](#phase-12); no code changes.
 
 ### Within each phase
 
@@ -455,6 +469,7 @@ The MVP is the end of [Phase 8](#phase-8): one transfer applied all or nothing, 
 8. [Phase 10](#phase-10): the domain refactored after the code review; every outcome, message and balance unchanged.
 9. [Phase 11](#phase-11): `Money` reviewed and the domain code commented; every outcome, message and balance unchanged.
 10. [Phase 12](#phase-12): each domain rule tested once; the sample balances checked once, end to end; every outcome, message and balance unchanged.
+11. [Phase 13](#phase-13): the documents say what the code does; no code changes.
 
 ## Notes
 

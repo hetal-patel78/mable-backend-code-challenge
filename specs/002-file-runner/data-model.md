@@ -95,7 +95,7 @@ classDiagram
 | `LoadBalances.new(reader, repository)` | a reader with `each_row`, `AccountRepository` | |
 | `call(path)` | String | Fills the repository and returns nil, or raises `InvalidBalancesFile` |
 
-- State for one call: the problem lines, in file order, and a `Hash` from account number text to the line it was added from ([page 6 pick 30](../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-30)).
+- State for one call: the problem lines, in file order, and a `Hash` keyed by `AccountNumber`, giving the line each account was added from ([page 6 pick 30](../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-30)).
 - Order of checks per row: [research R4](research.md#r4-loadbalances-problem-by-problem).
 - Lets an `UnreadableFile` with no line number pass unchanged ([page 6 pick 33](../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-33)).
 

@@ -19,7 +19,7 @@ How to check that `001-domain` is done. It proves [User Story 7](spec.md#us7) di
 | 5 | `bundle exec rspec --seed <n>` with a seed from step 3 | Passes in the same order, so a failing order can be repeated | [DEC-34](../../docs/design-analysis/design-decisions.md#dec-34) |
 | 6 | `bundle exec rubocop` | `no offenses detected` | [US7](spec.md#us7) scenario 3; [NFR-05](../../docs/solution-design/03-non-functional-requirements.md#nfr-05), [FR-031](spec.md#fr-031), [SC-005](spec.md#sc-005) |
 | 7 | `git status --short` after steps 3 and 6 | Nothing under `coverage/` is listed; `output/` is ignored too | [US7](spec.md#us7) scenario 4; [FR-041](spec.md#fr-041) |
-| 8 | `git ls-files lib spec` | Only `lib/domain/*.rb`, [`spec/spec_helper.rb`](../../spec/spec_helper.rb), [`spec/support/builders.rb`](../../spec/support/builders.rb) and `spec/domain/*_spec.rb`, one spec per class in [data-model.md](data-model.md) except `errors.rb` and `TransferResult`, which is in [`lib/application/`](../../lib/application/) (`002`) | [FR-038](spec.md#fr-038) |
+| 8 | `git ls-files lib/domain spec/domain spec/spec_helper.rb spec/support/builders.rb` | `lib/domain/*.rb`, [`spec/spec_helper.rb`](../../spec/spec_helper.rb), [`spec/support/builders.rb`](../../spec/support/builders.rb) and `spec/domain/*_spec.rb`, one spec per class in [data-model.md](data-model.md) except `errors.rb` and `TransferResult`, which is in [`lib/application/`](../../lib/application/) (`002`) | [FR-038](spec.md#fr-038) |
 
 ## Design review
 

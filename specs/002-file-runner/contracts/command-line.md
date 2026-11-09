@@ -83,6 +83,7 @@ Standard output is empty, no output file is left, and a file already at the outp
 | Input file cannot be opened | `Error: cannot read file <path>: <reason from the system>` | `cannot read file` |
 | Invalid balances file | `Error: the balances file is invalid (<count>):` then `  Line <N>: <problem>` each | `balances file invalid: <count>` |
 | Balances file with no rows | `Error: the balances file has no rows: <path>` | `balances file invalid: 1 problem` |
+| Balances file unreadable past a line | The invalid-balances lines, with the last problem `  Line <N>: cannot read <path> from this line. Check for an unclosed quote or characters that are not text.` | `balances file invalid: <count>` |
 | Transfers file with no rows | `Error: the transfers file has no transfers: <path>` | `transfers file has no transfers` |
 | Transfers file unreadable past a line | `Error: cannot read <path> from line <N>. Check for an unclosed quote or characters that are not text.` | `cannot read file` |
 | Total changed | `Error: the total of all balances changed from <before> to <after>. No output file was written.` | `total of all balances changed` |
