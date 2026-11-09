@@ -193,3 +193,47 @@ Then:
 > so when u update the SD, desing decision, claudecode.md, readme-  make sure u check against the all the code changes which u will commit before starting the updates
 
 Outcome: each topic in the solution design has one home page, the copies that disagreed are corrected, the documents match the code, and page 5 opens with an overview diagram.
+
+## 7. Money
+
+<a id="p39"></a>**P39. Explain Money's sign and hash handling, check its type and drop comparison**
+
+> looked at money.rb some feedback
+> Feedback1
+> def negative?
+>   @written.to_s.start_with?('-') || value.negative?
+> end
+>
+> add a comment  on why you are doing this
+>
+>
+> Feedback2
+> same for 
+
+Attached: the `hash` method of `Money`.
+
+> add comment why calling .hash
+> e.g.
+> a one-line comment, such as # 0.00 and -0.00 are equal, so they must share a hash.
+>
+>
+> Feedback3
+>
+> Money.new can accept anything e.g. float or string 
+> add a comment that new expects a BigDecimal.
+> or Check the type: raise ArgumentError unless value.is_a?(BigDecimal).
+>
+> Feedback 4 what is the use case of
+>  Comparable
+
+After the use of `Comparable` was explained:
+
+> Feedback 4: remove it and implement all feedback 1 to 3
+>
+> […]
+
+Then:
+
+> also add the comment in other files as where where ever needed and is currently missing
+
+Outcome: `Money`'s sign and hash handling are commented, `Money.new` accepts only a `BigDecimal`, `Money` no longer includes `Comparable`, and code that is not obvious from reading it is commented across `lib/`.
