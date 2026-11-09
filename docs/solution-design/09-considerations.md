@@ -135,16 +135,16 @@ The design targets one company's day, which is small ([DEC-32](../design-analysi
 
 ## Extensibility
 
-How the design takes the changes most likely to come. The [high-level design](05-high-level-design.md) shows where each one fits. Because the `Runner` builds the real readers, writer, repository, reporter and logger and passes them in to `ProcessDailyTransfer`, most changes swap one of these parts and leave `ProcessDailyTransfer` unchanged.
+How the design takes the changes most likely to come. The [high-level design](05-high-level-design.md) shows where each one fits. Because the `Runner` builds the real readers, writer, repository, reporter and logger and passes them in to `ProcessDailyTransfer`, most changes swap one of these parts and leave `ProcessDailyTransfer` unchanged. Where a change also needs `ProcessDailyTransfer` to change, the table says so.
 
 | Change | Where it goes | What stays the same |
 |---|---|---|
 | Another input format, such as JSON | A new reader in `infrastructure/` that gives the same rows with line numbers and the same row-shape checks, built by the `Runner` and passed in ([page 5](05-high-level-design.md#adding-another-input-format)) | Domain, `LoadBalances`, `ProcessDailyTransfer`, report and writer |
-| Another transfer rule, such as a daily limit | The domain model that owns the data, for example `Account` or `Transfer`, plus a new error and reason code. A new rule and code need a new decision first ([DEC-19](../design-analysis/design-decisions.md#dec-19)). | File reading, runner, writer |
-| Stored accounts | A database repository with the same `add`, `find`, `include?` and `all` ([DEC-31](../design-analysis/design-decisions.md#dec-31)), passed in by the `Runner` | Domain rules, `TransferService`, `ProcessDailyTransfer` |
+| Another transfer rule, such as a maximum amount per transfer | The domain model that owns the data, for example `Transfer` for a rule about one transfer or `Account` for a rule about its balance, plus a new error and reason code. A new rule and code need a new decision first ([DEC-19](../design-analysis/design-decisions.md#dec-19)). | File reading, runner, writer |
+| Stored accounts | A database repository with the same `add`, `find`, `include?` and `all` ([DEC-31](../design-analysis/design-decisions.md#dec-31)), passed in by the `Runner`. `TransferService#apply` changes the `Account` objects that `find` returns, so the repository also needs a way to save the changed accounts, and `ProcessDailyTransfer` wraps each `apply` in a database transaction ([DEC-18](../design-analysis/design-decisions.md#dec-18)). | Domain rules, `TransferService` |
 | Logs to a file or service | A different logger passed in ([DEC-28](../design-analysis/design-decisions.md#dec-28)) | `ProcessDailyTransfer` |
 | Another report layout or destination | A different reporter passed in, reading the same `DayResult` | Everything else |
-| Another output format | A different writer passed in, with the same no-overwrite rule ([DEC-27](../design-analysis/design-decisions.md#dec-27)) | Domain, `ProcessDailyTransfer` |
+| Another output format | A different writer passed in, with the same no-overwrite rule ([DEC-27](../design-analysis/design-decisions.md#dec-27)). The default output file name comes from `FinalBalancesCsvWriter.default_path`, which the `Runner` and `ProcessDailyTransfer` call by class name, so both change to take the name from the new writer. | Domain |
 
 ## Risks and known limitations
 

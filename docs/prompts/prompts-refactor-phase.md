@@ -36,10 +36,6 @@ Outcome: the [README](../../README.md) gained two sections: [Prerequisites](../.
 
 Attached: the `Final balances` section of the sample report.
 
-After the effort estimate, with the opening and closing balance per account recommended over balances on each transfer line:
-
-> ok run it on separate agent
-
 Outcome: the `Final balances` section of the screen report shows each account's opening and closing balance as a table ([DEC-26](../design-analysis/design-decisions.md#dec-26)). The output CSV is unchanged.
 
 ## 3. README, revised
@@ -49,3 +45,129 @@ Outcome: the `Final balances` section of the screen report shows each account's 
 > thinking on my ask ask I think we don't need to mentioned how it will evolve. I will keep it for my reference but don't need it to send to the reviewer
 
 Outcome: the README has no section on how the solution would evolve.
+
+## 4. ProcessDailyTransfer
+
+<a id="p30"></a>**P30. Pass ProcessDailyTransfer's dependencies as a parameter object**
+
+> I am reviewing the process daily transfer.rb
+> and I cannot easily tell what was happening specially where are using parts array and the reading the dependencies from array. What was ur reasoning to use this approach and not passing the named dependencies itself same as we do in C#.net class constructor. Passing named constructor helps in readability
+
+After the reason was explained (RuboCop's limit on parameters) and named keywords or a parameter object were offered:
+
+> yes I was going to suggest a parameter object same as we do in C#
+
+After the conflict with DEC-30 was raised:
+
+> remove DTOs or mappers from DEC-30.
+
+Outcome: `ProcessDailyTransfer` takes its dependencies as one `ProcessDailyTransfer::Parts`, a parameter object that names each of them, with the run time as a separate keyword. [DEC-30](../design-analysis/design-decisions.md#dec-30) no longer excludes DTOs or mappers.
+
+<a id="p31"></a>**P31. Move log message formatting out of ProcessDailyTransfer**
+
+> I am also seeing 
+>
+> ProcessDailyTransfer multiple tasks loading balance. It is running the transfer process  and also formatting text for logs. I suggest we move to formatting to method in new helper class and then call it this help ProcessDailyTransfer to focus on single reponsibility
+>
+> […]
+
+Outcome: `LogMessages` builds the text of every log line of the day's run, masking included, except the all-rejected warning, whose text `DayResult` owns (shared with the report); `ProcessDailyTransfer` decides when to log and at which level.
+
+## 5. Code review: loading, accounts and files
+
+<a id="p32"></a>**P32. Parse each balances field once, read fields by name, and format problem lines in one place**
+
+> Feedback 1
+> any reason why we are parsing
+> Account.new(number, balance) and Money.balance(text) multiple time in load-balances.rb. what is stopping you from parse once and use it multiple time?
+>
+> Feedback 2
+> reading the row using indexes is hard
+> row.fields[1]
+> used name based reads
+>
+> Feedback 3
+> I see we are constructing lines for problem at multiple place e.g.
+> @problems << "Line #{e.line_number}: #{e.line_problem}"
+> Line #{row.line_number}: #{problem}
+> I suggest we can write one single function like atline or something similar so that line formatting is done at one place
+
+Outcome: `LoadBalances` parses each row's account number and balance once and builds the account from those values; row fields are read by name; one method gives every "Line n: problem" text.
+
+<a id="p33"></a>**P33. Guard Account against amounts of $0 or less**
+
+> now reviewing account.rb
+>
+> if some other class call account.rb and pass amount less than 0 to deposit or wihdraw it will work e.g.
+>
+> if I call deposit(-50) and balanc = 10 then it will set the balance to -40.00 
+>
+> We should have guard to test for positive amount in account.rb as well and if not then raise and arguemenerror
+>
+> not a biggy but I also see you are doing balance - money 2 time. just do it onetime by storing in vairable
+> @balance = balance - money and then reuse it
+
+Outcome: `Account` raises `ArgumentError` for a deposit or withdrawal of $0 or less, a programming error that never decides a transfer's outcome ([DEC-18](../design-analysis/design-decisions.md#dec-18)); a withdrawal works out the new balance once.
+
+<a id="p34"></a>**P34. Use Ruby `Data` records for values compared by their data**
+
+> reviewing account_numbers.rb i see you have written a custom implementation to check if account number are same or not.
+>
+> my observation
+>
+> you added the implmentation for == so that it will compare using actual data and not the object
+
+Attached: the `==` and `eql?` methods of `AccountNumber`.
+
+> if so then why also need to call account.number.to_s in account_repository in every method?
+>
+> 2nd observation
+> Do we not have any equivalent to C# record which compares using data so that we don't have to write the custom implementation
+
+Later:
+
+> also look for any other class that can be converted to Data
+
+Outcome: `AccountNumber`, `Transfer` and `TransferResult` are `Data` records; `Money` keeps its own equality; the repository holds accounts by `AccountNumber` ([DEC-30](../design-analysis/design-decisions.md#dec-30)).
+
+<a id="p35"></a>**P35. Move TransferResult to the application layer**
+
+> reviewed transfer_result.rb
+>
+> it is storing the line number of the applied and rejected transfers .  I don't see any business rules in this class and so should not be the part of domain. It is purely for storing transfer result and I believe should move to the application folder
+
+Outcome: `TransferResult` is in `lib/application/`, as the application's record of each row's outcome ([DEC-19](../design-analysis/design-decisions.md#dec-19)).
+
+<a id="p36"></a>**P36. Remove requires that are not used**
+
+> no reviewed tranfer-service.rb
+> I don't believe we need
+> require_relative 'account_repository'
+> require_relative 'transfer'
+
+Outcome: each file requires only what it names; `TransferService` requires nothing.
+
+<a id="p37"></a>**P37. Explain and tidy the CSV reading**
+
+> now I am looking at csv-rows.rb
+>
+> Feedback 1
+> why we opening as utf-8 and the reading  csv.to_io.set_encoding(Encoding::BINARY) (raw bytes)?  explain the reason
+>
+> Feedback 2 - add some comment to explain what it is doing
+
+Attached: the `lines_in` method of `CsvRows`.
+
+> Feedback 3
+> There are constants for regex 
+>  BLANK = /\A[ \t\r\n]*\z/
+>   PADDING = /\A[ \t]+|[ \t]+\z/
+>   LINE_BREAK = /\r\n|\r|\n/
+> but for header_like regex is used inline
+>
+> Feedback 4
+> rescue exception only when we open the file.
+
+Attached: the `each` method of `CsvRows`.
+
+Outcome: `CsvRows` has comments on its encoding handling and line counting, a named constant for every pattern, and catches system errors only when opening the file and reading it, never in the code that handles each row.

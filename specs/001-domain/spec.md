@@ -434,7 +434,7 @@ Each is covered by a domain unit test in this spec (DEC-34):
 
 **Code organisation ([NFR-05](../../docs/solution-design/03-non-functional-requirements.md#nfr-05)) and cost ([NFR-02](../../docs/solution-design/03-non-functional-requirements.md#nfr-02))**
 
-- **FR-028** (NFR-05; DEC-30): each business rule (16 digits, money format, amount above $0, different accounts, no overdraft, opening balance not negative, no duplicate account, unknown account) MUST live in exactly one place, inside the domain model it belongs to, as listed under [Key Entities](#key-entities).
+- **FR-028** (NFR-05; DEC-30): each business rule (16 digits, money format, amount above $0, different accounts, no overdraft, opening balance not negative, no duplicate account, unknown account) MUST live in exactly one place, inside the domain model it belongs to, as listed under [Key Entities](#key-entities-include-if-feature-involves-data).
 - **FR-029** (NFR-05; DEC-30): the domain MUST NOT read files, print, log, read the clock or know line numbers.
 - **FR-030** (NFR-05; DEC-30): names MUST be the plain domain names on page 6 and in the page 10 glossary, with no base classes, no suffixes such as `AggregateRoot` or `ValueObject`, and no domain events, factories or commands.
 - **FR-031** (NFR-05; DEC-30, DEC-36): RuboCop with its default settings and `rubocop-rspec` MUST report zero offences, which sets at most 10 lines per method. Every later spec MUST keep zero offences.

@@ -9,7 +9,7 @@ The brief for step 3 of the [development approach](../../CLAUDE.md): the GitHub 
 - Spec Kit 1.2.6.dev0 is installed with the Claude integration and the PowerShell scripts: `.specify/` and the `/speckit-*` skills in `.claude/skills/`.
 - The set-up is committed on the local branch `spec-kit-setup`, on top of the finished solution design, and is not pushed. Part 1 starts from that branch, so the set-up is pushed with the spec work, never with the solution design.
 - The repository's GitHub remote is `origin` (`hetal-patel78/mable-backend-code-challenge`).
-- On this machine the `specify.exe` launcher is blocked by Windows Application Control. If the `specify` command is needed, run it through the tool's own Python: `C:\Users\hets7\AppData\Roaming\uv\tools\specify-cli\Scripts\python.exe -c "import sys; sys.argv=['specify', <arguments>]; from specify_cli import main; main()"`. The PowerShell scripts in `.specify/scripts/powershell/` run normally.
+- On this machine the `specify.exe` launcher is blocked by Windows Application Control. If the `specify` command is needed, run it through the tool's own Python: `%APPDATA%\uv\tools\specify-cli\Scripts\python.exe -c "import sys; sys.argv=['specify', <arguments>]; from specify_cli import main; main()"`. The PowerShell scripts in `.specify/scripts/powershell/` run normally.
 
 ## Shared rules
 
