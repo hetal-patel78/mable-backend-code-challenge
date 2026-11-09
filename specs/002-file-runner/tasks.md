@@ -596,6 +596,31 @@
 
 ---
 
+<a id="phase-17"></a>
+## Phase 17: The application layer without infrastructure (review of the layers)
+
+**Goal**: no file in [`lib/application/`](../../lib/application/) requires a file in [`lib/infrastructure/`](../../lib/infrastructure/), so the three layers of [DEC-30](../../docs/design-analysis/design-decisions.md#dec-30) depend inwards only, with no change in behaviour: the same report, output file, messages, log lines and exit status for every input. `ProcessDailyTransfer` asks the writer it was given for the default output path ([page 10 pick 35](../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-35)), not the `FinalBalancesCsvWriter` class. `UnreadableFile`, the error a reader raises for a file it cannot open or a line it cannot read past, and that `LoadBalances` catches ([page 10 pick 33](../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-33)), is defined in [`lib/application/errors.rb`](../../lib/application/errors.rb) as part of the reader contract the application uses; `CsvRows` builds its messages, with the path in its shown form ([DEC-26](../../docs/design-analysis/design-decisions.md#dec-26)), so no application class works out a shown path ([page 10 pick 53](../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-53)).
+
+**Independent Test**: the new examples below fail before the change and pass after it; every other example passes unchanged in its expectations; `grep -rn infrastructure lib/application` finds nothing; `ruby bin/run` gives the same streams, exit status and output file as before for the runs of [T127](#t127).
+
+### Tests (write first)
+
+- [ ] <a id="t140"></a>T140 [P] Add to [`final_balances_csv_writer_spec.rb`](../../spec/infrastructure/final_balances_csv_writer_spec.rb) a `describe '#default_path'`: a writer gives the same path as `FinalBalancesCsvWriter.default_path` for the fixed run time [[FR-024](spec.md#fr-024); [DEC-27](../../docs/design-analysis/design-decisions.md#dec-27), [DEC-30](../../docs/design-analysis/design-decisions.md#dec-30)]
+- [ ] <a id="t141"></a>T141 Add to [`process_daily_transfer_spec.rb`](../../spec/application/process_daily_transfer_spec.rb), in `describe '#call with the paths it is given'`, an example that, with no output path, the output path is the one the writer it was given returns for the run time (a writer double answering `default_path` with `output/from_writer.csv`) [[FR-012](spec.md#fr-012); [DEC-27](../../docs/design-analysis/design-decisions.md#dec-27), [DEC-30](../../docs/design-analysis/design-decisions.md#dec-30); [page 10 pick 35](../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-35)]
+- [ ] <a id="t142"></a>T142 [P] Add to [`csv_rows_spec.rb`](../../spec/infrastructure/csv_rows_spec.rb), in `describe 'a line that cannot be read'`, an example that the error gives the line problem `cannot read <path> from this line. Check for an unclosed quote or characters that are not text.`, and one that a file that cannot be opened gives no line problem; [`FakeReader`](../../spec/support/fakes.rb) and the two specs that build an `UnreadableFile` for a file that cannot be opened ([`load_balances_spec.rb`](../../spec/application/load_balances_spec.rb), [`process_daily_transfer_spec.rb`](../../spec/application/process_daily_transfer_spec.rb)) build it with `UnreadableFile.new(message, line_number:, line_problem:)`, with the same texts as before, so no expected string changes; [`load_balances_spec.rb`](../../spec/application/load_balances_spec.rb) requires `'application/errors'` for it, not `'infrastructure/errors'` [[FR-005](spec.md#fr-005); [DEC-04](../../docs/design-analysis/design-decisions.md#dec-04), [DEC-12](../../docs/design-analysis/design-decisions.md#dec-12), [DEC-30](../../docs/design-analysis/design-decisions.md#dec-30); [page 10 pick 33](../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-33)]
+- [ ] <a id="t143"></a>T143 Run `bundle exec rspec` and confirm that the [T140](#t140) to [T142](#t142) examples fail (no `#default_path`; the class's path used instead of the writer's; no `line_problem` given and no `UnreadableFile.new` with these keywords), and no other example fails (depends on [T140](#t140) to [T142](#t142))
+
+### Implementation
+
+- [ ] <a id="t144"></a>T144 [P] In [`final_balances_csv_writer.rb`](../../lib/infrastructure/final_balances_csv_writer.rb), add `#default_path(run_time)`, giving `self.class.default_path(run_time)`; in [`process_daily_transfer.rb`](../../lib/application/process_daily_transfer.rb), take the default output path from `@writer.default_path(@run_time)` and remove the require of `'../infrastructure/final_balances_csv_writer'` (depends on [T143](#t143)) [[FR-012](spec.md#fr-012); [DEC-27](../../docs/design-analysis/design-decisions.md#dec-27), [DEC-30](../../docs/design-analysis/design-decisions.md#dec-30); [page 10 pick 35](../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-35)]
+- [ ] <a id="t145"></a>T145 [P] Move `UnreadableFile` to [`lib/application/errors.rb`](../../lib/application/errors.rb): `initialize(message, line_number: nil, line_problem: nil)`, the readers `line_number` and `line_problem`, and `stop_reason` `cannot read file`; in [`csv_rows.rb`](../../lib/infrastructure/csv_rows.rb), private `cannot_open(error)` and `unreadable_at(line_number)` build the same messages as before (the constant `ADVICE` moves with them), and [`csv_rows.rb`](../../lib/infrastructure/csv_rows.rb) requires `'../application/errors'`; [`lib/infrastructure/errors.rb`](../../lib/infrastructure/errors.rb) keeps only `OutputNotWritable`; [`load_balances.rb`](../../lib/application/load_balances.rb) no longer requires `'../infrastructure/errors'` (depends on [T143](#t143)) [[FR-005](spec.md#fr-005); [DEC-04](../../docs/design-analysis/design-decisions.md#dec-04), [DEC-23](../../docs/design-analysis/design-decisions.md#dec-23), [DEC-30](../../docs/design-analysis/design-decisions.md#dec-30); [page 10 picks 33](../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-33), [53](../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-53)]
+- [ ] <a id="t146"></a>T146 [P] Bring the documents in line: [page 5](../../docs/solution-design/05-high-level-design.md), [page 6](../../docs/solution-design/06-components.md) (the errors table, `ProcessDailyTransfer`, `FinalBalancesCsvWriter`, `CsvRows`), [page 9](../../docs/solution-design/09-considerations.md) (another output format), [page 10](../../docs/solution-design/10-traceability-glossary-assumptions.md) ([picks 35](../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-35), [39](../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-39), [53](../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-53), the glossary); in this spec, [FR-005](spec.md#fr-005), [FR-012](spec.md#fr-012), [FR-024](spec.md#fr-024) and the key entities, the plan (project structure, [P8](plan.md#p8)), the data model and the [component contract](contracts/components-api.md) [[DEC-30](../../docs/design-analysis/design-decisions.md#dec-30)]
+- [ ] <a id="t147"></a>T147 Run `bundle exec rspec` until every example passes in random order with 100% line coverage, and `bundle exec rubocop` until it reports zero offences; confirm `grep -rn infrastructure lib/application` finds nothing; repeat [T127](#t127)'s comparison of `ruby bin/run` for the sample files, a missing input file, an unclosed quote in each file, bytes that are not UTF-8 and a folder as the balances file (depends on [T144](#t144) to [T146](#t146)) [[SC-001](spec.md#sc-001), [SC-005](spec.md#sc-005), [SC-008](spec.md#sc-008); [DEC-30](../../docs/design-analysis/design-decisions.md#dec-30), [DEC-36](../../docs/design-analysis/design-decisions.md#dec-36)]
+
+**Checkpoint**: [`lib/application/`](../../lib/application/) requires only [`lib/domain/`](../../lib/domain/) and its own files; the report, output files, messages, exit statuses and log lines are unchanged; `bundle exec rspec` passes in random order with 100% line coverage; `bundle exec rubocop` reports zero offences.
+
+---
+
 ## Edge cases and their tests
 
 Every edge case in the spec's [Edge Cases](spec.md#edge-cases) list, with the task that tests it.
@@ -668,6 +693,7 @@ Every edge case in the spec's [Edge Cases](spec.md#edge-cases) list, with the ta
 - **[Phase 14](#phase-14) (Refactor after the code review)**: after [Phase 13](#phase-13) and `001` [Phase 10](../001-domain/tasks.md#phase-10).
 - **[Phase 15](#phase-15) (Comments on code that is not obvious)**: after [Phase 14](#phase-14) and `001` [Phase 11](../001-domain/tasks.md#phase-11).
 - **[Phase 16](#phase-16) (Each rule tested once)**: after [Phase 15](#phase-15); alongside `001` [Phase 12](../001-domain/tasks.md#phase-12).
+- **[Phase 17](#phase-17) (The application layer without infrastructure)**: after [Phase 16](#phase-16).
 
 ### Within each phase
 
@@ -688,6 +714,7 @@ Every edge case in the spec's [Edge Cases](spec.md#edge-cases) list, with the ta
 - [Phase 7](#phase-7): [T070](#t070) to [T072](#t072) in parallel.
 - [Phase 14](#phase-14): [T116](#t116) and [T117](#t117) in parallel with [T115](#t115); then [T122](#t122), [T123](#t123) and [T124](#t124) in parallel with [T120](#t120) and [T121](#t121); [T125](#t125) alongside the code; [T128](#t128) and [T129](#t129) after [T127](#t127), one after the other (both touch `CsvRows`).
 - [Phase 16](#phase-16): [T135](#t135) after [T134](#t134); [T138](#t138) alongside [T136](#t136) and [T137](#t137), which edit [`runner_spec.rb`](../../spec/infrastructure/runner_spec.rb) one after the other.
+- [Phase 17](#phase-17): [T140](#t140) and [T142](#t142) in parallel with [T141](#t141); then [T144](#t144) and [T145](#t145) in parallel, and [T146](#t146) alongside them.
 
 ## Parallel example: Phase 3 (User Story 1)
 
@@ -720,6 +747,7 @@ The MVP is the end of [Phase 3](#phase-3): [`bin/run`](../../bin/run) on the cha
 11. [Phase 14](#phase-14): the application and infrastructure refactored after the code review; `TransferResult` is an application `Data` record, and nothing a user sees changes.
 12. [Phase 15](#phase-15): the application and infrastructure code that is not obvious from reading it is commented, and nothing a user sees changes.
 13. [Phase 16](#phase-16): each rule is tested once, at the layer that owns it; the runner keeps only what a run through it shows, and nothing a user sees changes.
+14. [Phase 17](#phase-17): the application layer requires nothing from the infrastructure layer, and nothing a user sees changes.
 
 ## Notes
 
