@@ -2,36 +2,36 @@
 
 The order in which one transfers row is checked, and the point where balances change.
 
-Every row from the transfers file goes through the same six checks, in the order set by [DEC-19](../../design-analysis/design-decisions.md#dec-19). The first check that fails gives the row its one reason code (each arrow below names the error raised, then the reason code), and no later check runs. Only a row that passes all six changes any balance, and then the withdrawal comes before the deposit, which cannot fail ([DEC-18](../../design-analysis/design-decisions.md#dec-18)). So a transfer is either fully applied or not applied at all.
+Every row from the transfers file goes through the same six checks, in the order set by [DEC-19](../../design-analysis/design-decisions.md#dec-19). The first check that fails gives the row its one reason code (each "no" leads to the reason code, with the error raised), no later check runs, and both balances stay as they were. Only a row that passes all six changes any balance, and then the withdrawal comes before the deposit, which cannot fail ([DEC-18](../../design-analysis/design-decisions.md#dec-18)). So a transfer is either fully applied or not applied at all.
 
 ```mermaid
 flowchart TD
-    subgraph checks["Checks: no balance has changed yet"]
-        A{"Exactly 3 fields?"} -->|yes| B{"Both account numbers<br/>exactly 16 digits?"}
-        B -->|yes| C{"Amount valid<br/>and above $0?"}
-        C -->|yes| D{"From and to<br/>accounts different?"}
-        D -->|yes| E{"Both accounts<br/>loaded?"}
-        E -->|yes| F{"From balance minus<br/>amount is $0.00 or more?"}
-    end
-    F -->|yes| G["Withdraw from the from account,<br/>then deposit to the to account:<br/>applied"]
-    A -->|"no: row marked,<br/>malformed_row"| R["Rejected with that reason,<br/>both balances unchanged"]
-    B -->|"no: InvalidAccountNumber,<br/>invalid_account_number"| R
-    C -->|"no: InvalidAmount,<br/>invalid_amount"| R
-    D -->|"no: SameAccount,<br/>same_account"| R
-    E -->|"no: UnknownAccount,<br/>unknown_account"| R
-    F -->|"no: InsufficientFunds,<br/>insufficient_funds"| R
+    A{"Has exactly<br/>3 fields?"} -->|yes| B{"Both account numbers<br/>exactly 16 digits?"}
+    B -->|yes| C{"Amount is valid money<br/>and above $0?"}
+    C -->|yes| D{"From and to accounts<br/>are different?"}
+    D -->|yes| E{"Both accounts are in<br/>the balances file?"}
+    E -->|yes| F{"From account has enough<br/>to pay the amount?<br/>(ending at exactly $0.00 is allowed)"}
+    F -->|yes| G["Applied: withdraw from the from account,<br/>then deposit to the to account"]
+    A -->|no| RA["Rejected: malformed_row<br/>(row marked by the reader)"]
+    B -->|no| RB["Rejected: invalid_account_number<br/>(InvalidAccountNumber)"]
+    C -->|no| RC["Rejected: invalid_amount<br/>(InvalidAmount)"]
+    D -->|no| RD["Rejected: same_account<br/>(SameAccount)"]
+    E -->|no| RE["Rejected: unknown_account<br/>(UnknownAccount)"]
+    F -->|no| RF["Rejected: insufficient_funds<br/>(InsufficientFunds)"]
 ```
 
 ## The checks in order
 
-| Order | Check | Reason code | Decision |
+The checks run in this order; the first one that fails decides the reason, and no balance changes.
+
+| Order | The row passes if… | If not, it is rejected as | Decision |
 |---|---|---|---|
-| 1 | Exactly 3 fields | `malformed_row` | [DEC-04](../../design-analysis/design-decisions.md#dec-04) |
-| 2 | Both account numbers are 16 digits | `invalid_account_number` | [DEC-08](../../design-analysis/design-decisions.md#dec-08) |
-| 3 | Amount is valid money and above $0 | `invalid_amount` | [DEC-09](../../design-analysis/design-decisions.md#dec-09), [DEC-10](../../design-analysis/design-decisions.md#dec-10) |
-| 4 | From and to are different | `same_account` | [DEC-13](../../design-analysis/design-decisions.md#dec-13) |
-| 5 | Both accounts are loaded | `unknown_account` | [DEC-17](../../design-analysis/design-decisions.md#dec-17), [DEC-31](../../design-analysis/design-decisions.md#dec-31) |
-| 6 | No overdraft | `insufficient_funds` | [DEC-13](../../design-analysis/design-decisions.md#dec-13) |
+| 1 | it has exactly 3 fields | `malformed_row` | [DEC-04](../../design-analysis/design-decisions.md#dec-04) |
+| 2 | both account numbers are exactly 16 digits | `invalid_account_number` | [DEC-08](../../design-analysis/design-decisions.md#dec-08) |
+| 3 | the amount is valid money and above $0 | `invalid_amount` | [DEC-09](../../design-analysis/design-decisions.md#dec-09), [DEC-10](../../design-analysis/design-decisions.md#dec-10) |
+| 4 | the from and to accounts are different | `same_account` | [DEC-13](../../design-analysis/design-decisions.md#dec-13) |
+| 5 | both accounts are in the balances file | `unknown_account` | [DEC-17](../../design-analysis/design-decisions.md#dec-17), [DEC-31](../../design-analysis/design-decisions.md#dec-31) |
+| 6 | the from account has enough to pay the amount (ending at exactly $0.00 is allowed) | `insufficient_funds` | [DEC-13](../../design-analysis/design-decisions.md#dec-13) |
 
 Which component makes each check, and the error it raises, is in [Which checks live where](../06-components.md#which-checks-live-where) and the [errors table](../06-components.md#errors-and-who-raises-them) on page 6. The field count is marked by the reader, with no error. `ProcessDailyTransfer` turns each domain error into the reason code on the same row of this table ([DEC-19](../../design-analysis/design-decisions.md#dec-19)). None of them stops the run.
 
