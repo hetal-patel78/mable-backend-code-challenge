@@ -2,11 +2,30 @@
 
 A command-line program that loads one company's starting account balances from a CSV file and applies one day's transfers from a second CSV file, never letting an account balance go below $0. It prints a report of the day and writes the closing balances to a new CSV file.
 
+## Prerequisites
+
+You need Git to clone the repository, and either Ruby or Docker.
+
+| You need | Version | Check with |
+|---|---|---|
+| Git | any recent version | `git --version` |
+| Ruby | 3.4, the version in [`.ruby-version`](.ruby-version) (3.4.12) | `ruby -v` |
+| Bundler | the one that comes with Ruby 3.4 | `bundle -v` |
+| Docker, instead of Ruby | any recent version | `docker --version` |
+
+Installing Ruby 3.4. The [ruby-lang.org installation page](https://www.ruby-lang.org/en/documentation/installation/) lists the options for each system.
+
+- **macOS and Linux:** use a version manager such as rbenv, chruby or asdf to install and switch to the version in `.ruby-version`. The Ruby that comes with macOS, or with a Linux package manager, is often older than 3.4.
+- **Windows:** use [RubyInstaller](https://rubyinstaller.org/), and pick a **Ruby+Devkit 3.4.x (x64)** download. At the end of the install, let it run `ridk install` and choose option 3, the MSYS2 and MINGW development tool chain. Some gems in `Gemfile.lock`, such as `bigdecimal`, build native extensions during `bundle install` and need it.
+- If `bundle -v` finds no Bundler, install it with `gem install bundler`.
+
+Without Ruby 3.4, use Docker instead: see [With Docker](#with-docker). If something goes wrong, see [Troubleshooting](#troubleshooting).
+
 ## Build, test and run
 
 ### With Ruby 3.4
 
-You need Ruby at the version in [`.ruby-version`](.ruby-version) and Bundler. From the project root:
+You need Ruby at the version in [`.ruby-version`](.ruby-version) and Bundler (see [Prerequisites](#prerequisites)). From the project root:
 
 ```
 bundle install
@@ -95,6 +114,26 @@ Docker is the alternative for a reviewer without Ruby 3.4. From the project root
 - Log lines go to standard error, with account numbers masked as `************6789`. The report alone goes to standard output.
 - Exit status 0: the run completed, even if some or all transfers were rejected.
 - Exit status 1: the run stopped, for one of these reasons: wrong arguments, a missing or unreadable input file, an invalid balances file, an empty transfers file, a file that cannot be read past a line, a changed total, an output file that already exists, or an output file that cannot be written.
+
+## Troubleshooting
+
+**`ruby` or `bundle` "is not recognized" right after installing Ruby (Windows).** The terminal, or the editor that started it, was opened before the installer added Ruby to `PATH`. Open a new terminal. If the editor (for example VS Code) keeps background processes running, quit it fully, or sign out of Windows and back in. Or refresh `PATH` in the current PowerShell window:
+
+```
+$env:Path = [Environment]::GetEnvironmentVariable('Path','User') + ';' + [Environment]::GetEnvironmentVariable('Path','Machine')
+```
+
+**`bin/run` opens a "Select an app to open this file" dialog (Windows).** Windows ignores the `#!/usr/bin/env ruby` first line. Run `ruby bin/run` instead, with the same arguments.
+
+**`/usr/bin/env: 'ruby\r': No such file or directory` from `bin/run` (Git Bash or WSL on a Windows checkout).** Git on Windows usually checks files out with CRLF line endings, and a CRLF first line cannot be started directly. Run `ruby bin/run` instead. The Docker image already runs `ruby bin/run` and strips the carriage returns from `bin/run` when it is built, so a Windows checkout builds and runs the same as any other.
+
+**`bundle install` fails to build a gem's native extension (Windows).** The MSYS2 development tool chain is missing. Run `ridk install`, choose option 3, then run `bundle install` again.
+
+**RuboCop reports `Carriage return character missing` (Windows).** RuboCop's default `Layout/EndOfLine` setting expects CRLF line endings on Windows. A checkout made with Git's `core.autocrlf` set to `false` or `input` keeps the repository's LF endings, so every file is reported. Clone again with `git clone -c core.autocrlf=true ...`, the Git for Windows default.
+
+**The output file name from Docker shows the wrong time.** The container uses UTC unless `TZ` is set. Pass your own time zone, for example `-e TZ=Australia/Sydney`, as in [With Docker](#with-docker).
+
+**The run stops because the output file already exists.** An output file is never overwritten. Give a new output path, or move the old file. With the default name, this happens only when two runs start in the same second; run again.
 
 ## Assumptions
 

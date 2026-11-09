@@ -5,7 +5,7 @@ This file is the single source of truth for how the solution to the [Mable back-
 How to read it:
 
 - Each decision has a stable ID (`DEC-01`, `DEC-02` and so on). Link to one as `design-decisions.md#dec-nn`.
-- Each decision gives the **rule**, the **reason**, the options **rejected**, and **From**: the review findings and answers it comes from. D, J, X, C, B and S are the tabs of the review sheet, saved in [`clarifications/`](clarifications/). P-numbers (P4, P6, P7, P11, P12, P14, P15, P19) are prompts in the [design prompt log](../prompts/prompts-design-phase.md); R1 to R3 are the questions from the independent review, answered in P14.
+- Each decision gives the **rule**, the **reason**, the options **rejected**, and **From**: the review findings and answers it comes from. D, J, X, C, B and S are the tabs of the review sheet, saved in [`clarifications/`](clarifications/). P-numbers (P4, P6, P7, P11, P12, P14, P15, P19) are prompts in the [design prompt log](../prompts/prompts-design-phase.md), and P27 is a prompt in the [refactor prompt log](../prompts/prompts-refactor-phase.md); R1 to R3 are the questions from the independent review, answered in P14.
 - A rule marked **[assistant's pick]** was decided by the AI assistant, where the developer's answers left a small detail open. Its reason and rejected options are in [To review](#to-review) or, once the developer agreed it, in [Agreed by the developer](#agreed-by-the-developer).
 
 ## Contents
@@ -651,13 +651,15 @@ The README gives:
 - the assumptions ([Assumptions](#assumptions));
 - the design reasoning ([DEC-30](#dec-30));
 - what a version with persistent storage would need to stay idempotent, and that remembering applied files across runs is out of scope ([DEC-03](#dec-03));
-- production items: handling very large files ([DEC-32](#dec-32)), and database transactions and sagas ([DEC-18](#dec-18)).
+- production items: handling very large files ([DEC-32](#dec-32)), and database transactions and sagas ([DEC-18](#dec-18));
+- the prerequisites: the tools needed, with the versions and how to check them, and how to install Ruby 3.4 on macOS, Linux and Windows;
+- a troubleshooting section for the problems a reviewer is likely to hit when installing and running the program, mostly on Windows.
 
 **Reason:** the README is where a reviewer looks first, and these are the questions they are most likely to ask.
 
 **Rejected:** explaining the design in code comments.
 
-**From:** J4, X6, X5, X11, X12, X13, B3, S12.
+**From:** J4, X6, X5, X11, X12, X13, B3, S12, P27.
 
 <a id="dec-38"></a>
 ### DEC-38 Submission
