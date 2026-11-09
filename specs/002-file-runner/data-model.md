@@ -75,7 +75,7 @@ classDiagram
 | `CsvRows.new(path, expected_size)` | String, Integer | |
 | `each { \|row\| ... }` | `Row` | Yields each non-blank row in file order; `Enumerable` |
 
-- Raises `UnreadableFile.cannot_open(path, error)` for a `SystemCallError` raised while opening the file or reading a row (an error raised in the caller's block passes through unchanged; plan [P33](plan.md#p33)), and `UnreadableFile.at_line(path, line)` for a `CSV::MalformedCSVError`, after yielding every earlier row ([research R1, R2](research.md#r1-reading-a-csv-file-row-by-row-with-its-line-number)).
+- Raises `UnreadableFile`, built by its private `cannot_open(error)`, for a `SystemCallError` raised while opening the file or reading a row (an error raised in the caller's block passes through unchanged; plan [P33](plan.md#p33)); and, built by its private `unreadable_at(line)` with the line number and the line problem, for a `CSV::MalformedCSVError`, or for a row that is not valid UTF-8 text, which `check_text` finds at the line where that row starts, after yielding every earlier row ([research R1, R2](research.md#r1-reading-a-csv-file-row-by-row-with-its-line-number)).
 - Holds one row at a time; never the file's text ([NFR-03](../../docs/solution-design/03-non-functional-requirements.md#nfr-03)).
 
 ### `BalancesCsvReader` and `TransfersCsvReader` (infrastructure)
@@ -159,17 +159,17 @@ All are direct subclasses of `StandardError`.
 | `InvalidBalancesFile` | `application/errors.rb` | `no_rows(path)` | `the balances file has no rows: <path>` | `balances file invalid: 1 problem` |
 | `NoTransfers` | `application/errors.rb` | `new(path)` | `the transfers file has no transfers: <path>` | `transfers file has no transfers` |
 | `TotalChanged` | `application/errors.rb` | `new(before, after)` (`Money`) | `the total of all balances changed from <before> to <after>. No output file was written.` | `total of all balances changed` |
-| `UnreadableFile` | `infrastructure/errors.rb` | `cannot_open(path, error)` | `cannot read file <path>: <reason>` | `cannot read file` |
-| `UnreadableFile` | `infrastructure/errors.rb` | `at_line(path, line_number)` | `cannot read <path> from line <N>. Check for an unclosed quote or characters that are not text.` | `cannot read file` |
+| `UnreadableFile` | `application/errors.rb` | `new(message)`, built by `CsvRows` for a file it cannot open | `cannot read file <path>: <reason>` | `cannot read file` |
+| `UnreadableFile` | `application/errors.rb` | `new(message, line_number:, line_problem:)`, built by `CsvRows` for a line it cannot read | `cannot read <path> from line <N>. Check for an unclosed quote or characters that are not text.`; the line problem `cannot read <path> from this line. Check for an unclosed quote or characters that are not text.` | `cannot read file` |
 | `OutputNotWritable` | `infrastructure/errors.rb` | `new(path, error)` | `cannot write output file <path>: <reason>` | `cannot write output file` |
 
-- `<count>` is `1 problem` or `<n> problems`. `<reason>` is the system's text (plan [P9](plan.md#p9)). `InvalidBalancesFile#problems` returns the problem lines; `TotalChanged#before` and `#after` the totals; `UnreadableFile#path` and `#line_number` (nil for `cannot_open`) and `#line_problem` (`cannot read <path> from this line. Check for an unclosed quote or characters that are not text.`).
+- `<count>` is `1 problem` or `<n> problems`. `<reason>` is the system's text (plan [P9](plan.md#p9)). `InvalidBalancesFile#problems` returns the problem lines; `TotalChanged#before` and `#after` the totals; `UnreadableFile#line_number` and `#line_problem` (both nil for a file that cannot be opened; the line problem is `cannot read <path> from this line. Check for an unclosed quote or characters that are not text.`).
 
 ### `FinalBalancesCsvWriter` (infrastructure; plan P13)
 
 | Member | Type | Meaning |
 |---|---|---|
-| `FinalBalancesCsvWriter.default_path(run_time)` | `Time` | `output/final_balances_YYYY-MM-DD_HHMMSS.csv` |
+| `FinalBalancesCsvWriter.default_path(run_time)`, and the same on a writer | `Time` | `output/final_balances_YYYY-MM-DD_HHMMSS.csv` |
 | `.new` | | No arguments |
 | `write(accounts, path)` | Array of `Account`, String | One `<number>,<balance>\n` line per account, in the order given; creates missing folders; never overwrites; deletes its own partial file; raises `OutputNotWritable` |
 
@@ -186,7 +186,7 @@ All are direct subclasses of `StandardError`.
 |---|---|---|
 | `DisplayPath.of(path, folder = Dir.pwd)` | String, String | The path relative to `folder` when the file is in or below it, or in full |
 
-- The `Runner` resolves every path to a real (absolute) path for the start checks, then gives `ProcessDailyTransfer` the balances and transfers paths in their shown form and the output path in full (plan [P11](plan.md#p11)). Only `infrastructure/` uses `DisplayPath.of`: the start-check lines, the paths the `Runner` passes on, `UnreadableFile` and `OutputNotWritable`, and the report's output line in `ReportPrinter`. `InvalidBalancesFile.no_rows`, `NoTransfers` and the `Run started` line show the path they are given ([page 6 pick 53](../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-53)).
+- The `Runner` resolves every path to a real (absolute) path for the start checks, then gives `ProcessDailyTransfer` the balances and transfers paths in their shown form and the output path in full (plan [P11](plan.md#p11)). Only `infrastructure/` uses `DisplayPath.of`: the start-check lines, the paths the `Runner` passes on, the `UnreadableFile` messages `CsvRows` builds, `OutputNotWritable`, and the report's output line in `ReportPrinter`. `InvalidBalancesFile.no_rows`, `NoTransfers` and the `Run started` line show the path they are given ([page 6 pick 53](../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-53)).
 
 ### `Runner` (infrastructure; plan P12)
 

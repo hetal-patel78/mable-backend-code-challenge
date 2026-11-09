@@ -70,7 +70,7 @@ Each check raises a named error. **Domain errors** are about one value, one row 
 | `InvalidBalancesFile` | Run-stopping | `LoadBalances` | `application/` | Every problem with its line number, exit 1 |
 | `NoTransfers` | Run-stopping | `ProcessDailyTransfer` | `application/` | Exit 1 |
 | `TotalChanged` | Run-stopping | `ProcessDailyTransfer` | `application/` | Exit 1 |
-| `UnreadableFile` | Run-stopping | `BalancesCsvReader`, `TransfersCsvReader` | `infrastructure/` | Exit 1; in the balances file at a line, the last problem in `InvalidBalancesFile` |
+| `UnreadableFile` | Run-stopping | `CsvRows`, for both readers | `application/` | Exit 1; in the balances file at a line, the last problem in `InvalidBalancesFile` |
 | `OutputNotWritable` | Run-stopping | `FinalBalancesCsvWriter` | `infrastructure/` | Exit 1 |
 
 The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-19). The `malformed_row` reason comes from the reader's field-count mark, not from an error.
@@ -148,7 +148,7 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
 ### `ProcessDailyTransfer`
 
 - **Responsibility:** runs the day. Takes the run time in its constructor, defaulting to the current time ([DEC-30](../design-analysis/design-decisions.md#dec-30)). The balances reader, the transfers reader, the writer, the repository, the reporter (`ReportPrinter`) and the logger are all passed in to its constructor ([DEC-28](../design-analysis/design-decisions.md#dec-28)), as one parameter object that names each part ([P30](../prompts/prompts-refactor-phase.md#p30)): `ProcessDailyTransfer::Parts`, a `Data.define` nested in the class, with the run time as a separate keyword. **(assistant's pick: the nesting, `Data.define` and the separate run time)** The `Runner` builds the real ones. It creates `LoadBalances` and `TransferService` itself, giving them the parts it was given; they touch no file, screen or clock, so tests reach them through those parts. **(assistant's pick)** Tests pass fakes, for example a repository whose total changes ([DEC-24](../design-analysis/design-decisions.md#dec-24)) a reporter that records whether a report was printed, a logger that writes to memory, and a fixed run time.
-- **In:** the balances path, the transfers path and the output path. The `Runner` always gives the output path. If a caller leaves it out, `ProcessDailyTransfer` asks `FinalBalancesCsvWriter.default_path` for its run time. **(assistant's pick)** The readers are given the paths when they are asked to read, not when they are built. **(assistant's pick)**
+- **In:** the balances path, the transfers path and the output path. The `Runner` always gives the output path. If a caller leaves it out, `ProcessDailyTransfer` asks the writer it was given for the default path for its run time (`default_path`). **(assistant's pick)** The readers are given the paths when they are asked to read, not when they are built. **(assistant's pick)**
 - **Out:** a `DayResult`, or a run-stopping error. In order, it:
   1. logs the run start, loads the balances through `LoadBalances`, notes each account's opening balance before any transfer is applied, and adds up the total before from those opening balances;
   2. reads each transfers row in file order ([DEC-15](../design-analysis/design-decisions.md#dec-15)), builds the `AccountNumber`s, the `Money` and the `Transfer`, and hands it to `TransferService`;
@@ -189,8 +189,9 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
 
 ### Application errors
 
-- `InvalidBalancesFile`, `NoTransfers` and `TotalChanged`; who raises each is in the [errors table](#errors-and-who-raises-them).
+- `InvalidBalancesFile`, `NoTransfers`, `TotalChanged` and `UnreadableFile`; who raises each is in the [errors table](#errors-and-who-raises-them).
 - `InvalidBalancesFile` carries every problem with its line number, so the `Runner` can print them all.
+- `UnreadableFile` is the error of the reader contract that `LoadBalances` catches, so it is defined with the application errors and no application class requires an infrastructure file. The reader that raises it builds its message. **(assistant's pick)**
 
 ---
 
@@ -206,7 +207,7 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
 ### `FinalBalancesCsvWriter`
 
 - **Responsibility:** names and writes the final balances file ([DEC-27](../design-analysis/design-decisions.md#dec-27)).
-- **In:** the run time, for the class method `FinalBalancesCsvWriter.default_path(run_time)`, the method name being the **(assistant's pick)**; then, for an instance, the accounts in load order and the output path.
+- **In:** the run time, for the class method `FinalBalancesCsvWriter.default_path(run_time)`, the method name being the **(assistant's pick)**, and for the same method on a writer, which gives the class's path, for a caller that holds a writer **(assistant's pick)**; then, for an instance, the accounts in load order and the output path.
 - **Out:** `default_path` gives `output/final_balances_YYYY-MM-DD_HHMMSS.csv` for the run time. Writing gives the file, in the balances input format, with LF line endings, on every operating system **(assistant's pick)**, reason on [page 9](09-considerations.md#portability-and-ci). It creates missing folders and creates the file only if it does not exist at that moment. If the file appears after the start checks, it raises `OutputNotWritable` with the reason from the system and leaves that file unchanged **(assistant's pick)**. If the file cannot be created or writing fails partway, it deletes any partial file and raises `OutputNotWritable` with the reason from the system ([DEC-25](../design-analysis/design-decisions.md#dec-25)).
 - **Does not:** overwrite a file; read the clock; decide whether the run completed; print anything.
 
@@ -243,14 +244,14 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
 
 Three small helpers used only inside `infrastructure/`. Without them, both readers would repeat the CSV, line-number, byte-order-mark and malformed-row handling, and the `Runner`, `ReportPrinter` and the infrastructure errors would each hold a copy of the path rule. **(assistant's pick)**
 
-- **`CsvRows`:** reads one file with Ruby's CSV library, opened as `bom|utf-8`, one row at a time (`CSV.open`, one row per `shift`, [DEC-32](../design-analysis/design-decisions.md#dec-32)), and gives each non-blank row as a `Row` with its physical line number ([DEC-04](../design-analysis/design-decisions.md#dec-04), [DEC-05](../design-analysis/design-decisions.md#dec-05), [DEC-07](../design-analysis/design-decisions.md#dec-07)). It trims the values, marks a row whose number of fields is not the one the reader expects, and marks a header-looking first row with the header hint ([DEC-06](../design-analysis/design-decisions.md#dec-06)). It reads the rows as raw bytes and checks that each row is UTF-8 text, so a row that is not text is reported at its own line; the values are then turned into text. A file that cannot be opened, or that the library cannot read past a line, raises `UnreadableFile`; a system error while the file is opened or read is reported as one that cannot be read, but an error raised by the code the rows are given to passes through unchanged; the file is opened in its own method and closed however the reading ends. **(assistant's pick)** Each reader builds one with the number of fields it expects: 2 for balances, 3 for transfers.
+- **`CsvRows`:** reads one file with Ruby's CSV library, opened as `bom|utf-8`, one row at a time (`CSV.open`, one row per `shift`, [DEC-32](../design-analysis/design-decisions.md#dec-32)), and gives each non-blank row as a `Row` with its physical line number ([DEC-04](../design-analysis/design-decisions.md#dec-04), [DEC-05](../design-analysis/design-decisions.md#dec-05), [DEC-07](../design-analysis/design-decisions.md#dec-07)). It trims the values, marks a row whose number of fields is not the one the reader expects, and marks a header-looking first row with the header hint ([DEC-06](../design-analysis/design-decisions.md#dec-06)). It reads the rows as raw bytes and checks that each row is UTF-8 text, so a row that is not text is reported at its own line; the values are then turned into text. A file that cannot be opened, or that the library cannot read past a line, raises `UnreadableFile`, whose messages `CsvRows` builds with the path in its shown form, and, for a line, the same problem said of that line for the balances problem list; a system error while the file is opened or read is reported as one that cannot be read, but an error raised by the code the rows are given to passes through unchanged; the file is opened in its own method and closed however the reading ends. **(assistant's pick)** Each reader builds one with the number of fields it expects: 2 for balances, 3 for transfers.
 - **`Row`:** one row as a reader gives it: its line number, its values as written and trimmed, the expected number of fields, and the header hint if the row was marked. A `Data` record: it never changes once built, and it says whether it has the wrong number of fields.
 - **`DisplayPath`:** works out how a path is shown: relative to the folder the command was run from when the file is in or below it, otherwise in full ([DEC-26](../design-analysis/design-decisions.md#dec-26)). The `Runner` uses it for its start-check lines and for the balances and transfers paths it passes on, `ReportPrinter` for the output line, and the infrastructure errors for the paths in their messages. No `domain/` or `application/` class uses it ([DEC-30](../design-analysis/design-decisions.md#dec-30)).
 - **Do not:** check account numbers or amounts; build domain models; print anything.
 
 ### Infrastructure errors
 
-- `UnreadableFile` and `OutputNotWritable`; who raises each is in the [errors table](#errors-and-who-raises-them).
+- `OutputNotWritable`; who raises it is in the [errors table](#errors-and-who-raises-them).
 
 ---
 

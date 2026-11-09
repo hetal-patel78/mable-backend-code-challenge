@@ -47,6 +47,8 @@ The code is split into three folders under `lib/` ([DEC-30](../design-analysis/d
 - **Application** (`lib/application/`): runs one day. It loads the balances, applies each transfer in file order, keeps each row's outcome as a `TransferResult`, writes the output and prints the report through the parts it is given.
 - **Domain** (`lib/domain/`): the business rules. A *domain model* is a class named after a business idea, such as `Account` or `Money`, that holds its own rules. The domain knows nothing about files, line numbers, the screen or the logger.
 
+Each layer uses only the layers inside it: infrastructure uses the application and the domain, and the application uses only the domain. The application reaches the files, the screen and the logger only through the parts it is given, and `UnreadableFile`, the error a reader raises, is defined with the application's own errors.
+
 ## Diagram 1: what the Runner builds and passes in
 
 ```mermaid

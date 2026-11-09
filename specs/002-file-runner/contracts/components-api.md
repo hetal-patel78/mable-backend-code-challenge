@@ -8,15 +8,15 @@ Code files load their own dependencies with `require_relative`, and only those w
 
 | File | Defines | Uses |
 |---|---|---|
-| `application/errors` | `InvalidBalancesFile`, `NoTransfers`, `TotalChanged` | |
-| `application/load_balances` | `LoadBalances` | `domain/account_number`, `domain/money`, `domain/account`, `domain/errors`, `application/errors`, `infrastructure/errors` |
+| `application/errors` | `InvalidBalancesFile`, `NoTransfers`, `TotalChanged`, `UnreadableFile` | |
+| `application/load_balances` | `LoadBalances` | `domain/account_number`, `domain/money`, `domain/account`, `domain/errors`, `application/errors` |
 | `application/transfer_result` | `TransferResult` | |
 | `application/day_result` | `DayResult` | `application/transfer_result` |
 | `application/log_messages` | `LogMessages` | `domain/money` |
-| `application/process_daily_transfer` | `ProcessDailyTransfer` | `application/load_balances`, `application/log_messages`, `application/day_result`, `application/errors`, `application/transfer_result`, `domain/account_number`, `domain/money`, `domain/errors`, `domain/transfer`, `domain/transfer_service`, `infrastructure/final_balances_csv_writer` (for `default_path`) |
-| `infrastructure/errors` | `UnreadableFile`, `OutputNotWritable` | `infrastructure/display_path` |
+| `application/process_daily_transfer` | `ProcessDailyTransfer` | `application/load_balances`, `application/log_messages`, `application/day_result`, `application/errors`, `application/transfer_result`, `domain/account_number`, `domain/money`, `domain/errors`, `domain/transfer`, `domain/transfer_service` |
+| `infrastructure/errors` | `OutputNotWritable` | `infrastructure/display_path` |
 | `infrastructure/row` | `Row` | |
-| `infrastructure/csv_rows` | `CsvRows` | `csv`, `infrastructure/row`, `infrastructure/errors` |
+| `infrastructure/csv_rows` | `CsvRows` | `csv`, `application/errors`, `infrastructure/display_path`, `infrastructure/row` |
 | `infrastructure/balances_csv_reader` | `BalancesCsvReader` | `infrastructure/csv_rows` |
 | `infrastructure/transfers_csv_reader` | `TransfersCsvReader` | `infrastructure/csv_rows` |
 | `infrastructure/display_path` | `DisplayPath` | `pathname` |
@@ -87,8 +87,7 @@ The `<problem>` texts inside `InvalidBalancesFile`, in field order for each row:
 | `InvalidBalancesFile.no_rows(path)` | an error with the no-rows message |
 | `NoTransfers.new(path)` | an error |
 | `TotalChanged.new(before, after)` | an error; `before`, `after` return the `Money` totals |
-| `UnreadableFile.cannot_open(path, error)` | an error; `path`; `line_number` nil |
-| `UnreadableFile.at_line(path, line_number)` | an error; `path`; `line_number`; `line_problem` |
+| `UnreadableFile.new(message, line_number: nil, line_problem: nil)` | an error; `line_number` and `line_problem` nil for a file that cannot be opened; built by `CsvRows`, which gives the messages |
 | `OutputNotWritable.new(path, error)` | an error |
 | `error.message` | the text after `Error: ` in the spec's table |
 | `error.stop_reason` | the text after `Run stopped: ` in the spec's table |
@@ -100,6 +99,7 @@ The `<problem>` texts inside `InvalidBalancesFile`, in field order for each row:
 | Call | Returns | Raises |
 |---|---|---|
 | `FinalBalancesCsvWriter.default_path(run_time)` | `output/final_balances_<YYYY-MM-DD>_<HHMMSS>.csv` from `run_time`'s own (local) time | |
+| `writer.default_path(run_time)` | the same path as the class method | |
 | `FinalBalancesCsvWriter.new.write(accounts, path)` | nil; the file holds `<account.number>,<account.balance>\n` per account | `OutputNotWritable`: `cannot write output file <path>: <reason from the system>` |
 | `DisplayPath.of(path, folder = Dir.pwd)` | the path to show | |
 | `ReportPrinter.new(output: $stdout, current_folder: Dir.pwd)` | a reporter | |
@@ -117,4 +117,4 @@ The `<problem>` texts inside `InvalidBalancesFile`, in field order for each row:
 
 - A reader passed to `LoadBalances` or `ProcessDailyTransfer` needs only `each_row(path)` yielding `Row`s; the fake readers in the specs have the same member.
 - A reporter needs only `print(day_result)`; a writer only `write(accounts, path)`; a repository `add`, `include?`, `find` and `all` (`001`); a logger `info`, `warn` and `error`.
-- The `Runner` passes `ProcessDailyTransfer` the balances and transfers paths in their shown form (`DisplayPath.of`) and the output path in full (plan [P11](../plan.md#p11)), so `DayResult#output_path` is the full path. The application classes show the paths they are given: `InvalidBalancesFile.no_rows` and `NoTransfers` in their messages, `ProcessDailyTransfer` in its `Run started` line; no `application/` file uses `DisplayPath` ([page 6 pick 53](../../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-53)). `DisplayPath.of` is used only in `infrastructure/`: by the `Runner` for its start-check lines and the paths it passes on, by `UnreadableFile` and `OutputNotWritable` in their messages, and by `ReportPrinter`, which alone works out the output path to show in the report ([page 6 pick 41](../../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-41)). The readers and the writer open files with the path they are given.
+- The `Runner` passes `ProcessDailyTransfer` the balances and transfers paths in their shown form (`DisplayPath.of`) and the output path in full (plan [P11](../plan.md#p11)), so `DayResult#output_path` is the full path. The application classes show the paths they are given: `InvalidBalancesFile.no_rows` and `NoTransfers` in their messages, `ProcessDailyTransfer` in its `Run started` line; no `application/` file uses `DisplayPath` ([page 6 pick 53](../../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-53)). `DisplayPath.of` is used only in `infrastructure/`: by the `Runner` for its start-check lines and the paths it passes on, by `CsvRows` in the `UnreadableFile` messages it builds and by `OutputNotWritable` in its message, and by `ReportPrinter`, which alone works out the output path to show in the report ([page 6 pick 41](../../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-41)). The readers and the writer open files with the path they are given.

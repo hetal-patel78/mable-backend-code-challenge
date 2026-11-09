@@ -140,7 +140,7 @@ How the design takes the changes most likely to come. The [high-level design](05
 | Stored accounts | A database repository with the same `add`, `find`, `include?` and `all` ([DEC-31](../design-analysis/design-decisions.md#dec-31)), passed in by the `Runner`. `TransferService#apply` changes the `Account` objects that `find` returns, so the repository also needs a way to save the changed accounts, and `ProcessDailyTransfer` wraps each `apply` in a database transaction ([DEC-18](../design-analysis/design-decisions.md#dec-18)). | Domain rules, `TransferService` |
 | Logs to a file or service | A different logger passed in ([DEC-28](../design-analysis/design-decisions.md#dec-28)) | `ProcessDailyTransfer` |
 | Another report layout or destination | A different reporter passed in, reading the same `DayResult` | Everything else |
-| Another output format | A different writer passed in, with the same no-overwrite rule ([DEC-27](../design-analysis/design-decisions.md#dec-27)). The default output file name comes from `FinalBalancesCsvWriter.default_path`, which the `Runner` and `ProcessDailyTransfer` call by class name, so both change to take the name from the new writer. | Domain |
+| Another output format | A different writer passed in, with the same no-overwrite rule ([DEC-27](../design-analysis/design-decisions.md#dec-27)). The default output file name comes from `FinalBalancesCsvWriter.default_path`, which the `Runner` calls by class name, so it changes to take the name from the new writer; `ProcessDailyTransfer` asks the writer it was given, so it does not change. | Domain |
 
 ## Risks and known limitations
 
