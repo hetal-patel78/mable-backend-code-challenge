@@ -12,6 +12,11 @@ class FinalBalancesCsvWriter
     "output/final_balances_#{run_time.strftime('%Y-%m-%d_%H%M%S')}.csv"
   end
 
+  # The same path as the class method gives, for a caller that holds a writer rather than the class.
+  def default_path(run_time)
+    self.class.default_path(run_time)
+  end
+
   def write(accounts, path)
     file = open_new(path)
     write_lines(file, accounts, path)

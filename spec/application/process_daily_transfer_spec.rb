@@ -104,6 +104,12 @@ RSpec.describe ProcessDailyTransfer do
       expect(File.file?('output/final_balances_2026-11-07_143005.csv')).to be(true)
     end
 
+    it 'takes the default output path from the writer it was given, for its run time (DEC-27, DEC-30)' do
+      writer = instance_double(FinalBalancesCsvWriter, write: nil)
+      allow(writer).to receive(:default_path).with(Time.new(2026, 11, 7, 14, 30, 5)).and_return('output/writer.csv')
+      expect(day(writer: writer).call('balances.csv', 'transfers.csv').output_path).to eq('output/writer.csv')
+    end
+
     it 'asks the balances reader with the balances path' do
       expect(result.then { balances_reader.paths }).to eq(['balances.csv'])
     end
@@ -114,7 +120,7 @@ RSpec.describe ProcessDailyTransfer do
   end
 
   describe '#call when the balances file cannot be read' do
-    let(:error) { UnreadableFile.cannot_open('balances.csv', Errno::EACCES.new) }
+    let(:error) { UnreadableFile.new('cannot read file balances.csv: Permission denied') }
     let(:balances_reader) { FakeReader.new([], error: error) }
 
     it 'lets the error through unchanged (DEC-12)' do

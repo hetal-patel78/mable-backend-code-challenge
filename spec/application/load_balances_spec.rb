@@ -4,7 +4,6 @@ require 'application/load_balances'
 require 'application/errors'
 require 'domain/account_repository'
 require 'infrastructure/csv_rows'
-require 'infrastructure/errors'
 
 RSpec.describe LoadBalances do
   let(:reader) do
@@ -188,7 +187,7 @@ RSpec.describe LoadBalances do
     end
 
     it 'lets a file that cannot be opened pass through unchanged' do
-      unopened = UnreadableFile.cannot_open('balances.csv', Errno::EACCES.new)
+      unopened = UnreadableFile.new('cannot read file balances.csv: Permission denied')
       unopenable = described_class.new(FakeReader.new([], error: unopened), repository)
       expect { unopenable.call('balances.csv') }.to raise_error(be(unopened))
     end

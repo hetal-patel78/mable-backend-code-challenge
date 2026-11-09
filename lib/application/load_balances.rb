@@ -4,7 +4,6 @@ require_relative '../domain/account'
 require_relative '../domain/account_number'
 require_relative '../domain/errors'
 require_relative '../domain/money'
-require_relative '../infrastructure/errors'
 require_relative 'errors'
 
 # Loads every row of the balances file into the repository, in file order, or lists every problem in it.

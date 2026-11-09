@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'infrastructure/csv_rows'
-require 'infrastructure/errors'
+require 'application/errors'
 
 RSpec.describe CsvRows do
   around { |example| in_temp_folder { example.run } }
@@ -142,6 +142,11 @@ RSpec.describe CsvRows do
       expect { rows_of(path) }.to raise_error(an_object_having_attributes(line_number: 2))
     end
 
+    it 'gives the problem text for a list of problems, said of the line it is listed at (DEC-04, DEC-12)' do
+      problem = "cannot read #{path} from this line. Check for an unclosed quote or characters that are not text."
+      expect { rows_of(path) }.to raise_error(an_object_having_attributes(line_problem: problem))
+    end
+
     it 'yields the rows before bytes that are not UTF-8 (DEC-04)' do
       write_file('bytes.csv', "1111234522226789,100.00\n1212343433335665,\xFF50.00\n".b)
       expect(lines_before_error('bytes.csv')).to eq([1])
@@ -163,6 +168,10 @@ RSpec.describe CsvRows do
 
     it 'gives no line number for a missing file (DEC-23)' do
       expect { rows_of(missing) }.to raise_error(an_object_having_attributes(line_number: nil))
+    end
+
+    it 'gives no line problem for a missing file (DEC-23)' do
+      expect { rows_of(missing) }.to raise_error(an_object_having_attributes(line_problem: nil))
     end
 
     it 'leaves out the call details after " @ " (P9)' do

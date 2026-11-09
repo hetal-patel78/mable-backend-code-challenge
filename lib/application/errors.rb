@@ -37,6 +37,22 @@ class NoTransfers < StandardError
   end
 end
 
+# An input file that a reader cannot open, or cannot read past a line; it stops the run. The reader builds the message,
+# and, for a line, the text of the same problem said of that line, for a list of problems.
+class UnreadableFile < StandardError
+  attr_reader :line_number, :line_problem
+
+  def initialize(message, line_number: nil, line_problem: nil)
+    super(message)
+    @line_number = line_number
+    @line_problem = line_problem
+  end
+
+  def stop_reason
+    'cannot read file'
+  end
+end
+
 # A total of all balances that changed during the day; it stops the run before the output file is written.
 class TotalChanged < StandardError
   attr_reader :before, :after

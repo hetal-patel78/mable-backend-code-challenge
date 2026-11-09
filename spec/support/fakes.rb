@@ -4,9 +4,10 @@ require 'logger'
 require 'stringio'
 require 'domain/account'
 require 'domain/money'
-require 'infrastructure/errors'
+require 'application/errors'
 
 # A reader that yields the rows it is given and records each path; it can fail before or after the rows.
+# Its UnreadableFile for a line has the same texts as the one CsvRows raises.
 class FakeReader
   attr_reader :paths
 
@@ -22,7 +23,15 @@ class FakeReader
     raise @error if @error
 
     @rows.each(&)
-    raise UnreadableFile.at_line(path, @unreadable_at) if @unreadable_at
+    raise unreadable_line(path) if @unreadable_at
+  end
+
+  private
+
+  def unreadable_line(path)
+    advice = 'Check for an unclosed quote or characters that are not text.'
+    UnreadableFile.new("cannot read #{path} from line #{@unreadable_at}. #{advice}",
+                       line_number: @unreadable_at, line_problem: "cannot read #{path} from this line. #{advice}")
   end
 end
 

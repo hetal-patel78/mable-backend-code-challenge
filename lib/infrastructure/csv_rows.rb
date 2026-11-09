@@ -1,14 +1,16 @@
 # frozen_string_literal: true
 
 require 'csv'
+require_relative '../application/errors'
+require_relative 'display_path'
 require_relative 'row'
-require_relative 'errors'
 
 # The non-blank rows of one CSV file, read one at a time, each with the physical line where it starts.
 class CsvRows
   include Enumerable
 
   HEADER_HINT = 'This looks like a header row; files must not have a header.'
+  ADVICE = 'Check for an unclosed quote or characters that are not text.'
   BLANK = /\A[ \t\r\n]*\z/
   PADDING = /\A[ \t]+|[ \t]+\z/
   LINE_BREAK = /\r\n|\r|\n/
@@ -34,7 +36,7 @@ class CsvRows
   def open_file
     CSV.open(@path, 'r:bom|utf-8')
   rescue SystemCallError => e
-    raise UnreadableFile.cannot_open(@path, e)
+    raise cannot_open(e)
   end
 
   # Read as raw bytes, so the CSV parser never raises an encoding error of its own at the wrong line;
@@ -50,7 +52,7 @@ class CsvRows
   end
 
   def check_text(bytes, line_number)
-    raise UnreadableFile.at_line(@path, line_number) unless text(bytes).valid_encoding?
+    raise unreadable_at(line_number) unless text(bytes).valid_encoding?
   end
 
   def text(bytes)
@@ -61,9 +63,20 @@ class CsvRows
   def next_fields(csv)
     csv.shift
   rescue CSV::MalformedCSVError
-    raise UnreadableFile.at_line(@path, @lines_read + 1)
+    raise unreadable_at(@lines_read + 1)
   rescue SystemCallError => e
-    raise UnreadableFile.cannot_open(@path, e)
+    raise cannot_open(e)
+  end
+
+  # Ruby's system error messages end in " @ rb_sysopen - <path>"; only the part before " @ " is kept.
+  def cannot_open(error)
+    UnreadableFile.new("cannot read file #{DisplayPath.of(@path)}: #{error.message.split(' @ ').first}")
+  end
+
+  def unreadable_at(line_number)
+    shown = DisplayPath.of(@path)
+    UnreadableFile.new("cannot read #{shown} from line #{line_number}. #{ADVICE}",
+                       line_number: line_number, line_problem: "cannot read #{shown} from this line. #{ADVICE}")
   end
 
   # The physical lines a row's raw text spans: one per line break, plus a last line with no final break,

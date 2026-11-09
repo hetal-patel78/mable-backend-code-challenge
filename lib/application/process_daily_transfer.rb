@@ -10,7 +10,6 @@ require_relative '../domain/errors'
 require_relative '../domain/money'
 require_relative '../domain/transfer'
 require_relative '../domain/transfer_service'
-require_relative '../infrastructure/final_balances_csv_writer'
 
 # Runs one day: loads the balances, applies each transfer in file order, writes the output file and reports.
 class ProcessDailyTransfer
@@ -33,7 +32,7 @@ class ProcessDailyTransfer
   end
 
   def call(balances_path, transfers_path, output_path = nil)
-    output_path ||= FinalBalancesCsvWriter.default_path(@run_time)
+    output_path ||= @writer.default_path(@run_time)
     @logger.info(LogMessages.run_started(balances_path, transfers_path))
     LoadBalances.new(@balances_reader, @repository).call(balances_path)
     opening_balances = take_opening_balances

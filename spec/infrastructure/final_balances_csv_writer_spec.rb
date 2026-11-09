@@ -36,6 +36,13 @@ RSpec.describe FinalBalancesCsvWriter do
     end
   end
 
+  describe '#default_path' do
+    it 'gives a writer the same path as the class does, for a caller given the writer (DEC-27, DEC-30)' do
+      run_time = Time.new(2026, 11, 7, 14, 30, 5)
+      expect(described_class.new.default_path(run_time)).to eq(described_class.default_path(run_time))
+    end
+  end
+
   describe '#write' do
     it 'writes each account in load order, 2 decimal places, no header, LF only (DEC-27)' do
       described_class.new.write(accounts, 'out/day1.csv')

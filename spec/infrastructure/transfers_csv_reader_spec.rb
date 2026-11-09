@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'infrastructure/transfers_csv_reader'
-require 'infrastructure/errors'
+require 'application/errors'
 
 RSpec.describe TransfersCsvReader do
   subject(:reader) { described_class.new }
