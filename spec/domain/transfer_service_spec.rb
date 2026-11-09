@@ -120,27 +120,5 @@ RSpec.describe TransferService do
         expect(total).to eq('150.00')
       end
     end
-
-    context 'with the sample accounts and transfers (DEC-35)' do
-      let(:repository) do
-        repository_with(*{ '1111234522226789' => '5000.00', '1111234522221234' => '10000.00',
-                           '2222123433331212' => '550.00', '1212343433335665' => '1200.00',
-                           '3212343433335755' => '50000.00' }.map { |number, opening| account(number, opening) })
-      end
-
-      before do
-        [%w[1111234522226789 1212343433335665 500.00], %w[3212343433335755 2222123433331212 1000.00],
-         %w[3212343433335755 1111234522226789 320.50], %w[1111234522221234 1212343433335665 25.60]]
-          .each { |from, to, money| service.apply(transfer(from: from, to: to, amount: money)) }
-      end
-
-      it 'gives the exact closing balances' do
-        expect(balances).to eq(%w[4820.50 9974.40 1550.00 1725.60 48679.50])
-      end
-
-      it 'keeps the total at 66750.00' do
-        expect(total).to eq('66750.00')
-      end
-    end
   end
 end

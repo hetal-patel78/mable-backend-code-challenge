@@ -63,11 +63,6 @@ module ReportTemplates
     REPORT
   end
 
-  def sample_output_file
-    "1111234522226789,4820.50\n1111234522221234,9974.40\n2222123433331212,1550.00\n" \
-      "1212343433335665,1725.60\n3212343433335755,48679.50\n"
-  end
-
   private
 
   def template_balances(openings, closings)

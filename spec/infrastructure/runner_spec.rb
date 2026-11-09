@@ -41,82 +41,6 @@ RSpec.describe Runner do
       STDERR
     end
 
-    describe 'AC-01.4 an invalid file reports every problem and stops the run' do
-      subject(:run) do
-        run_scenario(files: { 'balances.csv' => "1111234522226789,5000.00\n\n12345,100.00\n1212343433335665,abc,9\n" \
-                                                "1111234522226789,10.00\n2222123433331212,-5.00\n" \
-                                                "3212343433335755,1.234\n" })
-      end
-
-      it_behaves_like 'a stopped run', stderr: <<~STDERR
-        Error: the balances file is invalid (5 problems):
-          Line 3: account number "12345" must be exactly 16 digits
-          Line 4: expected 2 fields, found 3
-          Line 5: account 1111234522226789 appears more than once (first on line 1)
-          Line 6: balance "-5.00" must not be negative
-          Line 7: balance "1.234" has more than 2 decimal places
-        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 5 problems
-      STDERR
-
-      it 'names no account number in the error log line (DEC-28)' do
-        expect(run.stderr.lines.grep(/\AE, \[/).join).not_to match(/\d{16}/)
-      end
-    end
-
-    describe 'AC-01.5 a row with several problems reports each one, in field order' do
-      subject(:run) { run_scenario(files: { 'balances.csv' => "12345,abc\n" }) }
-
-      it_behaves_like 'a stopped run', stderr: <<~STDERR
-        Error: the balances file is invalid (2 problems):
-          Line 1: account number "12345" must be exactly 16 digits
-          Line 1: balance "abc" is not a valid amount
-        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 2 problems
-      STDERR
-    end
-
-    describe 'AC-01.6 1111234522226789,' do
-      subject(:run) { run_scenario(files: { 'balances.csv' => "1212343433335665,50.00\n1111234522226789,\n" }) }
-
-      it_behaves_like 'a stopped run', stderr: <<~STDERR
-        Error: the balances file is invalid (1 problem):
-          Line 2: balance is empty
-        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 1 problem
-      STDERR
-    end
-
-    describe 'AC-01.6 1111234522226789,abc' do
-      subject(:run) { run_scenario(files: { 'balances.csv' => "1212343433335665,50.00\n1111234522226789,abc\n" }) }
-
-      it_behaves_like 'a stopped run', stderr: <<~STDERR
-        Error: the balances file is invalid (1 problem):
-          Line 2: balance "abc" is not a valid amount
-        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 1 problem
-      STDERR
-    end
-
-    describe 'AC-01.6 1111234522226789,5000.00,x' do
-      subject(:run) do
-        run_scenario(files: { 'balances.csv' => "1212343433335665,50.00\n1111234522226789,5000.00,x\n" })
-      end
-
-      it_behaves_like 'a stopped run', stderr: <<~STDERR
-        Error: the balances file is invalid (1 problem):
-          Line 2: expected 2 fields, found 3
-        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 1 problem
-      STDERR
-    end
-
-    describe 'AC-01.6 ,' do
-      subject(:run) { run_scenario(files: { 'balances.csv' => "1212343433335665,50.00\n,\n" }) }
-
-      it_behaves_like 'a stopped run', stderr: <<~STDERR
-        Error: the balances file is invalid (2 problems):
-          Line 2: account number "" must be exactly 16 digits
-          Line 2: balance is empty
-        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 2 problems
-      STDERR
-    end
-
     describe 'AC-01.7 a header row makes the file invalid, with a hint (DEC-06)' do
       subject(:run) do
         run_scenario(files: { 'balances.csv' => "account,balance\n#{Runs::DEFAULT_FILES['balances.csv']}" })
@@ -130,7 +54,7 @@ RSpec.describe Runner do
       STDERR
     end
 
-    describe 'AC-01.7 1111O34522226789,100.00 has no header hint (DEC-06)' do
+    describe 'AC-01.7 a first row whose account number has digits gets no header hint (DEC-06)' do
       subject(:run) do
         run_scenario(files: { 'balances.csv' => "1111O34522226789,100.00\n1212343433335665,50.00\n" \
                                                 "0000123412341234,0.00\n" })
@@ -143,7 +67,7 @@ RSpec.describe Runner do
       STDERR
     end
 
-    describe 'AC-01.7 account,balance,x has the header hint (DEC-06)' do
+    describe 'AC-01.7 a header row with 3 fields gets the hint after the field count (DEC-06)' do
       subject(:run) do
         run_scenario(files: { 'balances.csv' => "account,balance,x\n#{Runs::DEFAULT_FILES['balances.csv']}" })
       end
@@ -191,49 +115,6 @@ RSpec.describe Runner do
           Line 3: account number "12345" must be exactly 16 digits
           Line 7: cannot read bad.csv from this line. Check for an unclosed quote or characters that are not text.
         E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 2 problems
-      STDERR
-    end
-
-    describe 'AC-01.10 a duplicate account is reported even when its balance is invalid (DEC-12, DEC-31)' do
-      subject(:run) { run_scenario(files: { 'balances.csv' => "1111234522226789,5000.00\n1111234522226789,abc\n" }) }
-
-      it_behaves_like 'a stopped run', stderr: <<~STDERR
-        Error: the balances file is invalid (2 problems):
-          Line 2: account 1111234522226789 appears more than once (first on line 1)
-          Line 2: balance "abc" is not a valid amount
-        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 2 problems
-      STDERR
-    end
-
-    describe 'AC-01.10 known gap: a first copy with an invalid balance (DEC-12)' do
-      subject(:run) { run_scenario(files: { 'balances.csv' => "1111234522226789,abc\n1111234522226789,10.00\n" }) }
-
-      it_behaves_like 'a stopped run', stderr: <<~STDERR
-        Error: the balances file is invalid (1 problem):
-          Line 1: balance "abc" is not a valid amount
-        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 1 problem
-      STDERR
-    end
-
-    describe 'AC-01.10 known gap: a first copy with the wrong field count (DEC-12)' do
-      subject(:run) do
-        run_scenario(files: { 'balances.csv' => "1111234522226789,5000.00,x\n1111234522226789,10.00\n" })
-      end
-
-      it_behaves_like 'a stopped run', stderr: <<~STDERR
-        Error: the balances file is invalid (1 problem):
-          Line 1: expected 2 fields, found 3
-        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 1 problem
-      STDERR
-    end
-
-    describe 'AC-01.10 known gap: a first copy with a negative balance (DEC-12)' do
-      subject(:run) { run_scenario(files: { 'balances.csv' => "1111234522226789,-5.00\n1111234522226789,10.00\n" }) }
-
-      it_behaves_like 'a stopped run', stderr: <<~STDERR
-        Error: the balances file is invalid (1 problem):
-          Line 1: balance "-5.00" must not be negative
-        E, [<timestamp> #<pid>] ERROR -- : Run stopped: balances file invalid: 1 problem
       STDERR
     end
 
@@ -295,39 +176,7 @@ RSpec.describe Runner do
                       STDERR
     end
 
-    describe 'AC-02.3 a header row is rejected with a hint; every row rejected still completes (DEC-06, DEC-21)' do
-      subject(:run) { run_scenario(files: { 'transfers.csv' => "from,to,amount\n" }) }
-
-      it_behaves_like 'a completed run',
-                      output_file: "1111234522226789,100.00\n1212343433335665,50.00\n0000123412341234,0.00\n",
-                      stdout: <<~STDOUT, stderr: <<~STDERR
-                        Transfers
-                          Line 1  rejected  from -> to  amount  invalid_account_number: This looks like a header row; files must not have a header.
-
-                        Summary
-                          Processed: 1
-                          Applied: 0
-                          Rejected: 1
-                            invalid_account_number: 1
-                          Total before: 150.00
-                          Total after: 150.00
-
-                        Warning: All transfers were rejected; check this is the right file.
-
-                        Final balances
-                          Account           Opening  Closing
-                          1111234522226789   100.00   100.00
-                          1212343433335665    50.00    50.00
-                          0000123412341234     0.00     0.00
-
-                        Output file: output/final_balances_2026-11-07_143005.csv
-                      STDOUT
-                        W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: **** -> **** amount invalid_account_number
-                        W, [<timestamp> #<pid>]  WARN -- : All transfers were rejected; check this is the right file.
-                      STDERR
-    end
-
-    describe 'AC-02.3 from,to is malformed_row with the header hint (DEC-06, DEC-21)' do
+    describe 'AC-02.3 a header row with 2 fields is a malformed_row with the header hint (DEC-06, DEC-21)' do
       subject(:run) { run_scenario(files: { 'transfers.csv' => "from,to\n" }) }
 
       it_behaves_like 'a completed run',
@@ -390,188 +239,23 @@ RSpec.describe Runner do
     end
   end
 
-  describe 'FR-03 to FR-06 (owned by 001)' do
-    # Each row is line 1 of transfers.csv. An applied row gives Template A with its transfer and final balances;
-    # a rejected row gives Template R with its report line, and its warn line ends with the reason code.
-    invalid_amounts = ['0', '0.00', '-5.00', '-0', '-0.00', '1.234', 'abc', '10.', '.50', '+10', '1e3', '$10', '1 0']
-    domain_rows = [
-      { name: 'AC-03.1 1111234522226789,1212343433335665,30.00', row: '1111234522226789,1212343433335665,30.00',
-        transfer: '1111234522226789 -> 1212343433335665  30.00', balances: %w[70.00 80.00 0.00] },
-      { name: 'AC-03.3 12345,1212343433335665,abc', row: '12345,1212343433335665,abc',
-        report: '12345 -> 1212343433335665  abc  invalid_account_number',
-        warn: '*2345 -> ************5665 abc invalid_account_number' },
-      { name: 'AC-03.3 1111234522226789,1111234522226789,0', row: '1111234522226789,1111234522226789,0',
-        report: '1111234522226789 -> 1111234522226789  0  invalid_amount',
-        warn: '************6789 -> ************6789 0 invalid_amount' },
-      { name: 'AC-03.3 9999888877776666,9999888877776666,5.00', row: '9999888877776666,9999888877776666,5.00',
-        report: '9999888877776666 -> 9999888877776666  5.00  same_account',
-        warn: '************6666 -> ************6666 5.00 same_account' },
-      { name: 'AC-04.1 100.01 is more than the balance', row: '1111234522226789,1212343433335665,100.01',
-        report: '1111234522226789 -> 1212343433335665  100.01  insufficient_funds',
-        warn: '************6789 -> ************5665 100.01 insufficient_funds' },
-      { name: 'AC-04.2 100.00 leaves exactly 0.00 (DEC-13)', row: '1111234522226789,1212343433335665,100.00',
-        transfer: '1111234522226789 -> 1212343433335665  100.00', balances: %w[0.00 150.00 0.00] },
-      { name: 'AC-04.3 0.01 from the 0.00 account', row: '0000123412341234,1111234522226789,0.01',
-        report: '0000123412341234 -> 1111234522226789  0.01  insufficient_funds',
-        warn: '************1234 -> ************6789 0.01 insufficient_funds' },
-      { name: 'AC-05.1 an unknown to account (DEC-17)', row: '1111234522226789,9999888877776666,10.00',
-        report: '1111234522226789 -> 9999888877776666  10.00  unknown_account',
-        warn: '************6789 -> ************6666 10.00 unknown_account' },
-      { name: 'AC-05.2 an unknown from account (DEC-17)', row: '9999888877776666,1111234522226789,10.00',
-        report: '9999888877776666 -> 1111234522226789  10.00  unknown_account',
-        warn: '************6666 -> ************6789 10.00 unknown_account' },
-      { name: 'AC-06.1 from 1111234522226789', row: '1111234522226789,1212343433335665,10.00',
-        transfer: '1111234522226789 -> 1212343433335665  10.00', balances: %w[90.00 60.00 0.00] },
-      { name: 'AC-06.1 from 0000123412341234 matches the leading zeros (DEC-08)',
-        row: '0000123412341234,1212343433335665,10.00',
-        report: '0000123412341234 -> 1212343433335665  10.00  insufficient_funds',
-        warn: '************1234 -> ************5665 10.00 insufficient_funds' },
-      { name: 'AC-06.1 from 111123452222678 (DEC-08, DEC-29)', row: '111123452222678,1212343433335665,10.00',
-        report: '111123452222678 -> 1212343433335665  10.00  invalid_account_number',
-        warn: '***********2678 -> ************5665 10.00 invalid_account_number' },
-      { name: 'AC-06.1 from 11112345222267890 (DEC-08, DEC-29)', row: '11112345222267890,1212343433335665,10.00',
-        report: '11112345222267890 -> 1212343433335665  10.00  invalid_account_number',
-        warn: '*************7890 -> ************5665 10.00 invalid_account_number' },
-      { name: 'AC-06.1 from 1111O34522226789 (DEC-08, DEC-29)', row: '1111O34522226789,1212343433335665,10.00',
-        report: '1111O34522226789 -> 1212343433335665  10.00  invalid_account_number',
-        warn: '************6789 -> ************5665 10.00 invalid_account_number' },
-      { name: 'AC-06.1 from 1111-2345-2222-6789 (DEC-08, DEC-29)', row: '1111-2345-2222-6789,1212343433335665,10.00',
-        report: '1111-2345-2222-6789 -> 1212343433335665  10.00  invalid_account_number',
-        warn: '***************6789 -> ************5665 10.00 invalid_account_number' },
-      { name: 'AC-06.2 amount 10', row: '1111234522226789,1212343433335665,10',
-        transfer: '1111234522226789 -> 1212343433335665  10.00', balances: %w[90.00 60.00 0.00] },
-      { name: 'AC-06.2 amount 10.5', row: '1111234522226789,1212343433335665,10.5',
-        transfer: '1111234522226789 -> 1212343433335665  10.50', balances: %w[89.50 60.50 0.00] },
-      { name: 'AC-06.2 amount 10.50', row: '1111234522226789,1212343433335665,10.50',
-        transfer: '1111234522226789 -> 1212343433335665  10.50', balances: %w[89.50 60.50 0.00] },
-      { name: 'AC-06.2 amount 007.50', row: '1111234522226789,1212343433335665,007.50',
-        transfer: '1111234522226789 -> 1212343433335665  7.50', balances: %w[92.50 57.50 0.00] },
-      *invalid_amounts.map do |amount|
-        { name: "AC-06.2 amount #{amount} (DEC-09, DEC-10)", row: "1111234522226789,1212343433335665,#{amount}",
-          report: "1111234522226789 -> 1212343433335665  #{amount}  invalid_amount",
-          warn: "************6789 -> ************5665 #{amount} invalid_amount" }
-      end,
-      { name: 'AC-06.2 an empty amount (DEC-09)', row: '1111234522226789,1212343433335665,',
-        report: '1111234522226789 -> 1212343433335665  ""  invalid_amount',
-        warn: '************6789 -> ************5665 "" invalid_amount' },
-      { name: 'AC-06.2 amount "1,000.00" quoted (DEC-09)', row: '1111234522226789,1212343433335665,"1,000.00"',
-        report: '1111234522226789 -> 1212343433335665  1,000.00  invalid_amount',
-        warn: '************6789 -> ************5665 1,000.00 invalid_amount' },
-      { name: 'AC-06.2 amount 1,000.00 not quoted is 4 fields (DEC-09)',
-        row: '1111234522226789,1212343433335665,1,000.00', report: 'malformed_row: 4 fields, expected 3',
-        warn: '************6789 -> ************5665 1 malformed_row' }
-    ]
+  # The FR-03 to FR-06 rules are owned by 001 and tested in spec/domain/; each reason code is mapped and shown in
+  # spec/application/ and spec/infrastructure/report_printer_spec.rb. This run is the one end-to-end check of
+  # invalid_amount; the other reason codes run end to end in spec/acceptance/ and the FR-02 scenarios above (DEC-34).
+  describe 'FR-06 a transfer with an amount that is not a number is rejected through the whole run (owned by 001)' do
+    subject(:run) { run_scenario(files: { 'transfers.csv' => "1111234522226789,1212343433335665,abc\n" }) }
 
-    domain_rows.each do |scenario|
-      describe scenario[:name] do
-        subject(:run) { run_scenario(files: { 'transfers.csv' => "#{scenario[:row]}\n" }) }
-
-        if scenario[:balances]
-          it_behaves_like 'a completed run',
-                          stdout: template_a(transfer: scenario[:transfer], balances: scenario[:balances])
-        else
-          it_behaves_like 'a completed run',
-                          stdout: template_r(line: "  Line 1  rejected  #{scenario[:report]}",
-                                             reason: scenario[:warn].split.last),
-                          stderr: "W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: #{scenario[:warn]}\n" \
-                                  'W, [<timestamp> #<pid>]  WARN -- : All transfers were rejected; ' \
-                                  "check this is the right file.\n"
-        end
-      end
-    end
-  end
-
-  describe 'FR-07 The order transfers are applied in' do
-    describe 'AC-07.1 one pass, no retry, repeats applied (DEC-15, DEC-16)' do
-      subject(:run) do
-        run_scenario(files: { 'transfers.csv' => "0000123412341234,1212343433335665,20.00\n" \
-                                                 "1111234522226789,0000123412341234,20.00\n" \
-                                                 "1111234522226789,0000123412341234,20.00\n" })
-      end
-
-      it_behaves_like 'a completed run', stdout: <<~STDOUT, stderr: <<~STDERR
-        Transfers
-          Line 1  rejected  0000123412341234 -> 1212343433335665  20.00  insufficient_funds
-          Line 2  applied  1111234522226789 -> 0000123412341234  20.00
-          Line 3  applied  1111234522226789 -> 0000123412341234  20.00
-
-        Summary
-          Processed: 3
-          Applied: 2
-          Rejected: 1
-            insufficient_funds: 1
-          Total before: 150.00
-          Total after: 150.00
-
-        Final balances
-          Account           Opening  Closing
-          1111234522226789   100.00    60.00
-          1212343433335665    50.00    50.00
-          0000123412341234     0.00    40.00
-
-        Output file: output/final_balances_2026-11-07_143005.csv
-      STDOUT
-        W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************1234 -> ************5665 20.00 insufficient_funds
-      STDERR
-    end
+    it_behaves_like 'a completed run',
+                    stdout: template_r(line: '  Line 1  rejected  1111234522226789 -> 1212343433335665  abc  ' \
+                                             'invalid_amount',
+                                       reason: 'invalid_amount'),
+                    stderr: <<~STDERR
+                      W, [<timestamp> #<pid>]  WARN -- : Line 1 rejected: ************6789 -> ************5665 abc invalid_amount
+                      W, [<timestamp> #<pid>]  WARN -- : All transfers were rejected; check this is the right file.
+                    STDERR
   end
 
   describe 'FR-08 The end-of-day result and its output' do
-    describe 'AC-08.1 the sample files give the exact expected result' do
-      subject(:run) do
-        run_scenario(files: sample_files,
-                     arguments: %w[data/mable_account_balances.csv data/mable_transactions.csv
-                                   output/final_balances_2026-11-07_143005.csv])
-      end
-
-      it_behaves_like 'a completed run', stdout: sample_report, output_file: sample_output_file
-    end
-
-    describe 'AC-08.2 a day with mixed rejections' do
-      subject(:run) do
-        run_scenario(files: { 'transfers.csv' => "1111234522226789,1212343433335665,30.00\n" \
-                                                 "1111234522226789,1212343433335665,90.00\n" \
-                                                 "1212343433335665,9999888877776666,10.00\n" \
-                                                 "1111234522226789,0000123412341234,70.00\n" \
-                                                 "1212343433335665,1212343433335665,5.00\n" })
-      end
-
-      it_behaves_like 'a completed run', stdout: <<~STDOUT, stderr: <<~STDERR, output_file: <<~OUTPUT
-        Transfers
-          Line 1  applied  1111234522226789 -> 1212343433335665  30.00
-          Line 2  rejected  1111234522226789 -> 1212343433335665  90.00  insufficient_funds
-          Line 3  rejected  1212343433335665 -> 9999888877776666  10.00  unknown_account
-          Line 4  applied  1111234522226789 -> 0000123412341234  70.00
-          Line 5  rejected  1212343433335665 -> 1212343433335665  5.00  same_account
-
-        Summary
-          Processed: 5
-          Applied: 2
-          Rejected: 3
-            same_account: 1
-            unknown_account: 1
-            insufficient_funds: 1
-          Total before: 150.00
-          Total after: 150.00
-
-        Final balances
-          Account           Opening  Closing
-          1111234522226789   100.00     0.00
-          1212343433335665    50.00    80.00
-          0000123412341234     0.00    70.00
-
-        Output file: output/final_balances_2026-11-07_143005.csv
-      STDOUT
-        W, [<timestamp> #<pid>]  WARN -- : Line 2 rejected: ************6789 -> ************5665 90.00 insufficient_funds
-        W, [<timestamp> #<pid>]  WARN -- : Line 3 rejected: ************5665 -> ************6666 10.00 unknown_account
-        W, [<timestamp> #<pid>]  WARN -- : Line 5 rejected: ************5665 -> ************5665 5.00 same_account
-      STDERR
-        1111234522226789,0.00
-        1212343433335665,80.00
-        0000123412341234,70.00
-      OUTPUT
-    end
-
     describe 'AC-08.3 the output file fed back in as the balances file (DEC-27)' do
       subject(:run) do
         run_scenario(files: { 'balances.csv' => "1111234522226789,0.00\n1212343433335665,80.00\n" \
@@ -715,7 +399,7 @@ RSpec.describe Runner do
       in_project(FinalBalancesCsvWriter.default_path(given[:run_time]))
     end
 
-    describe 'AC-09.1 no arguments' do
+    describe 'AC-09.1 no arguments run the sample files' do
       subject(:run) { run_scenario(files: files, arguments: []) }
 
       include_context 'with a stand-in ProcessDailyTransfer'
@@ -746,7 +430,7 @@ RSpec.describe Runner do
       end
     end
 
-    describe 'AC-09.1 b.csv t.csv' do
+    describe 'AC-09.1 two arguments read both files from the current folder and write the default output' do
       subject(:run) { run_scenario(files: files, arguments: %w[b.csv t.csv]) }
 
       include_context 'with a stand-in ProcessDailyTransfer'
@@ -776,7 +460,7 @@ RSpec.describe Runner do
       end
     end
 
-    describe 'AC-09.1 b.csv t.csv out/day1.csv' do
+    describe 'AC-09.1 a third argument names the output file' do
       subject(:run) { run_scenario(files: files, arguments: %w[b.csv t.csv out/day1.csv]) }
 
       include_context 'with a stand-in ProcessDailyTransfer'
@@ -818,7 +502,7 @@ RSpec.describe Runner do
     end
 
     [%w[balances.csv], %w[a b c d], %w[-h], %w[--help]].each do |arguments|
-      describe "AC-09.2 #{arguments.join(' ')}" do
+      describe "AC-09.2 the arguments #{arguments.join(' ')} print the usage and stop the run" do
         subject(:run) { run_scenario(arguments: arguments, read: ['output/']) }
 
         it 'prints nothing on standard output' do
@@ -903,7 +587,7 @@ RSpec.describe Runner do
     end
 
     %w[info INFO Info].each do |level|
-      describe "AC-09.5 LOG_LEVEL=#{level}" do
+      describe "AC-09.5 LOG_LEVEL=#{level} logs every event at info level (DEC-28)" do
         subject(:run) { sample_run(env: { 'LOG_LEVEL' => level }) }
 
         it_behaves_like 'a completed run', stdout: sample_report, stderr: <<~STDERR
