@@ -6,7 +6,7 @@
 
 **Tests**: required. Tests come first in every phase (constitution IV, [DEC-34](../../docs/design-analysis/design-decisions.md#dec-34)): write the spec, run it and see the new examples fail, then write the code until they pass. Every phase ends with `bundle exec rspec` passing in random order and `bundle exec rubocop` reporting zero offences. The test split follows brief rule 4: this spec runs every page 2 scenario through `Runner` with real CSV files and exact standard output, standard error and exit status, including the scenarios of FR-03 to FR-06, which `001` owns and unit-tests; the domain's messages are never rewritten here.
 
-**Organization**: phases follow the order the code depends on and build outside-in (plan P24). Phase 2 builds the file reading and path showing every story needs. Phase 3 is the MVP: the sample files from `bin/run` to the report (User Story 1). Phases 4 to 7 add the balances problems (US2), the transfers rejections (US3), the end of a completed run (US4) and the runner's own checks (US5). Phase 8 runs the domain scenarios through the runner (US6). Phases 9 and 10 are the design review (US7) and the suite checks (US8).
+**Organization**: phases follow the order the code depends on and build outside-in (plan P24). Phase 2 builds the file reading and path showing every story needs. Phase 3 is the MVP: the sample files from `bin/run` to the report (User Story 1). Phases 4 to 7 add the balances problems (US2), the transfers rejections (US3), the end of a completed run (US4) and the runner's own checks (US5). Phase 8 runs the domain scenarios through the runner (US6). Phases 9 and 10 are the design review (US7) and the suite checks (US8). Phase 12, after the polish of Phase 11, adds the opening balances to the report (DEC-26).
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -443,6 +443,32 @@
 
 ---
 
+## Phase 12: Opening balances in the report (DEC-26)
+
+**Goal**: the `Final balances` section of the report shows each account's opening balance next to its closing balance, as the table of DEC-26 (headings `Account`, `Opening`, `Closing`; each column as wide as its widest value or heading; two spaces between columns; amounts right-aligned). The output file does not change (DEC-27). Nothing else in the report changes.
+
+**Independent Test**: `day_result_spec.rb`, `process_daily_transfer_spec.rb` and `report_printer_spec.rb` for the opening balances; every runner scenario and end-to-end spec whose standard output is a report, through the report templates and the literal reports.
+
+### Tests (write first)
+
+- [X] T090 [P] Update `spec/support/report_templates.rb`: `template_a` takes `openings:` (default `%w[100.00 50.00 0.00]`, the spec's `balances.csv`) and prints the `Final balances` table of the spec's Template A with each opening and closing balance right-aligned to 7 characters; `template_r` prints the table with the opening and closing balances `100.00`, `50.00`, `0.00`; `sample_report` prints AC-08.1's table with the opening balances of DEC-35 [FR-027; AC-08.1; DEC-26, DEC-35]
+- [X] T091 [P] Update `spec/application/day_result_spec.rb`: the members example gives and returns `opening_balances:` (a `Hash` of `AccountNumber` to `Money`), so it returns the six members it was given; the `day` helper passes `opening_balances:` [FR-022; DEC-26]
+- [X] T092 Add to `spec/application/process_daily_transfer_spec.rb`, in `describe '#call with applied rows only'`: the opening balances are the loaded balances by account number, in load order, taken before any transfer is applied (`100.00`, `50.00`, `0.00` while the final balances are `95.00`, `55.00`, `0.00`); and, with one transfer between the first two accounts, the third account's opening balance equals its closing balance; the existing total-check examples with `ChangingTotalRepository` stay unchanged and still raise `TotalChanged` [FR-013, FR-022; DEC-24, DEC-26]
+- [X] T093 Update `spec/infrastructure/report_printer_spec.rb`: every `DayResult` it builds passes `opening_balances:` (the sample day DEC-35's, the three-account day `100.00`, `50.00`, `0.00`); AC-08.1's report and AC-02.1's report show the table exactly [FR-027; AC-02.1, AC-08.1; DEC-26, DEC-35]
+- [X] T094 Update the literal reports in `spec/infrastructure/runner_spec.rb` (AC-02.1, AC-02.3, AC-07.1, AC-08.2, the info log run of AC-09.5 and the leading zeros run) and in `spec/acceptance/runner_run_mixed_rejections_spec.rb` to the table, and pass `openings: %w[0.00 80.00 70.00]` to `template_a` in AC-08.3's fed-back run; the output files they expect do not change [FR-027, FR-045; AC-02.1, AC-02.3, AC-07.1, AC-08.2, AC-08.3; DEC-08, DEC-26, DEC-27]
+- [X] T095 Run `bundle exec rspec` and confirm the examples of T090 to T094 fail because the opening balances are missing (`DayResult` has no `opening_balances` member; the report prints the old `Final balances` lines), and no other example fails (depends on T090 to T094)
+
+### Implementation
+
+- [X] T096 Add the member `opening_balances` to `DayResult` in `lib/application/day_result.rb`, after `total_after` [FR-022; DEC-26; P7]
+- [X] T097 In `lib/application/process_daily_transfer.rb`, after `LoadBalances`, take the opening balances (account number to balance) from one `repository.all`, add them up for the total before, and pass them to the `DayResult` (depends on T096) [FR-013, FR-022; DEC-24, DEC-26]
+- [X] T098 In `lib/infrastructure/report_printer.rb`, print `Final balances` as the table: the header row `Account`, `Opening`, `Closing`, then per account its number, `opening_balances.fetch(number)` and its balance, each column as wide as its widest value or heading, two spaces between columns, the number left-aligned and the amounts right-aligned (depends on T096) [FR-027; DEC-26]
+- [X] T099 Run `bundle exec rspec` until every example passes in random order with 100% line coverage, `bundle exec rubocop` reports zero offences, and `ruby bin/run` on the sample files prints AC-08.1's report with the DEC-35 opening and closing balances and exits with 0; move the output file it writes out of `output/` (depends on T097, T098) [SC-001, SC-005, SC-008; DEC-26, DEC-35]
+
+**Checkpoint**: the report shows each account's opening and closing balances; the output file is unchanged; `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences.
+
+---
+
 ## Edge cases and their tests
 
 Every edge case in the spec's [Edge Cases](spec.md#edge-cases) list, with the task that tests it.
@@ -508,7 +534,8 @@ Every edge case in the spec's [Edge Cases](spec.md#edge-cases) list, with the ta
 - **Phase 7 (US5)**: after Phase 6 (AC-09.4 and the full stopping-error list).
 - **Phase 8 (US6)**: after Phases 4 and 5.
 - **Phases 9 and 10 (US7, US8)**: after Phase 8.
-- **Phase 11 (Polish)**: last.
+- **Phase 11 (Polish)**: after Phases 1 to 10.
+- **Phase 12 (Opening balances in the report)**: after Phase 11.
 
 ### Within each phase
 
@@ -553,6 +580,7 @@ The MVP is the end of Phase 3: `bin/run` on the challenge's sample files gives t
 6. Phase 7: arguments, start checks, `LOG_LEVEL` and every exit status (US5).
 7. Phase 8: every domain scenario through the runner (US6).
 8. Phases 9 to 11: the design review, the suite checks and the final checks; `003` can start.
+9. Phase 12: the opening balances in the report (DEC-26).
 
 ## Notes
 

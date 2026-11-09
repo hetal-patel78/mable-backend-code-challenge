@@ -50,8 +50,8 @@ Code files load their own dependencies with `require_relative`. A spec requires 
 | `ProcessDailyTransfer.new(run_time: Time.now, balances_reader:, transfers_reader:, writer:, repository:, reporter:, logger:)` | a day | `KeyError` when a part is missing |
 | `day.call(balances_path, transfers_path, output_path = nil)` | the `DayResult` | `InvalidBalancesFile`, `UnreadableFile`, `NoTransfers`: `the transfers file has no transfers: <path>`, `TotalChanged`: `the total of all balances changed from <before> to <after>. No output file was written.`, `OutputNotWritable` |
 | `DayResult::ALL_REJECTED_WARNING` | `All transfers were rejected; check this is the right file.` | |
-| `DayResult.new(results:, total_before:, total_after:, accounts:, output_path:)` | a `DayResult` | |
-| `result.results`, `.total_before`, `.total_after`, `.accounts`, `.output_path` | as given | |
+| `DayResult.new(results:, total_before:, total_after:, opening_balances:, accounts:, output_path:)` | a `DayResult` | |
+| `result.results`, `.total_before`, `.total_after`, `.opening_balances`, `.accounts`, `.output_path` | as given | |
 | `result.processed_count`, `.applied_count`, `.rejected_count` | Integer | |
 | `result.rejected_counts` | `{ reason_code => count }`, only codes that occurred, in DEC-19 order | |
 | `result.all_rejected?` | Boolean | |

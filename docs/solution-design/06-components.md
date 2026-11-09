@@ -164,7 +164,7 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
 - **Responsibility:** runs the day. Takes the run time in its constructor, defaulting to the current time ([DEC-30](../design-analysis/design-decisions.md#dec-30)). The balances reader, the transfers reader, the writer, the repository, the reporter (`ReportPrinter`) and the logger are all passed in to its constructor ([DEC-28](../design-analysis/design-decisions.md#dec-28)). The `Runner` builds the real ones. It creates `LoadBalances` and `TransferService` itself, giving them the parts it was given; they touch no file, screen or clock, so tests reach them through those parts. **(assistant's pick)** Tests pass fakes, for example a repository whose total changes ([DEC-24](../design-analysis/design-decisions.md#dec-24)) and a reporter that records whether a report was printed.
 - **In:** the balances path, the transfers path and the output path. The `Runner` always gives the output path. If a caller leaves it out, `ProcessDailyTransfer` asks `FinalBalancesCsvWriter.default_path` for its run time. **(assistant's pick)** The readers are given the paths when they are asked to read, not when they are built. **(assistant's pick)**
 - **Out:** a `DayResult`, or a run-stopping error. In order, it:
-  1. logs the run start, loads the balances through `LoadBalances`, and adds up the total before;
+  1. logs the run start, loads the balances through `LoadBalances`, notes each account's opening balance before any transfer is applied, and adds up the total before from those opening balances;
   2. reads each transfers row in file order ([DEC-15](../design-analysis/design-decisions.md#dec-15)), builds the `AccountNumber`s, the `Money` and the `Transfer`, and hands it to `TransferService`;
   3. turns each outcome, or the domain error that refused it, into a `TransferResult` with its reason code, as in the [errors table](#errors-and-who-raises-them); a row the reader marked with the wrong number of fields becomes `malformed_row` ([DEC-19](../design-analysis/design-decisions.md#dec-19));
   4. logs each result, with account numbers masked ([DEC-29](../design-analysis/design-decisions.md#dec-29)). Masking is a private step of this class, because it is the only class that logs account numbers. **(assistant's pick)**
@@ -178,7 +178,7 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
 ### `DayResult`
 
 - **Responsibility:** everything the report needs about a completed run.
-- **In:** the `TransferResult`s, the totals before and after, the final accounts in load order, and the output path.
+- **In:** the `TransferResult`s, the totals before and after, the opening balance of each account by account number, the final accounts in load order, and the output path.
 - **Out:** the same data, read by `ReportPrinter`.
 - **Does not:** format or print anything; change any account.
 

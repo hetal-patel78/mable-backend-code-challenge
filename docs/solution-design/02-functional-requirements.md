@@ -205,9 +205,10 @@ Summary
 Warning: All transfers were rejected; check this is the right file.
 
 Final balances
-  1111234522226789  100.00
-  1212343433335665  50.00
-  0000123412341234  0.00
+  Account           Opening  Closing
+  1111234522226789   100.00   100.00
+  1212343433335665    50.00    50.00
+  0000123412341234     0.00     0.00
 
 Output file: output/final_balances_2026-11-07_143005.csv
 ```
@@ -262,9 +263,10 @@ Decisions: [DEC-13](../design-analysis/design-decisions.md#dec-13), [DEC-14](../
   Line 1  applied  1111234522226789 -> 1212343433335665  30.00
 ...
 Final balances
-  1111234522226789  70.00
-  1212343433335665  80.00
-  0000123412341234  0.00
+  Account           Opening  Closing
+  1111234522226789   100.00    70.00
+  1212343433335665    50.00    80.00
+  0000123412341234     0.00     0.00
 ```
 
 **AC-03.2 A rejected transfer changes nothing and the run continues.**
@@ -309,7 +311,7 @@ W, [<timestamp> #<pid>]  WARN -- : All transfers were rejected; check this is th
 **AC-04.2 Exactly $0 is applied.**
 - Given `balances.csv` and a `transfers.csv` of `1111234522226789,1212343433335665,100.00`.
 - When the program runs.
-- Then the transfer is applied, stderr is (nothing), and the final balances are `1111234522226789  0.00`, `1212343433335665  150.00` and `0000123412341234  0.00`.
+- Then the transfer is applied, stderr is (nothing), and the closing balances are 0.00, 150.00 and 0.00 (the opening balances are 100.00, 50.00 and 0.00).
 
 **AC-04.3 An account already at $0.00 cannot pay anything.**
 - Given `balances.csv` and a `transfers.csv` of `0000123412341234,1111234522226789,0.01`.
@@ -400,9 +402,10 @@ Decisions: [DEC-15](../design-analysis/design-decisions.md#dec-15), [DEC-16](../
 
 ```
 Final balances
-  1111234522226789  60.00
-  1212343433335665  50.00
-  0000123412341234  40.00
+  Account           Opening  Closing
+  1111234522226789   100.00    60.00
+  1212343433335665    50.00    50.00
+  0000123412341234     0.00    40.00
 ```
 
 ---
@@ -420,7 +423,7 @@ The report has five parts, in this order, separated by one empty line. Within a 
 1. `Transfers`: one line per data row, in file order: `Line N`, `applied` or `rejected`, `from -> to`, the amount, and for a rejected row its reason code. An applied amount is written with 2 decimal places; a rejected row shows its values as written. A row with the wrong number of fields shows `malformed_row: N fields, expected 3` in place of the values. On a header-looking first row, the reason is followed by `: This looks like a header row; files must not have a header.` (or `. This looks like ...` after `malformed_row: N fields, expected 3`) ([DEC-06](../design-analysis/design-decisions.md#dec-06)).
 2. `Summary`: `Processed` (data rows, including a header row), `Applied`, `Rejected`, then the count per reason code that occurred, indented under `Rejected`, in the order of [FR-03](#fr-03-apply-a-transfer), then `Total before` and `Total after`.
 3. Only when every transfer was rejected: `Warning: All transfers were rejected; check this is the right file.`
-4. `Final balances`: every account in the order it was loaded, with its full account number.
+4. `Final balances`: a table with the header row `Account`, `Opening`, `Closing`, then one row per account in the order it was loaded: its full account number, its opening balance (before the day's transfers) and its closing balance. Each column is as wide as its widest value or heading, with two spaces between columns; account numbers are left-aligned and amounts right-aligned, so the decimal points line up. An account with no applied transfer shows the same opening and closing balance. The output file holds only the closing balances.
 5. `Output file:` and the output path, relative to the folder the command was run from, or in full if the file is outside that folder.
 
 ### Acceptance criteria
@@ -445,11 +448,12 @@ Summary
   Total after: 66750.00
 
 Final balances
-  1111234522226789  4820.50
-  1111234522221234  9974.40
-  2222123433331212  1550.00
-  1212343433335665  1725.60
-  3212343433335755  48679.50
+  Account            Opening   Closing
+  1111234522226789   5000.00   4820.50
+  1111234522221234  10000.00   9974.40
+  2222123433331212    550.00   1550.00
+  1212343433335665   1200.00   1725.60
+  3212343433335755  50000.00  48679.50
 
 Output file: output/final_balances_2026-11-07_143005.csv
 ```
@@ -506,9 +510,10 @@ Summary
   Total after: 150.00
 
 Final balances
-  1111234522226789  0.00
-  1212343433335665  80.00
-  0000123412341234  70.00
+  Account           Opening  Closing
+  1111234522226789   100.00     0.00
+  1212343433335665    50.00    80.00
+  0000123412341234     0.00    70.00
 
 Output file: output/final_balances_2026-11-07_143005.csv
 ```
