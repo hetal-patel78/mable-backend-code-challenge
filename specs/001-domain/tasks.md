@@ -6,7 +6,7 @@
 
 **Tests**: required. Tests come first in every phase (constitution IV, [DEC-34](../../docs/design-analysis/design-decisions.md#dec-34)): write the spec, run it and see the new examples fail, then write the code until they pass. Every phase ends with `bundle exec rspec` passing in random order and `bundle exec rubocop` reporting zero offences. This spec tests the domain directly (brief rule 4): the result, the error class and its exact message, and that no balance changes after every refusal. The run outcomes in the spec are run by `002`, not here.
 
-**Organization**: phases follow the order the code depends on, not the priority order: values (US4), then money arithmetic (US6), the account (US2), the repository (US5, US3), and the transfer service and results (US1). Each phase is still one user story, tested on its own. Phase 10, after the polish of Phase 9, refactors the domain after the developer's code review, with no change in any outcome: the `Account` amount guard (P33), `AccountNumber` and `Transfer` as `Data` records and the repository keyed by `AccountNumber` (P34), and the unused requires (P36).
+**Organization**: phases follow the order the code depends on, not the priority order: values (US4), then money arithmetic (US6), the account (US2), the repository (US5, US3), and the transfer service and results (US1). Each phase is still one user story, tested on its own. Phase 10, after the polish of Phase 9, refactors the domain after the developer's code review, with no change in any outcome: the `Account` amount guard (P33), `AccountNumber` and `Transfer` as `Data` records and the repository keyed by `AccountNumber` (P34), and the unused requires (P36). Phase 11 reviews `Money` the same way: comments on its sign and hash handling, a `BigDecimal` type check in `Money.new`, no `Comparable`, and comments on the domain code that is not obvious from reading it (P39).
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -309,6 +309,31 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 ---
 
+## Phase 11: Money review (code review)
+
+**Goal**: the developer's code review of `Money`, with no change in any transfer outcome, message or balance. Short comments say what `negative?` and `hash` rely on: `BigDecimal` treats `-0.00` as not below zero, and `0.00` and `-0.00` are equal. `Money.new` raises `ArgumentError` for a value that is not a `BigDecimal`, a guard against programming errors. `Money` no longer includes `Comparable` or defines `<=>`, as no rule compares two amounts. Code in `lib/domain/` that is not obvious from reading it gets a short comment saying what it does or the Ruby fact it relies on (P39).
+
+**Independent Test**: `money_spec.rb` for the type check; every transfer outcome, message and balance in `spec/domain/` unchanged.
+
+### Tests (write first)
+
+- [X] T067 Add to `spec/domain/money_spec.rb` a `describe '.new'`: a `Float` (`10.5`) and a `String` (`'10.50'`) each raise `ArgumentError` with `Money needs a BigDecimal, got <class>`; the examples for `.amount`, `.balance`, `+` and `-` stay unchanged [FR-003 to FR-006; DEC-09; P39; plan D5]
+- [X] T068 Run `bundle exec rspec spec/domain/money_spec.rb` and confirm the two new examples fail (nothing raised) and no other example fails (depends on T067)
+- [X] T069 Remove the `describe '#<=>'` examples from `spec/domain/money_spec.rb`; confirm no file in `lib/` or `spec/` uses `<`, `>`, `<=`, `>=`, `<=>`, `sort`, `min`, `max`, `between?` or `clamp` on a `Money` (depends on T068, which runs the same file) [FR-006; P39; plan D5]
+
+### Implementation
+
+- [X] T070 In `lib/domain/money.rb`, add to `initialize` a first line `raise ArgumentError, "Money needs a BigDecimal, got #{value.class}" unless value.is_a?(BigDecimal)` (depends on T068) [FR-003 to FR-006; DEC-09; P39; plan D5]
+- [X] T071 In `lib/domain/money.rb`, remove `include Comparable` and `<=>`; `==`, `eql?` and `hash` stay as they are (depends on T069, T070) [FR-006; P39; plan D5]
+- [X] T072 In `lib/domain/money.rb`, add a one-line comment above `negative?` (a written minus sign counts too, because `BigDecimal` treats `-0.00` as not below zero) and above `hash` (`0.00` and `-0.00` are equal, so they share a hash) (depends on T071) [FR-032; DEC-09; P39; research R7]
+- [X] T073 Add a short comment to the code in `lib/domain/` that is not obvious from reading it, saying what it does or the Ruby fact it relies on, never the design reasoning: the frozen copy in `AccountNumber`, the constants set after a `Data.define` block, bare `super` in `Transfer`, the insertion order of `AccountRepository#all`, `to_s('F')` and the protected reader in `Money`, and the order of `TransferService#apply`; check every class comment is accurate (depends on T072) [FR-032; DEC-30; P39]
+- [X] T074 [P] Bring the documents in line: page 6 (`Money`); in this spec, FR-006, the clarification on `-0` and item 16; the plan (design overview, D5, with `Comparable` as a rejected option), research R7, the data model and the contract (depends on T071) [FR-006; DEC-09; P39; plan D5]
+- [X] T075 Run `bundle exec rspec` until every example passes in random order with 100% line coverage, `bundle exec rubocop` reports zero offences with `.rubocop.yml` unchanged, and `ruby bin/run` on the sample files gives exit status 0 and the DEC-35 balances (depends on T070 to T074) [SC-005, SC-008; DEC-35, DEC-36]
+
+**Checkpoint**: `Money.new` refuses any value that is not a `BigDecimal`; `Money` has no ordering; the code that is not obvious from reading it is commented; every domain message and balance is unchanged; `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences.
+
+---
+
 ## Edge cases and their tests
 
 Every edge case in the [spec](spec.md#edge-cases) that falls in this spec's scope, with the task whose test proves it.
@@ -356,6 +381,7 @@ Edge cases owned by `002` and not tested here: blank lines, header rows and the 
 - **Phase 8 (US1)**: after Phases 3 to 7; it uses every class.
 - **Phase 9 (Polish)**: after Phase 8.
 - **Phase 10 (Domain refactor)**: after Phase 9; before `002` Phase 14, which builds on it.
+- **Phase 11 (Money review)**: after Phase 10 and `002` Phase 14; before `002` Phase 15.
 
 ### Within each phase
 
@@ -363,6 +389,7 @@ Edge cases owned by `002` and not tested here: blank lines, header rows and the 
 - In Phase 3, `errors.rb` (T016) comes before the classes that raise its errors; `AccountNumber` and `Money` (T017, T018) can be written in parallel; `Transfer` and `Account` (T019, T020) need them.
 - `spec/support/builders.rb` is edited by one task at a time (T014, T024, T026, T031, T039).
 - In Phase 10, T056 edits four spec files that T052 to T055 edit, so it runs after them; `account_number.rb` (T059) comes before the repository (T061), whose key it is.
+- In Phase 11, T067 to T072 edit `money_spec.rb` or `money.rb`, so they run one after the other.
 
 ### Parallel opportunities
 
@@ -370,6 +397,7 @@ Edge cases owned by `002` and not tested here: blank lines, header rows and the 
 - Phase 3: the four spec files T010 to T013 and the builders T014 in parallel; then T017 and T018 in parallel.
 - Phase 8: T039, T040 and T041 in parallel; then T043 and T044 in parallel.
 - Phase 10: T052 to T055 in parallel; then T059, T060 and T062 in parallel with T058; T063 alongside the code.
+- Phase 11: T074 alongside T072 and T073.
 
 ## Parallel example: Phase 3 (User Story 4)
 
@@ -397,6 +425,7 @@ The MVP is the end of Phase 8: one transfer applied all or nothing, with every r
 6. Phase 8: transfers are applied all or nothing, and each row's outcome is a `TransferResult` (US1).
 7. Phase 9: the measurable outcomes and design reviews pass; `002` can start.
 8. Phase 10: the domain refactored after the code review; every outcome, message and balance unchanged.
+9. Phase 11: `Money` reviewed and the domain code commented; every outcome, message and balance unchanged.
 
 ## Notes
 

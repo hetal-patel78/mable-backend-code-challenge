@@ -90,7 +90,7 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
 
 - **Responsibility:** one exact amount on `BigDecimal`, with at most 2 decimal places ([DEC-09](../design-analysis/design-decisions.md#dec-09)).
 - **In:** text in the format of [DEC-09](../design-analysis/design-decisions.md#dec-09), including a leading minus sign.
-- **Out:** a value that can be added, subtracted and compared, and its text with exactly 2 decimal places. Raises `InvalidAmount` for empty text, text that is not a number, or more than 2 decimal places. It records that a minus sign was written, so `-0.00` counts as negative. **(assistant's pick)**
+- **Out:** a value that can be added, subtracted and checked for equality, and its text with exactly 2 decimal places. Raises `InvalidAmount` for empty text, text that is not a number, or more than 2 decimal places. It records that a minus sign was written, so `-0.00` counts as negative. **(assistant's pick)**
 - **Does not:** round or truncate; use floating point; accept `+100`, `1e3`, `$100` or any other format outside [DEC-09](../design-analysis/design-decisions.md#dec-09); decide whether a negative amount is allowed.
 
 ### `Account`

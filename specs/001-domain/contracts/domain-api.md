@@ -29,10 +29,11 @@ Code files are under `lib/domain/` and load their own dependencies. A caller req
 | `account_number == other` | true when the text is equal (`eql?` and `hash` too, from `Data`; plan.md D23) | |
 | `Money.amount(text)` | a `Money` | `InvalidAmount`: `amount is empty`; `amount "<text>" has more than 2 decimal places`; `amount "<text>" is not a valid amount` |
 | `Money.balance(text)` | a `Money` | `InvalidAmount`: `balance is empty`; `balance "<text>" has more than 2 decimal places`; `balance "<text>" is not a valid amount` |
+| `Money.new(value, text = nil)` | a `Money` | `ArgumentError`: `Money needs a BigDecimal, got <class>` for a value that is not a `BigDecimal` (a programming error) |
 | `money.to_s` | text with exactly 2 decimals, for example `7.50` | |
 | `money.text` | the text as written, for example `007.50` | |
 | `money + other`, `money - other` | a new `Money` | |
-| `money <=> other`, `==`, `<`, `>` | by value | |
+| `money == other` | true when the amount is equal, so `-0` equals `0` (`eql?` and `hash` too) | |
 | `money.negative?`, `money.positive?` | Boolean | |
 | `Account.check_opening_balance(balance)` | nil | `NegativeBalance`: `balance "<text>" must not be negative` |
 | `Account.new(number, balance)` | an `Account` | `NegativeBalance` as above |

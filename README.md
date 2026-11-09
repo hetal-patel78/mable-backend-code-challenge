@@ -172,7 +172,7 @@ The full reasoning is in [`docs/design-analysis/design-decisions.md`](docs/desig
 SimpleCov's line coverage from a full `bundle exec rspec` run:
 
 ```
-Line coverage: 527 / 527 (100.00%)
+Line coverage: 525 / 525 (100.00%)
 ```
 
 The full report is in `coverage/index.html` after a test run. No minimum figure is set.

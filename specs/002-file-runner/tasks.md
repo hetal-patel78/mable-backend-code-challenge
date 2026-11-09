@@ -6,7 +6,7 @@
 
 **Tests**: required. Tests come first in every phase (constitution IV, [DEC-34](../../docs/design-analysis/design-decisions.md#dec-34)): write the spec, run it and see the new examples fail, then write the code until they pass. Every phase ends with `bundle exec rspec` passing in random order and `bundle exec rubocop` reporting zero offences. The test split follows brief rule 4: this spec runs every page 2 scenario through `Runner` with real CSV files and exact standard output, standard error and exit status, including the scenarios of FR-03 to FR-06, which `001` owns and unit-tests; the domain's messages are never rewritten here.
 
-**Organization**: phases follow the order the code depends on and build outside-in (plan P24). Phase 2 builds the file reading and path showing every story needs. Phase 3 is the MVP: the sample files from `bin/run` to the report (User Story 1). Phases 4 to 7 add the balances problems (US2), the transfers rejections (US3), the end of a completed run (US4) and the runner's own checks (US5). Phase 8 runs the domain scenarios through the runner (US6). Phases 9 and 10 are the design review (US7) and the suite checks (US8). Phase 12, after the polish of Phase 11, adds the opening balances to the report (DEC-26). Phase 13 refactors `ProcessDailyTransfer` after the developer's code review, with no change in behaviour: the text of its log lines moves to `LogMessages` (page 6 pick 37), and its six parts are passed as one `ProcessDailyTransfer::Parts` (plan P6, page 10 pick 54). Phase 14, after `001` Phase 10, refactors the application and infrastructure after the developer's code review, with no change in behaviour: `TransferResult` moves to `lib/application/` as a `Data` record (P34, P35), `LoadBalances` and `ReportPrinter` read fields by name and `LoadBalances` parses each once (P32), each spec requires what it names (P36), and `CsvRows` no longer reports an error raised in the caller's block as a file that cannot be read, and explains its encoding handling (P37).
+**Organization**: phases follow the order the code depends on and build outside-in (plan P24). Phase 2 builds the file reading and path showing every story needs. Phase 3 is the MVP: the sample files from `bin/run` to the report (User Story 1). Phases 4 to 7 add the balances problems (US2), the transfers rejections (US3), the end of a completed run (US4) and the runner's own checks (US5). Phase 8 runs the domain scenarios through the runner (US6). Phases 9 and 10 are the design review (US7) and the suite checks (US8). Phase 12, after the polish of Phase 11, adds the opening balances to the report (DEC-26). Phase 13 refactors `ProcessDailyTransfer` after the developer's code review, with no change in behaviour: the text of its log lines moves to `LogMessages` (page 6 pick 37), and its six parts are passed as one `ProcessDailyTransfer::Parts` (plan P6, page 10 pick 54). Phase 14, after `001` Phase 10, refactors the application and infrastructure after the developer's code review, with no change in behaviour: `TransferResult` moves to `lib/application/` as a `Data` record (P34, P35), `LoadBalances` and `ReportPrinter` read fields by name and `LoadBalances` parses each once (P32), each spec requires what it names (P36), and `CsvRows` no longer reports an error raised in the caller's block as a file that cannot be read, and explains its encoding handling (P37). Phase 15, after `001` Phase 11, comments the application and infrastructure code that is not obvious from reading it, with no change in behaviour (P39).
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -539,6 +539,19 @@
 
 ---
 
+## Phase 15: Comments on code that is not obvious (code review)
+
+**Goal**: after `001` Phase 11, code in `lib/application/` and `lib/infrastructure/` that is not obvious from reading it gets a short comment saying what it does or the Ruby fact it relies on, never the design reasoning, with no change in behaviour (P39).
+
+**Independent Test**: `bundle exec rspec` and `bundle exec rubocop` unchanged in result; `ruby bin/run` on the sample files gives the DEC-35 balances.
+
+- [X] T132 Add a short comment to the code in `lib/application/`, `lib/infrastructure/` and `bin/run` that is not obvious from reading it: the constants set after a `Data.define` block, the `initialize` overrides of `TransferResult` and `Row` and their keyword defaults, the private `new` and `[]` of `TransferResult`, its frozen copy of the fields, the order of `DayResult#rejected_counts`, the problem list of `InvalidBalancesFile`, the guard in `LoadBalances#read` and its check of both fields, the missing fields and the mask in `LogMessages`, the splatted `rescue` and the opening balances of `ProcessDailyTransfer`, the header test of `CsvRows`, the `ArgumentError` rescue of `DisplayPath`, the ` @ ` split of the system error messages, the open flags of `FinalBalancesCsvWriter`, the section and table layout of `ReportPrinter`, and the log level, output check and input paths of `Runner`; check every class comment is accurate (the `ReportPrinter` comment names the warning) [FR-032 of `001`; DEC-30; P39]
+- [X] T133 Run `bundle exec rspec` until every example passes in random order with 100% line coverage, `bundle exec rubocop` reports zero offences with `.rubocop.yml` unchanged, and `ruby bin/run` on the sample files gives exit status 0 and the DEC-35 balances (depends on T132) [SC-005, SC-008; DEC-35, DEC-36]
+
+**Checkpoint**: the code that is not obvious from reading it is commented; the report, output files, exit statuses and log lines are unchanged; `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences.
+
+---
+
 ## Edge cases and their tests
 
 Every edge case in the spec's [Edge Cases](spec.md#edge-cases) list, with the task that tests it.
@@ -609,6 +622,7 @@ Every edge case in the spec's [Edge Cases](spec.md#edge-cases) list, with the ta
 - **Phase 12 (Opening balances in the report)**: after Phase 11.
 - **Phase 13 (Refactor ProcessDailyTransfer)**: after Phase 12.
 - **Phase 14 (Refactor after the code review)**: after Phase 13 and `001` Phase 10.
+- **Phase 15 (Comments on code that is not obvious)**: after Phase 14 and `001` Phase 11.
 
 ### Within each phase
 
@@ -658,6 +672,7 @@ The MVP is the end of Phase 3: `bin/run` on the challenge's sample files gives t
 9. Phase 12: the opening balances in the report (DEC-26).
 10. Phase 13: `ProcessDailyTransfer` refactored after the code review; the log text comes from `LogMessages`, the parts come as one `ProcessDailyTransfer::Parts`, and nothing a user sees changes.
 11. Phase 14: the application and infrastructure refactored after the code review; `TransferResult` is an application `Data` record, and nothing a user sees changes.
+12. Phase 15: the application and infrastructure code that is not obvious from reading it is commented, and nothing a user sees changes.
 
 ## Notes
 
