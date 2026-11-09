@@ -237,3 +237,24 @@ Then:
 > also add the comment in other files as where where ever needed and is currently missing
 
 Outcome: `Money`'s sign and hash handling are commented, `Money.new` accepts only a `BigDecimal`, `Money` no longer includes `Comparable`, and code that is not obvious from reading it is commented across `lib/`.
+
+## 8. High-level design and the transfer checks
+
+<a id="p40"></a>**P40. Check the high-level design against the code and make the transfer checks clearer**
+
+> can u check all the details in HLD is correct?
+
+Then, on the checks table on page 7.1:
+
+> this table create confusion
+
+And on its flowchart:
+
+> also the flow chart only showing yes on the arrow no is missing
+
+> From balance minus
+> amount is $0.00 or more?
+>
+> is also confusing
+
+Outcome: the high-level design page is corrected against the code in 15 places (among them Diagram 1's `Runner` edge, how each file is read, `CsvRows` and `Row`, the error mapping and the log lines). On page 7.1, the checks table says what makes a row pass and the reason it is rejected with, in the flowchart's words; each check in the flowchart has its own "yes" and "no" arrows, each "no" leads to its own rejected box, and the last check asks whether the from account has enough to pay the amount, ending at exactly $0.00 being allowed.
