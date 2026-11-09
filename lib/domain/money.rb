@@ -5,8 +5,6 @@ require_relative 'errors'
 
 # One exact amount of money with at most 2 decimal places.
 class Money
-  include Comparable
-
   MORE_THAN_TWO_PLACES = /\A-?[0-9]+\.[0-9]{3,}\z/
   VALID = /\A-?[0-9]+(\.[0-9]{1,2})?\z/
 
@@ -59,10 +57,6 @@ class Money
 
   def -(other)
     Money.new(value - other.value)
-  end
-
-  def <=>(other)
-    value <=> other.value
   end
 
   def ==(other)

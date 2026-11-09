@@ -163,14 +163,4 @@ RSpec.describe Money do
       expect((described_class.amount('5.00') + described_class.amount('2.50')).text).to eq('7.50')
     end
   end
-
-  describe '#<=>' do
-    it 'orders 10.00 below 10.01' do
-      expect(described_class.amount('10.00')).to be < described_class.amount('10.01')
-    end
-
-    it 'orders 100.00 above 99.99' do
-      expect(described_class.amount('100.00')).to be > described_class.amount('99.99')
-    end
-  end
 end
