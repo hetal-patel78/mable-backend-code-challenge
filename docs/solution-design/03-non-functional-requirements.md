@@ -60,7 +60,7 @@ Decisions: [DEC-32](../design-analysis/design-decisions.md#dec-32), [DEC-03](../
 **Targets**, as growth rates:
 - A whole run must take time in proportion to the rows in the balances file plus the rows in the transfers file. No step may compare every row with every other row.
 - Memory must grow in proportion to the number of accounts plus the number of transfers. The transfers file must be read one row at a time, so its text is never held in full; one result per transfer is kept, because the report lists every transfer at the end ([DEC-26](../design-analysis/design-decisions.md#dec-26)).
-- The balances file must be read in full before any transfer runs, because all its problems must be found first ([DEC-12](../design-analysis/design-decisions.md#dec-12)).
+- The balances file is read one row at a time too, and every row of it must be read and checked before any transfer runs, because all its problems must be found first ([DEC-12](../design-analysis/design-decisions.md#dec-12), [DEC-32](../design-analysis/design-decisions.md#dec-32)).
 - There must be no fixed limit on the number of accounts or transfers. The only limit is memory: the accounts and one result per transfer must fit in it. That a day's transfers fit in memory is an [assumption](../design-analysis/design-decisions.md#assumptions) ([DEC-32](../design-analysis/design-decisions.md#dec-32)).
 - Each run must start from the balances file and keep nothing between runs, so the tenth run of the day costs the same as the first and the same two files always give the same result ([DEC-03](../design-analysis/design-decisions.md#dec-03)).
 

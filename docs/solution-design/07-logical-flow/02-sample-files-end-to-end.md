@@ -57,7 +57,7 @@ sequenceDiagram
     P->>Repo: all, then add up the total after: 66750.00, equal to the total before
 ```
 
-- The balances file is read in full before any transfer, and the transfers file one row at a time ([DEC-32](../../design-analysis/design-decisions.md#dec-32)). Each transfer follows the flow on [page 03](03-successful-transfer.md). The total check is [DEC-24](../../design-analysis/design-decisions.md#dec-24).
+- Both files are read one row at a time, and every row of the balances file is read and checked before any transfer is read ([DEC-32](../../design-analysis/design-decisions.md#dec-32)). Each transfer follows the flow on [page 03](03-successful-transfer.md). The total check is [DEC-24](../../design-analysis/design-decisions.md#dec-24).
 
 ## Balances after each transfer
 

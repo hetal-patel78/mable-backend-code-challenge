@@ -2,7 +2,7 @@
 
 How else the two CSV files could have been read, and why Ruby's CSV library with no header detection and row-by-row reading was chosen.
 
-The chosen design: both files are read with Ruby's standard CSV library, with no header row. A header line fails like any other bad row, with a hint in the message. The transfers file is read one row at a time; the balances file is read in full. A file the library cannot read past some line stops the run ([DEC-04](../../design-analysis/design-decisions.md#dec-04), [DEC-06](../../design-analysis/design-decisions.md#dec-06), [DEC-32](../../design-analysis/design-decisions.md#dec-32)). The readers are described in [Components](../06-components.md).
+The chosen design: both files are read with Ruby's standard CSV library, with no header row. A header line fails like any other bad row, with a hint in the message. Both files are read one row at a time, and every row of the balances file is read and checked before any transfer is read. A file the library cannot read past some line stops the run ([DEC-04](../../design-analysis/design-decisions.md#dec-04), [DEC-06](../../design-analysis/design-decisions.md#dec-06), [DEC-32](../../design-analysis/design-decisions.md#dec-32)). The readers are described in [Components](../06-components.md).
 
 ## Header detection
 
@@ -69,7 +69,7 @@ flowchart LR
 **Cons**
 - Complexity with no stated need: one company's daily transfers are small.
 - The transfers file is already read one row at a time, so it is never held in memory as a whole.
-- The balances file must be read in full anyway, because all its errors must be found before any transfer runs ([DEC-12](../../design-analysis/design-decisions.md#dec-12)).
+- Every row of the balances file must be read and checked before any transfer runs anyway, because all its errors must be found first ([DEC-12](../../design-analysis/design-decisions.md#dec-12)).
 - The report lists every transfer, so the transfer results are kept until the end in any design that prints that report ([DEC-26](../../design-analysis/design-decisions.md#dec-26)).
 
 **Cost.** Chosen design: O(m) space for the m accounts, and O(n) space for the n transfer results kept for the report; the transfers file itself is never fully in memory. Chunking would not lower this without changing the report.

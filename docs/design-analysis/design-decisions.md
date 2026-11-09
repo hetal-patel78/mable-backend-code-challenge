@@ -559,7 +559,7 @@ The report is printed on stdout once, at the end of a completed run, after the o
 ### DEC-32 Reading large files
 
 **Rule**
-- The transfers file is read one row at a time with Ruby's CSV library (`CSV.open`, one row per `shift`), so the physical line number of each row is kept ([DEC-07](#dec-07)). The balances file is read in full, because all its errors must be found before any transfer runs ([DEC-12](#dec-12)).
+- Both files are read one row at a time with Ruby's CSV library (`CSV.open`, one row per `shift`), so the physical line number of each row is kept ([DEC-07](#dec-07)). Every row of the balances file is read and checked before any row of the transfers file is read, because all its errors must be found before any transfer runs ([DEC-12](#dec-12)).
 - There is no other work for large files: no chunking, memory limits or background processing.
 
 **Reason:** reading row by row costs nothing extra and already copes with a larger file. A day's transfers for one company are small.
