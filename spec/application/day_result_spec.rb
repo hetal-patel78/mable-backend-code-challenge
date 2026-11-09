@@ -13,16 +13,18 @@ RSpec.describe DayResult do
 
   def day(*results)
     described_class.new(results: results, total_before: balance('150.00'), total_after: balance('150.00'),
-                        accounts: [account], output_path: 'output/day.csv')
+                        opening_balances: { account_number => balance }, accounts: [account],
+                        output_path: 'output/day.csv')
   end
 
   it 'has the warning DEC-21 gives when every transfer is rejected' do
     expect(described_class::ALL_REJECTED_WARNING).to eq('All transfers were rejected; check this is the right file.')
   end
 
-  it 'returns the five members it was given' do
+  it 'returns the six members it was given, the opening balances among them (DEC-26)' do
     members = { results: [applied(1)], total_before: balance('150.00'), total_after: balance('149.00'),
-                accounts: [account], output_path: 'output/day.csv' }
+                opening_balances: { account_number => balance('150.00') }, accounts: [account],
+                output_path: 'output/day.csv' }
     expect(described_class.new(**members)).to have_attributes(members)
   end
 

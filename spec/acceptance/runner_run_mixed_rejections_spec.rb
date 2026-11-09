@@ -30,9 +30,10 @@ RSpec.describe Runner, '#run' do
           Total after: 150.00
 
         Final balances
-          1111234522226789  0.00
-          1212343433335665  80.00
-          0000123412341234  70.00
+          Account           Opening  Closing
+          1111234522226789   100.00     0.00
+          1212343433335665    50.00    80.00
+          0000123412341234     0.00    70.00
 
         Output file: output/final_balances_2026-11-07_143005.csv
       STDOUT

@@ -45,6 +45,16 @@ RSpec.describe ProcessDailyTransfer do
       expect(result.accounts.map { |held| held.balance.to_s }).to eq(%w[95.00 55.00 0.00])
     end
 
+    it 'returns the opening balances by account number in load order, taken before any transfer (DEC-26)' do
+      expect(result.opening_balances.map { |number, money| [number.to_s, money.to_s] })
+        .to eq([%w[1111234522226789 100.00], %w[1212343433335665 50.00], %w[0000123412341234 0.00]])
+    end
+
+    it 'gives an account with no applied transfer the same opening and closing balance (DEC-26)' do
+      untouched = result.accounts.last
+      expect(result.opening_balances.fetch(untouched.number)).to eq(untouched.balance)
+    end
+
     it 'returns the output path' do
       expect(result.output_path).to eq('output/day.csv')
     end

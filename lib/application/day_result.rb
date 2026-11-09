@@ -2,8 +2,9 @@
 
 require_relative '../domain/transfer_result'
 
-# The day's outcome: every transfer result in file order, the totals, the final accounts and the output path.
-DayResult = Data.define(:results, :total_before, :total_after, :accounts, :output_path) do
+# The day's outcome: every transfer result in file order, the totals, the opening balances, the final accounts
+# and the output path.
+DayResult = Data.define(:results, :total_before, :total_after, :opening_balances, :accounts, :output_path) do
   def processed_count
     results.size
   end
