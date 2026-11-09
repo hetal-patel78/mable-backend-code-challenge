@@ -171,3 +171,25 @@ Attached: the `lines_in` method of `CsvRows`.
 Attached: the `each` method of `CsvRows`.
 
 Outcome: `CsvRows` has comments on its encoding handling and line counting, a named constant for every pattern, and catches system errors only when opening the file and reading it, never in the code that handles each row.
+
+## 6. Solution design
+
+<a id="p38"></a>**P38. Remove repetition from the solution design and add an overview diagram**
+
+> yes please I want one HighLevel diagram and so if anyone interested can look for the split
+>
+> also while u are doing it I see there was lot of repetition on SD pages - can check for duplicates and verify my observation was correct   we can remove the repetition and keep it one single page.
+
+On the first draft of the overview diagram:
+
+> overview diagram to have about 14 boxes that is lot
+
+On the repeated sample balances table and the starting and opening wording:
+
+> yes lets make it consistent
+
+Then:
+
+> so when u update the SD, desing decision, claudecode.md, readme-  make sure u check against the all the code changes which u will commit before starting the updates
+
+Outcome: each topic in the solution design has one home page, the copies that disagreed are corrected, the documents match the code, and page 5 opens with an overview diagram.
