@@ -33,10 +33,14 @@ class Money
     freeze
   end
 
+  # The amount as written in the file, such as "10.5" or "-0.00", so an error message quotes what the user typed.
+  # A Money not read from a file, such as a balance after a withdrawal, has no written text and gives to_s.
   def text
     @written || to_s
   end
 
+  # The amount as the program shows it, with exactly 2 decimal places: "10", "10.5" and "10.50" all give "10.50".
+  # Used for the report, the output file and the log lines.
   # to_s('F') writes plain digits, not BigDecimal's default form such as 0.1e2; the sign is added once, in front.
   def to_s
     units, fraction = value.abs.to_s('F').split('.')
