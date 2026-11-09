@@ -12,6 +12,7 @@ class CsvRows
   BLANK = /\A[ \t\r\n]*\z/
   PADDING = /\A[ \t]+|[ \t]+\z/
   LINE_BREAK = /\r\n|\r|\n/
+  DIGIT = /[0-9]/
 
   def initialize(path, expected_size)
     @path = path
@@ -21,13 +22,23 @@ class CsvRows
   def each(&)
     @lines_read = 0
     @first_row_given = false
-    CSV.open(@path, 'r:bom|utf-8') { |csv| each_row_of(csv, &) }
-  rescue SystemCallError => e
-    raise UnreadableFile.cannot_open(@path, e)
+    csv = open_file
+    each_row_of(csv, &)
+  ensure
+    csv&.close
   end
 
   private
 
+  # Opened as UTF-8 text with any byte-order mark dropped.
+  def open_file
+    CSV.open(@path, 'r:bom|utf-8')
+  rescue SystemCallError => e
+    raise UnreadableFile.cannot_open(@path, e)
+  end
+
+  # Read as raw bytes, so the CSV parser never raises an encoding error of its own at the wrong line;
+  # check_text then checks each row's bytes at its physical line.
   def each_row_of(csv)
     csv.to_io.set_encoding(Encoding::BINARY)
     while (fields = next_fields(csv))
@@ -46,17 +57,23 @@ class CsvRows
     bytes.to_s.dup.force_encoding(Encoding::UTF_8)
   end
 
+  # A system error while reading is reported like one while opening; the caller's block is outside this rescue.
   def next_fields(csv)
     csv.shift
   rescue CSV::MalformedCSVError
     raise UnreadableFile.at_line(@path, @lines_read + 1)
+  rescue SystemCallError => e
+    raise UnreadableFile.cannot_open(@path, e)
   end
 
+  # The physical lines a row's raw text spans: one per line break, plus a last line with no final break,
+  # so the next row starts at the right line.
   def lines_in(raw)
     breaks = raw.scan(LINE_BREAK).size
     raw.empty? || raw.end_with?("\n", "\r") ? breaks : breaks + 1
   end
 
+  # The fields, read as raw bytes, become UTF-8 text with the spaces and tabs around them removed.
   def row(line_number, fields)
     values = fields.map { |field| text(field).gsub(PADDING, '') }
     hint = HEADER_HINT if header_like?(values.first)
@@ -65,6 +82,6 @@ class CsvRows
   end
 
   def header_like?(first_field)
-    !@first_row_given && !first_field.empty? && !first_field.match?(/[0-9]/)
+    !@first_row_given && !first_field.empty? && !first_field.match?(DIGIT)
   end
 end

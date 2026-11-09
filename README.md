@@ -162,6 +162,7 @@ $env:Path = [Environment]::GetEnvironmentVariable('Path','User') + ';' + [Enviro
 - The values compared by their data (`AccountNumber` and `Transfer` in the domain, `TransferResult` in the application) are Ruby `Data` records, so they are equal by content and never change. `Money` keeps its own equality, because `10.5` and `10.50` are the same amount.
 - `ProcessDailyTransfer` is given its parts as one `ProcessDailyTransfer::Parts` value, each by name (the readers, the writer, the repository, the report printer and the logger), and the run time, so the tests pass fakes.
 - Every check runs before any balance changes, so each transfer is all or nothing. An account also refuses a deposit or withdrawal of $0 or less with `ArgumentError`, a guard against programming errors: a transfer with such an amount is already rejected as `invalid_amount`.
+- The CSV files are read as raw bytes, and each row is checked for UTF-8 text on its own, so a row that is not text is reported at its own line number. A system error while a file is opened or read is reported as `cannot read file`; an error raised by the code the rows are given to is not.
 - Money is a `Money` value on `BigDecimal`, never floating point, and never rounded.
 
 The full reasoning is in [`docs/design-analysis/design-decisions.md`](docs/design-analysis/design-decisions.md) and the solution design in [`docs/solution-design/README.md`](docs/solution-design/README.md).
@@ -171,7 +172,7 @@ The full reasoning is in [`docs/design-analysis/design-decisions.md`](docs/desig
 SimpleCov's line coverage from a full `bundle exec rspec` run:
 
 ```
-Line coverage: 501 / 501 (100.00%)
+Line coverage: 527 / 527 (100.00%)
 ```
 
 The full report is in `coverage/index.html` after a test run. No minimum figure is set.

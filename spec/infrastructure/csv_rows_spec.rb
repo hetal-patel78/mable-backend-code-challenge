@@ -174,4 +174,31 @@ RSpec.describe CsvRows do
       expect { rows_of('folder.csv') }.to raise_error(UnreadableFile, /\Acannot read file folder\.csv: \S/)
     end
   end
+
+  describe 'a system error while the rows are read' do
+    before do
+      write_file('written.csv', "1111234522226789,100.00\n")
+      allow(CSV).to receive(:open).and_wrap_original do |open, *arguments|
+        open.call(*arguments).tap { |csv| allow(csv).to receive(:shift).and_raise(Errno::EIO.new) }
+      end
+    end
+
+    it 'raises UnreadableFile with the reason from the system, as for a file that cannot be opened (DEC-23)' do
+      expect { rows_of('written.csv') }
+        .to raise_error(UnreadableFile, 'cannot read file written.csv: Input/output error')
+    end
+
+    it 'gives no line number for a system error while reading (DEC-23)' do
+      expect { rows_of('written.csv') }.to raise_error(an_object_having_attributes(line_number: nil))
+    end
+  end
+
+  describe 'an error raised by the caller' do
+    it 'passes a system error raised inside the block through unchanged, not as a file that cannot be opened' do
+      write_file('written.csv', "1111234522226789,100.00\n")
+      error = Errno::EACCES.new
+      failing_block = ->(_row) { raise error }
+      expect { described_class.new('written.csv', 2).each(&failing_block) }.to raise_error(be(error))
+    end
+  end
 end

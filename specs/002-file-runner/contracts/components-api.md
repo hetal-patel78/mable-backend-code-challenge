@@ -40,7 +40,7 @@ Code files load their own dependencies with `require_relative`, and only those w
 
 `UnreadableFile` from a reader is one of:
 
-- `cannot read file <path>: <reason from the system>`: the file cannot be opened or read (`line_number` nil);
+- `cannot read file <path>: <reason from the system>`: the file cannot be opened, or a system error stops the reading (`line_number` nil); a system error raised inside the caller's block passes through unchanged (plan P33);
 - `cannot read <path> from line <N>. Check for an unclosed quote or characters that are not text.`: raised after every row before line `N` has been yielded (`line_number` `N`).
 
 ## Application

@@ -75,7 +75,7 @@ classDiagram
 | `CsvRows.new(path, expected_size)` | String, Integer | |
 | `each { \|row\| ... }` | `Row` | Yields each non-blank row in file order; `Enumerable` |
 
-- Raises `UnreadableFile.cannot_open(path, error)` for a `SystemCallError`, and `UnreadableFile.at_line(path, line)` for a `CSV::MalformedCSVError`, after yielding every earlier row ([research R1, R2](research.md#r1-reading-a-csv-file-row-by-row-with-its-line-number)).
+- Raises `UnreadableFile.cannot_open(path, error)` for a `SystemCallError` raised while opening the file or reading a row (an error raised in the caller's block passes through unchanged; plan P33), and `UnreadableFile.at_line(path, line)` for a `CSV::MalformedCSVError`, after yielding every earlier row ([research R1, R2](research.md#r1-reading-a-csv-file-row-by-row-with-its-line-number)).
 - Holds one row at a time; never the file's text (NFR-03).
 
 ### `BalancesCsvReader` and `TransfersCsvReader` (infrastructure)
