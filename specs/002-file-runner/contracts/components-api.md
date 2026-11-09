@@ -4,7 +4,7 @@ The members of this spec's classes that other classes and the specs may call, wi
 
 ## Loading
 
-Code files load their own dependencies with `require_relative`, and only those whose constants they name. A spec requires the file of the class it tests and of every other class it names, with `lib/` on the load path (`001` plan D13).
+Code files load their own dependencies with `require_relative`, and only those whose constants they name. A spec requires the file of the class it tests and of every other class it names, with [`lib/`](../../../lib/) on the load path (`001` plan [D13](../../001-domain/plan.md#d13)).
 
 | File | Defines | Uses |
 |---|---|---|
@@ -40,7 +40,7 @@ Code files load their own dependencies with `require_relative`, and only those w
 
 `UnreadableFile` from a reader is one of:
 
-- `cannot read file <path>: <reason from the system>`: the file cannot be opened, or a system error stops the reading (`line_number` nil); a system error raised inside the caller's block passes through unchanged (plan P33);
+- `cannot read file <path>: <reason from the system>`: the file cannot be opened, or a system error stops the reading (`line_number` nil); a system error raised inside the caller's block passes through unchanged (plan [P33](../plan.md#p33));
 - `cannot read <path> from line <N>. Check for an unclosed quote or characters that are not text.`: raised after every row before line `N` has been yielded (`line_number` `N`).
 
 ## Application
@@ -65,7 +65,7 @@ Code files load their own dependencies with `require_relative`, and only those w
 | `DayResult.new(results:, total_before:, total_after:, opening_balances:, accounts:, output_path:)` | a `DayResult` | |
 | `result.results`, `.total_before`, `.total_after`, `.opening_balances`, `.accounts`, `.output_path` | as given | |
 | `result.processed_count`, `.applied_count`, `.rejected_count` | Integer | |
-| `result.rejected_counts` | `{ reason_code => count }`, only codes that occurred, in DEC-19 order | |
+| `result.rejected_counts` | `{ reason_code => count }`, only codes that occurred, in [DEC-19](../../../docs/design-analysis/design-decisions.md#dec-19) order | |
 | `result.all_rejected?` | Boolean | |
 
 The `<problem>` texts inside `InvalidBalancesFile`, in field order for each row:
@@ -93,7 +93,7 @@ The `<problem>` texts inside `InvalidBalancesFile`, in field order for each row:
 | `error.message` | the text after `Error: ` in the spec's table |
 | `error.stop_reason` | the text after `Run stopped: ` in the spec's table |
 
-`<reason from the system>` is `error.message` of the `SystemCallError` or `IOError` up to ` @ ` (plan P9).
+`<reason from the system>` is `error.message` of the `SystemCallError` or `IOError` up to ` @ ` (plan [P9](../plan.md#p9)).
 
 ## Output
 
@@ -117,4 +117,4 @@ The `<problem>` texts inside `InvalidBalancesFile`, in field order for each row:
 
 - A reader passed to `LoadBalances` or `ProcessDailyTransfer` needs only `each_row(path)` yielding `Row`s; the fake readers in the specs have the same member.
 - A reporter needs only `print(day_result)`; a writer only `write(accounts, path)`; a repository `add`, `include?`, `find` and `all` (`001`); a logger `info`, `warn` and `error`.
-- The `Runner` passes `ProcessDailyTransfer` the balances and transfers paths in their shown form (`DisplayPath.of`) and the output path in full (plan P11), so `DayResult#output_path` is the full path. The application classes show the paths they are given: `InvalidBalancesFile.no_rows` and `NoTransfers` in their messages, `ProcessDailyTransfer` in its `Run started` line; no `application/` file uses `DisplayPath` (page 6 pick 53). `DisplayPath.of` is used only in `infrastructure/`: by the `Runner` for its start-check lines and the paths it passes on, by `UnreadableFile` and `OutputNotWritable` in their messages, and by `ReportPrinter`, which alone works out the output path to show in the report (page 6 pick 41). The readers and the writer open files with the path they are given.
+- The `Runner` passes `ProcessDailyTransfer` the balances and transfers paths in their shown form (`DisplayPath.of`) and the output path in full (plan [P11](../plan.md#p11)), so `DayResult#output_path` is the full path. The application classes show the paths they are given: `InvalidBalancesFile.no_rows` and `NoTransfers` in their messages, `ProcessDailyTransfer` in its `Run started` line; no `application/` file uses `DisplayPath` ([page 6 pick 53](../../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-53)). `DisplayPath.of` is used only in `infrastructure/`: by the `Runner` for its start-check lines and the paths it passes on, by `UnreadableFile` and `OutputNotWritable` in their messages, and by `ReportPrinter`, which alone works out the output path to show in the report ([page 6 pick 41](../../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-41)). The readers and the writer open files with the path they are given.

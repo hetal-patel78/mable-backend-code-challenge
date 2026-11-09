@@ -11,7 +11,7 @@ ruby bin/run [BALANCES_FILE TRANSFERS_FILE [OUTPUT_FILE]]      # on Windows
 
 | Arguments | Balances | Transfers | Output |
 |---|---|---|---|
-| none | `data/mable_account_balances.csv` under the project root | `data/mable_transactions.csv` under the project root | `output/final_balances_YYYY-MM-DD_HHMMSS.csv` under the project root |
+| none | [`data/mable_account_balances.csv`](../../../data/mable_account_balances.csv) under the project root | [`data/mable_transactions.csv`](../../../data/mable_transactions.csv) under the project root | `output/final_balances_YYYY-MM-DD_HHMMSS.csv` under the project root |
 | 2 | the first, from the current folder | the second, from the current folder | as with none |
 | 3 | the first | the second | the third, from the current folder, used as given |
 | 1, or 4 or more (`-h` and `--help` included) | usage message, exit 1 | | |
@@ -27,7 +27,7 @@ Environment: `LOG_LEVEL` is `info` (any letter case) for info level; anything el
 | Standard output | The report of a completed run, once, after the output file is written; nothing else, ever |
 | Standard error | `Error:` lines and the usage message (plain text), and log lines (`Logger`'s default format) |
 
-Every path in the report, in a message or in a log line is shown relative to the current folder when the file is in it or below it, and in full otherwise (DEC-26; plan P10).
+Every path in the report, in a message or in a log line is shown relative to the current folder when the file is in it or below it, and in full otherwise ([DEC-26](../../../docs/design-analysis/design-decisions.md#dec-26); plan [P10](../plan.md#p10)).
 
 ## The report (exit status 0)
 
@@ -54,7 +54,7 @@ Final balances
 Output file: <path>
 ```
 
-An empty value is shown as `""`. Account numbers are in full. Money has exactly 2 decimal places. In `Final balances`, `<opening>` is the balance before the day's transfers and `<closing>` the balance after them; each column is as wide as its widest value or heading, with two spaces between columns, the account number left-aligned and the amounts and their headings right-aligned (DEC-26).
+An empty value is shown as `""`. Account numbers are in full. Money has exactly 2 decimal places. In `Final balances`, `<opening>` is the balance before the day's transfers and `<closing>` the balance after them; each column is as wide as its widest value or heading, with two spaces between columns, the account number left-aligned and the amounts and their headings right-aligned ([DEC-26](../../../docs/design-analysis/design-decisions.md#dec-26)).
 
 ## Log lines
 
@@ -90,11 +90,11 @@ Standard output is empty, no output file is left, and a file already at the outp
 
 Start-check `Error:` lines come in the order balances, transfers, output; `<reasons>` lists `file not found` and `output file already exists`, each once and only if it occurred, in that order, separated by `, `. `<count>` is `1 problem` or `<n> problems`.
 
-An unexpected error (a bug) is not caught: Ruby prints its stack trace and the exit status is 1 (page 10 pick 45).
+An unexpected error (a bug) is not caught: Ruby prints its stack trace and the exit status is 1 ([page 10 pick 45](../../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-45)).
 
 ## The output file
 
-One line per account, `<account number>,<balance>`, full account numbers, balances with exactly 2 decimal places, in load order, no header, every line ending with LF only, the last included ([DEC-27](../../../docs/design-analysis/design-decisions.md#dec-27), page 10 pick 17). It can be the next day's balances file. Missing folders on its path are created; an existing file is never overwritten.
+One line per account, `<account number>,<balance>`, full account numbers, balances with exactly 2 decimal places, in load order, no header, every line ending with LF only, the last included ([DEC-27](../../../docs/design-analysis/design-decisions.md#dec-27), [page 10 pick 17](../../../docs/solution-design/10-traceability-glossary-assumptions.md#pick-17)). It can be the next day's balances file. Missing folders on its path are created; an existing file is never overwritten.
 
 ## Exit status
 
