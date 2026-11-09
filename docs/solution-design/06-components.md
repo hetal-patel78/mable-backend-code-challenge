@@ -111,7 +111,7 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
 
 - **Responsibility:** one requested movement of money: from account, to account, amount ([DEC-30](../design-analysis/design-decisions.md#dec-30)).
 - **In:** two `AccountNumber`s and a `Money` amount.
-- **Out:** a value holding the three. It raises `InvalidAmount` for an amount of $0 or less, then `SameAccount` for the same account on both sides. It checks the amount first, so a row with both problems gets `invalid_amount`, as the order in [DEC-19](../design-analysis/design-decisions.md#dec-19) requires.
+- **Out:** a value holding the three, equal to another transfer with the same accounts and amount. It raises `InvalidAmount` for an amount of $0 or less, then `SameAccount` for the same account on both sides. It checks the amount first, so a row with both problems gets `invalid_amount`, as the order in [DEC-19](../design-analysis/design-decisions.md#dec-19) requires.
 - **Does not:** look up accounts, check balances or change anything. It does not hold `Account` objects.
 
 ### `TransferResult`

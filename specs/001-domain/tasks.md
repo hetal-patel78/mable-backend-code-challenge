@@ -6,7 +6,7 @@
 
 **Tests**: required. Tests come first in every phase (constitution IV, [DEC-34](../../docs/design-analysis/design-decisions.md#dec-34)): write the spec, run it and see the new examples fail, then write the code until they pass. Every phase ends with `bundle exec rspec` passing in random order and `bundle exec rubocop` reporting zero offences. This spec tests the domain directly (brief rule 4): the result, the error class and its exact message, and that no balance changes after every refusal. The run outcomes in the spec are run by `002`, not here.
 
-**Organization**: phases follow the order the code depends on, not the priority order: values (US4), then money arithmetic (US6), the account (US2), the repository (US5, US3), and the transfer service and results (US1). Each phase is still one user story, tested on its own.
+**Organization**: phases follow the order the code depends on, not the priority order: values (US4), then money arithmetic (US6), the account (US2), the repository (US5, US3), and the transfer service and results (US1). Each phase is still one user story, tested on its own. Phase 10, after the polish of Phase 9, refactors the domain after the developer's code review, with no change in any outcome: the `Account` amount guard (P33), `AccountNumber` and `Transfer` as `Data` records and the repository keyed by `AccountNumber` (P34), and the unused requires (P36).
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -288,17 +288,24 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 - [X] T052 [P] Add to `spec/domain/account_spec.rb`: `withdraw` and `deposit` each raise `ArgumentError` with `amount <amount> must be greater than 0.00` for an amount of `0.00` and of `-5.00`, described as a programming error; after `attempt(ArgumentError)` with `-5.00` the balance is unchanged (`100.00` for `withdraw`, `0.00` for `deposit`) [FR-010 to FR-012; DEC-18, DEC-30; P33; plan D24]
 - [X] T053 [P] Add to `spec/domain/account_number_spec.rb` a `describe 'as a Data record'`: `members` is `%i[text]`; `AccountNumber.new(text: '12345')` raises `InvalidAccountNumber` with the same message as the positional form; it is frozen. The `==` and `hash` examples stay unchanged [FR-001, FR-002; DEC-08, DEC-30; P34; plan D19, D23]
+- [X] T054 [P] Add to `spec/domain/transfer_spec.rb` a `describe 'as a Data record'`: `members` is `%i[from to amount]`; a transfer is equal to one built from equal values (`30.00` and `30.0`); it is frozen [FR-008, FR-009; DEC-30; P34; plan D19]
 - [X] T055 [P] Add to `spec/domain/account_repository_spec.rb`, in `describe '#include?'`: false for the text `'1111234522226789'` of a number it holds, because the key is the `AccountNumber` [FR-015, FR-033; DEC-31; research R8; P34]
 - [X] T056 Add `require 'domain/errors'` to every spec file of `spec/domain/` that names a domain error (`account_number`, `account_repository`, `account`, `money`, `transfer`, `transfer_service`), so each loads what it names without relying on another file's requires (depends on T052 to T055, which edit four of the same files) [DEC-34; P36; plan D13]
+- [X] T057 Run `bundle exec rspec spec/domain` and confirm the new examples of T052 to T055 fail (no `ArgumentError`; no `members`; a transfer equal only to itself; `include?` true for the text) and no other example fails (depends on T056)
 
 ### Implementation
 
 - [X] T058 In `lib/domain/account.rb`, add a private `check_amount(money)` raising `ArgumentError, "amount #{money} must be greater than 0.00"` unless `money.positive?`, called first by `withdraw` and `deposit`; in `withdraw`, work out `balance - money` once into a local and use it for the check and the new balance (depends on T057) [FR-010 to FR-012; DEC-13, DEC-18, DEC-30; P33; plan D24]
 - [X] T059 [P] Rewrite `lib/domain/account_number.rb` as `AccountNumber = Data.define(:text)`, with `initialize(text:)` raising `InvalidAccountNumber` unless the text matches `AccountNumber::PATTERN`, then `super`; `to_s` returns `text`; `AccountNumber::PATTERN` set after the block; no hand-written `==`, `eql?`, `hash` or `freeze`; `AccountNumber.new('...')` still works positionally (depends on T057) [FR-001, FR-002; DEC-08, DEC-30; P34; plan D19, D23, D25]
+- [X] T060 [P] Rewrite `lib/domain/transfer.rb` as `Transfer = Data.define(:from, :to, :amount)`, with `initialize(from:, to:, amount:)` raising `InvalidAmount` and then `SameAccount` as before, then `super` (depends on T057) [FR-008, FR-009; DEC-10, DEC-19, DEC-30; P34; plan D8, D19, D25]
 - [X] T061 In `lib/domain/account_repository.rb`, key the `Hash` by `account.number` and look up by the `AccountNumber` given, with no `to_s` (depends on T059) [FR-014 to FR-016, FR-033; DEC-31; research R8; P34]
 - [X] T062 [P] In `lib/domain/transfer_service.rb`, remove `require_relative 'account_repository'` and `require_relative 'transfer'`: it only calls methods on the objects it is given. Check every file in `lib/domain/` requires only what it names. Run each changed spec file of `spec/domain/` on its own with `bundle exec rspec <file>` (depends on T056) [DEC-34; P36; plan D13]
+- [X] T063 [P] Bring the documents in line: DEC-18 (the guard is for programming errors; a valid transfer's deposit cannot fail), DEC-30 (the `Account` guard, `Data` records, P33 and P34 in its From list); page 5 (model table), page 6 (`AccountNumber`, `Account`, `Transfer`, `AccountRepository`, the value term), page 7.1 and 7.3, page 9 (repository key), page 10 (picks 49, 56, 57, the glossary); in this spec, FR-012, the key entities, the clarification of 2026-11-09 and item 17; the plan (design overview, D13, D19, D23 to D25), research R8 and R9, the data model and the contract; the README's design section [DEC-18, DEC-30; P33, P34, P36]
+- [X] T064 Run `bundle exec rspec` until every example passes in random order with 100% line coverage, and `bundle exec rubocop` reports zero offences with `.rubocop.yml` unchanged (depends on T058 to T063) [SC-005, SC-008; DEC-36]
 - [X] T065 Add to `spec/domain/account_number_spec.rb`, in `describe 'as a Data record'`, an example that `AccountNumber.new(+'1111222233334444')` has a frozen `text` and that changing the original string afterwards does not change the account number, and confirm it fails before T066 (depends on T059) [FR-001; DEC-08, DEC-30; P34]
 - [X] T066 In `lib/domain/account_number.rb`, after the pattern check, store a frozen copy of the text with `super(text: text.dup.freeze)`, so the `Hash` key in `AccountRepository` cannot change under the repository (depends on T065) [FR-001; DEC-08, DEC-30; P34]
+
+**Checkpoint**: `Account` refuses an amount of $0 or less with `ArgumentError`, which no transfer reaches; `AccountNumber` and `Transfer` are `Data` records; the repository is keyed by `AccountNumber`; every domain message and balance is unchanged; `bundle exec rspec` passes in random order; `bundle exec rubocop` reports zero offences.
 
 ---
 
@@ -355,12 +362,14 @@ Edge cases owned by `002` and not tested here: blank lines, header rows and the 
 - The spec tasks come first, then the run that shows them failing, then the code.
 - In Phase 3, `errors.rb` (T016) comes before the classes that raise its errors; `AccountNumber` and `Money` (T017, T018) can be written in parallel; `Transfer` and `Account` (T019, T020) need them.
 - `spec/support/builders.rb` is edited by one task at a time (T014, T024, T026, T031, T039).
+- In Phase 10, T056 edits four spec files that T052 to T055 edit, so it runs after them; `account_number.rb` (T059) comes before the repository (T061), whose key it is.
 
 ### Parallel opportunities
 
 - Phase 1: T004, T005, T006, T007 in parallel, after T001 to T003.
 - Phase 3: the four spec files T010 to T013 and the builders T014 in parallel; then T017 and T018 in parallel.
 - Phase 8: T039, T040 and T041 in parallel; then T043 and T044 in parallel.
+- Phase 10: T052 to T055 in parallel; then T059, T060 and T062 in parallel with T058; T063 alongside the code.
 
 ## Parallel example: Phase 3 (User Story 4)
 
@@ -387,6 +396,7 @@ The MVP is the end of Phase 8: one transfer applied all or nothing, with every r
 5. Phases 6 and 7: the repository holds, finds and refuses accounts (US5, US3).
 6. Phase 8: transfers are applied all or nothing, and each row's outcome is a `TransferResult` (US1).
 7. Phase 9: the measurable outcomes and design reviews pass; `002` can start.
+8. Phase 10: the domain refactored after the code review; every outcome, message and balance unchanged.
 
 ## Notes
 

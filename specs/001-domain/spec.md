@@ -476,7 +476,7 @@ Names and meanings as on [page 6](../../docs/solution-design/06-components.md) a
 - **`AccountNumber`** (value, a Ruby `Data` record): one valid 16-digit account number, kept as text. Rule: exactly 16 digits. Error: `InvalidAccountNumber`.
 - **`Money`** (value): one exact amount with at most 2 decimal places, written with exactly 2; records a written minus sign. Rule: money format. Error: `InvalidAmount`.
 - **`Account`** (aggregate root): an account number and a balance that never goes below $0. Members: its number, its balance, `withdraw`, `deposit`, and the class-level opening-balance check. Rules: no overdraft; opening balance not negative. Errors: `InsufficientFunds`, `NegativeBalance`; `ArgumentError` for a deposit or withdrawal of $0 or less, a programming error.
-- **`Transfer`** (value): one request to move an amount from one account to another; refers to accounts by number. Rules: amount above $0, then different accounts. Errors: `InvalidAmount`, `SameAccount`.
+- **`Transfer`** (value, a Ruby `Data` record): one request to move an amount from one account to another; refers to accounts by number. Rules: amount above $0, then different accounts. Errors: `InvalidAmount`, `SameAccount`.
 - **`TransferResult`** (domain result): the outcome of one transfers row: line number, every field as written, applied or one reason code, and the header hint when it applies.
 - **`AccountRepository`**: holds the run's accounts in memory, in load order; `add`, `include?`, `find`, `all`. Rules: no duplicate on add; unknown account on find. Errors: `DuplicateAccount`, `UnknownAccount`.
 - **`TransferService`**: applies one `Transfer`, all or nothing: find both, withdraw, deposit.

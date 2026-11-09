@@ -79,9 +79,9 @@ classDiagram
 | Member | Type | Meaning |
 |---|---|---|
 | `Transfer.new(from:, to:, amount:)` | `AccountNumber`, `AccountNumber`, `Money` | Raises `InvalidAmount` unless `amount.positive?`; then `SameAccount` when `from == to` (D8) |
-| `from`, `to`, `amount` | | The three values |
+| `from`, `to`, `amount` | | The three values, the members of a `Data` record |
 
-- No lookup, no balance, no `Account` (FR-009). Frozen (D19).
+- No lookup, no balance, no `Account` (FR-009). Equal to a transfer with equal values; frozen (D19).
 
 ### `TransferResult` (domain result)
 

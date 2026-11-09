@@ -47,4 +47,18 @@ RSpec.describe Transfer do
         .to raise_error(InvalidAmount, 'amount "0" must be greater than 0.00')
     end
   end
+
+  describe 'as a Data record' do
+    it 'has the members from, to and amount, in that order' do
+      expect(described_class.members).to eq(%i[from to amount])
+    end
+
+    it 'is equal to a transfer built from equal values' do
+      expect(transfer(amount: '30.00')).to eq(transfer(amount: '30.0'))
+    end
+
+    it 'is frozen' do
+      expect(transfer).to be_frozen
+    end
+  end
 end
