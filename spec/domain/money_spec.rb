@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'domain/money'
+require 'domain/errors'
 
 RSpec.describe Money do
   describe '.amount' do

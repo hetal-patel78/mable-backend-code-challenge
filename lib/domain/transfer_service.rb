@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative 'account_repository'
-require_relative 'transfer'
-
 # Applies one transfer to the accounts in a repository, all or nothing.
 class TransferService
   def initialize(repository)

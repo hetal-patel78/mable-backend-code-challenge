@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
 require 'application/load_balances'
+require 'application/errors'
 require 'domain/account_repository'
 require 'infrastructure/csv_rows'
+require 'infrastructure/errors'
 
 RSpec.describe LoadBalances do
   let(:reader) do

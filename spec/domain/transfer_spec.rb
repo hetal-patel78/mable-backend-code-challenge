@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'domain/transfer'
+require 'domain/errors'
 
 RSpec.describe Transfer do
   describe '.new' do

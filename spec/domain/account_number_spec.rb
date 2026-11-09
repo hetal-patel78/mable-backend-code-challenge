@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'domain/account_number'
+require 'domain/errors'
 
 RSpec.describe AccountNumber do
   describe '.new' do

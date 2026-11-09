@@ -506,6 +506,18 @@
 
 ---
 
+## Phase 14: Refactor after the code review (TransferResult, LoadBalances, CsvRows)
+
+**Goal**: the developer's code review of the application and infrastructure, after `001` Phase 10, with no change in behaviour: the same report, output file, exit status and log lines, at the same levels, for every input. `TransferResult` moves to `lib/application/` as the application's record of each row's outcome (P35) and becomes a `Data` record (P34). `LoadBalances` parses each field once, reads the fields by name and writes `Line <N>: <problem>` in one method; `ReportPrinter` reads the fields by name (P32). `CsvRows` rescues system errors only where it opens the file and reads a row, never around the caller's block, explains its encoding handling and its line count in short comments, and names its digit pattern (P37). Each spec requires what it names (P36).
+
+**Independent Test**: `transfer_result_spec.rb` (moved to `spec/application/`) for the `Data` record; `csv_rows_spec.rb` for an error raised in the caller's block; `load_balances_spec.rb` and `report_printer_spec.rb`, unchanged, for the refactored code; every changed spec file run on its own; `ruby bin/run` with `LOG_LEVEL=info` on the runs of T127, compared with the code before this phase.
+
+### Tests (write first)
+
+- [X] T118 Make each spec require the file of every class it names, besides the class under test: `day_result_spec.rb`, `log_messages_spec.rb` and `report_printer_spec.rb` add `'application/transfer_result'` (and `report_printer_spec.rb` `'application/day_result'`); `load_balances_spec.rb` adds `'application/errors'` and `'infrastructure/errors'`; `process_daily_transfer_spec.rb` adds `'application/day_result'` and `'application/errors'`; `csv_rows_spec.rb` and `transfers_csv_reader_spec.rb` add `'infrastructure/errors'`; `runner_spec.rb` adds the files of `AccountRepository`, `Money`, `ProcessDailyTransfer`, the run-stopping errors, the readers, the writer and the report printer (depends on T116, which edits `csv_rows_spec.rb` too) [DEC-34; P36; plan P1]
+
+---
+
 ## Edge cases and their tests
 
 Every edge case in the spec's [Edge Cases](spec.md#edge-cases) list, with the task that tests it.
@@ -574,6 +586,7 @@ Every edge case in the spec's [Edge Cases](spec.md#edge-cases) list, with the ta
 - **Phase 11 (Polish)**: after Phases 1 to 10.
 - **Phase 12 (Opening balances in the report)**: after Phase 11.
 - **Phase 13 (Refactor ProcessDailyTransfer)**: after Phase 12.
+- **Phase 14 (Refactor after the code review)**: after Phase 13 and `001` Phase 10.
 
 ### Within each phase
 

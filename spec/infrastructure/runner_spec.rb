@@ -1,6 +1,14 @@
 # frozen_string_literal: true
 
 require 'infrastructure/runner'
+require 'application/errors'
+require 'application/process_daily_transfer'
+require 'domain/account_repository'
+require 'domain/money'
+require 'infrastructure/balances_csv_reader'
+require 'infrastructure/final_balances_csv_writer'
+require 'infrastructure/report_printer'
+require 'infrastructure/transfers_csv_reader'
 
 RSpec.describe Runner do
   describe 'FR-01 Load the balances file' do

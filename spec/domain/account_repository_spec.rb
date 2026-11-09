@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'domain/account_repository'
+require 'domain/errors'
 
 RSpec.describe AccountRepository do
   let(:three_numbers) { %w[1111234522226789 1212343433335665 0000123412341234] }

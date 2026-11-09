@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'infrastructure/csv_rows'
+require 'infrastructure/errors'
 
 RSpec.describe CsvRows do
   around { |example| in_temp_folder { example.run } }

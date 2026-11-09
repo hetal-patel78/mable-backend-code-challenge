@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'domain/account'
+require 'domain/errors'
 
 RSpec.describe Account do
   describe '.check_opening_balance' do

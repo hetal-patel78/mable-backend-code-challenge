@@ -4,7 +4,7 @@ The members of this spec's classes that other classes and the specs may call, wi
 
 ## Loading
 
-Code files load their own dependencies with `require_relative`. A spec requires the file of the class it tests, with `lib/` on the load path (`001` plan D13).
+Code files load their own dependencies with `require_relative`, and only those whose constants they name. A spec requires the file of the class it tests and of every other class it names, with `lib/` on the load path (`001` plan D13).
 
 | File | Defines | Uses |
 |---|---|---|

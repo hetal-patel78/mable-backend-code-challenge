@@ -87,7 +87,7 @@ data/
 └── mable_transactions.csv               # copy of docs/challenge/, unchanged
 
 lib/
-├── domain/                              # from 001, unchanged
+├── domain/                              # from 001
 ├── application/
 │   ├── errors.rb                        # InvalidBalancesFile, NoTransfers, TotalChanged
 │   ├── load_balances.rb                 # LoadBalances
@@ -170,7 +170,7 @@ Names and details that page 6 and the page 10 glossary leave open, and small tec
 
 | # | Decision | Relates to | Reason | Rejected |
 |---|---|---|---|---|
-| P1 | Every class and error is a top-level constant with its page 6 name, in the files listed under Source Code; each code file loads what it uses with `require_relative`, and specs require `'application/<file>'` or `'infrastructure/<file>'` | DEC-30, `001` plan D2, D13 | Same as the domain: the names stay exactly as on page 6 | A namespace module |
+| P1 | Every class and error is a top-level constant with its page 6 name, in the files listed under Source Code; each code file loads what it uses with `require_relative`, and specs require `'application/<file>'` or `'infrastructure/<file>'` for the class under test and for every other code file whose constant they name, so each spec loads on its own | DEC-30, `001` plan D2, D13 | Same as the domain: the names stay exactly as on page 6 | A namespace module |
 | P2 | A row given by a reader is a `Row`, a `Data` value in `lib/infrastructure/row.rb` with `line_number`, `fields` (trimmed text), `expected_size` and `header_hint` (nil unless marked), and the predicate `wrong_field_count?` (`fields.size != expected_size`) | DEC-04, DEC-06, DEC-07, FR-003, FR-004, page 6 pick 52 | Page 5 says any reader gives "the same rows"; one small value carries the row, its line and both reader marks to `LoadBalances` and `ProcessDailyTransfer` | Arrays of fields with the line number passed beside them; a flag for the wrong count separate from the counts |
 | P3 | The reading rules shared by both readers live once in `CsvRows` (`lib/infrastructure/csv_rows.rb`), an `Enumerable` built with a path and the expected number of fields; it owns the header hint text as `CsvRows::HEADER_HINT` | DEC-04 to DEC-07, DEC-32, FR-001 to FR-005, page 6 pick 52, constitution I and VII | The two readers differ only in the number of fields; one owner for the reading rules means one test of each (DEC-34) and no base class (DEC-30) | A base reader class (ruled out by DEC-30); a mixin (the rules would be tested through both readers); copying the rules into both readers |
 | P4 | Both readers have `each_row(path) { \|row\| ... }` and a constant `FIELD_COUNT` (2 and 3); both read through `CsvRows`, one row at a time. "Read in full" for the balances file means every row is read and checked before any transfer, which `LoadBalances` does | DEC-32, FR-006, NFR-03 | The row-by-row read is what lets the rows before an unreadable line be given first (DEC-04); reading the balances text into memory first would add nothing that can be tested | `rows(path)` returning an `Array` (the rows before an unreadable line would be lost); reading the balances file into a string first |

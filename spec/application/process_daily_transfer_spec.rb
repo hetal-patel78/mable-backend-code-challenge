@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require 'application/process_daily_transfer'
+require 'application/day_result'
+require 'application/errors'
 require 'domain/account_repository'
 require 'infrastructure/csv_rows'
 require 'infrastructure/errors'

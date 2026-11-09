@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'domain/transfer_service'
+require 'domain/errors'
 
 RSpec.describe TransferService do
   let(:repository) { three_accounts }

@@ -278,6 +278,22 @@ No shared code blocks the stories beyond Phase 1. Each domain error is added to 
 
 ---
 
+## Phase 10: Domain refactor (code review)
+
+**Goal**: the developer's code review of the domain, with no change in any transfer outcome, message or balance. `Account#withdraw` and `#deposit` raise `ArgumentError` for an amount of $0 or less, a guard against programming errors, and `withdraw` works out the new balance once (P33). `AccountNumber` and `Transfer` become `Data` records, and `AccountRepository` keys its `Hash` by the `AccountNumber` itself (P34). `TransferService` loads nothing it does not use, and each domain spec requires what it names (P36). `TransferResult` moves to `lib/application/` in `002` Phase 14 (P35), so it is not touched here.
+
+**Independent Test**: `account_spec.rb` for the guard; `account_number_spec.rb` and `transfer_spec.rb` for the `Data` records; `account_repository_spec.rb` for the key; each changed spec file of `spec/domain/` run on its own; every transfer outcome, message and balance in `spec/domain/` unchanged.
+
+### Tests (write first)
+
+- [X] T056 Add `require 'domain/errors'` to every spec file of `spec/domain/` that names a domain error (`account_number`, `account_repository`, `account`, `money`, `transfer`, `transfer_service`), so each loads what it names without relying on another file's requires (depends on T052 to T055, which edit four of the same files) [DEC-34; P36; plan D13]
+
+### Implementation
+
+- [X] T062 [P] In `lib/domain/transfer_service.rb`, remove `require_relative 'account_repository'` and `require_relative 'transfer'`: it only calls methods on the objects it is given. Check every file in `lib/domain/` requires only what it names. Run each changed spec file of `spec/domain/` on its own with `bundle exec rspec <file>` (depends on T056) [DEC-34; P36; plan D13]
+
+---
+
 ## Edge cases and their tests
 
 Every edge case in the [spec](spec.md#edge-cases) that falls in this spec's scope, with the task whose test proves it.
@@ -323,6 +339,7 @@ Edge cases owned by `002` and not tested here: blank lines, header rows and the 
 - **Phase 7 (US3)**: after Phase 6 (`AccountRepository`).
 - **Phase 8 (US1)**: after Phases 3 to 7; it uses every class.
 - **Phase 9 (Polish)**: after Phase 8.
+- **Phase 10 (Domain refactor)**: after Phase 9; before `002` Phase 14, which builds on it.
 
 ### Within each phase
 
