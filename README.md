@@ -29,8 +29,10 @@ You need Ruby at the version in [`.ruby-version`](.ruby-version) and Bundler (se
 
 ```
 bundle install
-bin/run
+ruby bin/run
 ```
+
+`ruby bin/run` works on every system. On macOS and Linux, `bin/run` on its own works too, and the examples below use that shorter form.
 
 Run the tests with `bundle exec rspec` and the style checker with `bundle exec rubocop`.
 
