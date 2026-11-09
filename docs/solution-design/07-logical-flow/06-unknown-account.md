@@ -28,7 +28,7 @@ sequenceDiagram
 How it works:
 
 - `AccountRepository` is the one place that knows which accounts exist. `find` raises `UnknownAccount` for a number it does not hold, and it never adds an account ([DEC-31](../../design-analysis/design-decisions.md#dec-31)).
-- `TransferService` finds both accounts before `withdraw`, so the failed lookup stops the transfer before any balance changes ([DEC-18](../../design-analysis/design-decisions.md#dec-18)). Account 1111234522226789 keeps the balance it had before line 2.
+- The failed lookup stops the transfer before any balance changes ([page 01](01-apply-one-transfer.md), [DEC-18](../../design-analysis/design-decisions.md#dec-18)): account 1111234522226789 keeps the balance it had before line 2.
 - The reason is `unknown_account` whether the from account, the to account or both are unknown.
 - `ProcessDailyTransfer` turns the error into a rejected `TransferResult` and processes the next row ([DEC-14](../../design-analysis/design-decisions.md#dec-14)).
 

@@ -57,10 +57,7 @@ sequenceDiagram
     P->>Repo: all, then add up the total after: 66750.00, equal to the total before
 ```
 
-- The `Runner` reads the clock once, and the same run time names the output file that the start checks look at and that the writer later creates ([DEC-27](../../design-analysis/design-decisions.md#dec-27), [DEC-30](../../design-analysis/design-decisions.md#dec-30)). The order of the `Runner`'s steps is on the [overview](README.md#how-a-run-starts).
-- `bin/run` passes nothing to the `Runner` but the arguments. Every part `ProcessDailyTransfer` uses is passed in, so a test can pass a fixed time, a logger that writes to memory, a fake repository or a fake reporter ([DEC-28](../../design-analysis/design-decisions.md#dec-28), [DEC-34](../../design-analysis/design-decisions.md#dec-34)).
 - The balances file is read in full before any transfer, and the transfers file one row at a time ([DEC-32](../../design-analysis/design-decisions.md#dec-32)). Each transfer follows the flow on [page 03](03-successful-transfer.md). The total check is [DEC-24](../../design-analysis/design-decisions.md#dec-24).
-- `ProcessDailyTransfer` prints the report through the reporter only after the output file is written ([DEC-26](../../design-analysis/design-decisions.md#dec-26)). The `Runner` does not print the report; it only sets the exit status.
 
 ## Balances after each transfer
 

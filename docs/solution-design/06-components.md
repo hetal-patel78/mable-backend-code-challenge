@@ -125,8 +125,8 @@ The reason codes come from [DEC-19](../design-analysis/design-decisions.md#dec-1
 
 - **Responsibility:** applies one `Transfer`, all or nothing ([DEC-18](../design-analysis/design-decisions.md#dec-18)).
 - **In:** a `Transfer` and the repository.
-- **Out:** both balances changed, or an `UnknownAccount` or `InsufficientFunds` error with both balances unchanged. It finds both accounts first, then calls `withdraw`, and only then `deposit`.
-- **Does not:** read rows, build `TransferResult`s, log, or undo anything. Nothing needs undoing, because every check runs before the first change.
+- **Out:** both balances changed, or an `UnknownAccount` or `InsufficientFunds` error with both balances unchanged. It finds both accounts first, then calls `withdraw`, and only then `deposit`; why that order makes the transfer all or nothing is on [page 7.1](07-logical-flow/01-apply-one-transfer.md).
+- **Does not:** read rows, build `TransferResult`s, log, or undo anything (nothing ever needs undoing).
 
 ### Domain errors
 

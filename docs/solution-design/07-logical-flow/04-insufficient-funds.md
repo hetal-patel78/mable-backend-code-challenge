@@ -28,8 +28,7 @@ sequenceDiagram
 
 What makes the balances safe:
 
-- `withdraw` compares first and changes the balance only when the result is $0.00 or more ([DEC-13](../../design-analysis/design-decisions.md#dec-13)). Here it raises `InsufficientFunds` before touching the balance.
-- The deposit comes after the withdrawal, so it is never reached ([DEC-18](../../design-analysis/design-decisions.md#dec-18)). Nothing has to be undone.
+- Here `withdraw` raises `InsufficientFunds` before touching the balance, and the deposit after it is never reached, so nothing has to be undone ([page 01](01-apply-one-transfer.md), [DEC-13](../../design-analysis/design-decisions.md#dec-13), [DEC-18](../../design-analysis/design-decisions.md#dec-18)).
 - `ProcessDailyTransfer` turns the error into a rejected `TransferResult` with the reason `insufficient_funds`, the last check in [DEC-19](../../design-analysis/design-decisions.md#dec-19), and moves on to the next row ([DEC-14](../../design-analysis/design-decisions.md#dec-14)).
 - The row is never retried, even if a later row pays enough into the account ([DEC-15](../../design-analysis/design-decisions.md#dec-15)).
 

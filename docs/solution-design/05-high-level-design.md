@@ -34,13 +34,10 @@ flowchart LR
     Run -- "run time, output path,<br/>and every part built" --> PDT
 ```
 
-*Passed in* means a class is given the parts it uses when it is created, instead of creating them itself. A test can then pass a fake part in their place. A *repository* is the one place that holds the accounts and finds them by number.
+*Passed in* and *repository* are defined in the [glossary](10-traceability-glossary-assumptions.md#glossary).
 
-- `bin/run` passes only the command-line arguments; the `Runner` does all the setup.
-- The `Runner` reads the clock once. When no output path is given, it asks `FinalBalancesCsvWriter` for the default path for that run time. It checks that path at the start, then passes the same run time and path to `ProcessDailyTransfer`, so the checked path and the written path are always the same ([DEC-25](../design-analysis/design-decisions.md#dec-25), [DEC-27](../design-analysis/design-decisions.md#dec-27)).
-- The `Runner` builds the real readers, writer, repository, reporter (`ReportPrinter`) and logger, and passes them all in to `ProcessDailyTransfer` ([DEC-28](../design-analysis/design-decisions.md#dec-28), [DEC-31](../design-analysis/design-decisions.md#dec-31)).
-- `ProcessDailyTransfer` takes the run time as a constructor argument, defaulting to the current time ([DEC-30](../design-analysis/design-decisions.md#dec-30)), so a test can pass a fixed time.
-- Tests pass a fixed time, a logger that writes to memory, a fake repository whose total changes, and a fake reporter to check that no report is printed ([DEC-24](../design-analysis/design-decisions.md#dec-24), [DEC-34](../design-analysis/design-decisions.md#dec-34)).
+- `bin/run` passes only the command-line arguments. The `Runner` reads the clock once, works out and checks the output path, and passes the run time, the paths and every part it built in to `ProcessDailyTransfer`, so the checked path and the written path are always the same ([DEC-25](../design-analysis/design-decisions.md#dec-25), [DEC-27](../design-analysis/design-decisions.md#dec-27), [DEC-28](../design-analysis/design-decisions.md#dec-28), [DEC-30](../design-analysis/design-decisions.md#dec-30), [DEC-31](../design-analysis/design-decisions.md#dec-31)). The steps in order are under [`Runner` on page 6](06-components.md#runner).
+- Because every part and the run time are passed in, tests pass fakes and a fixed time instead; which ones is under [`ProcessDailyTransfer` on page 6](06-components.md#processdailytransfer) ([DEC-24](../design-analysis/design-decisions.md#dec-24), [DEC-34](../design-analysis/design-decisions.md#dec-34)).
 
 ## Diagram 2: how the input files are read
 
@@ -106,7 +103,7 @@ Each rule lives in the model that owns the data it checks, and each model raises
 | `Account` | the opening balance is not negative; a withdrawal must not take the balance below $0; exactly $0.00 is allowed; a deposit or withdrawal of $0 or less is a programming error ([DEC-10](../design-analysis/design-decisions.md#dec-10), [DEC-11](../design-analysis/design-decisions.md#dec-11), [DEC-13](../design-analysis/design-decisions.md#dec-13), [DEC-18](../design-analysis/design-decisions.md#dec-18)) |
 | `AccountRepository` | no duplicate account on add; unknown account on find; accounts kept in load order ([DEC-31](../design-analysis/design-decisions.md#dec-31)) |
 
-`TransferService` finds both accounts, then withdraws, then deposits. Every check runs before any balance changes, so a transfer is all or nothing ([DEC-18](../design-analysis/design-decisions.md#dec-18)). `ProcessDailyTransfer` records each transfer's outcome as a `TransferResult`, the application's record of the row: applied, or rejected with one reason code ([DEC-19](../design-analysis/design-decisions.md#dec-19)). `ProcessDailyTransfer` turns each domain error into its reason code ([DEC-19](../design-analysis/design-decisions.md#dec-19)); the mapping is in the [errors table on page 6](06-components.md#errors-and-who-raises-them). Why `Account` is the aggregate root is explained on [page 6](06-components.md).
+`TransferService` applies each transfer all or nothing; why the order of its steps makes that so is on [page 7.1](07-logical-flow/01-apply-one-transfer.md) ([DEC-18](../design-analysis/design-decisions.md#dec-18)). `ProcessDailyTransfer` records each transfer's outcome as a `TransferResult`, the application's record of the row: applied, or rejected with one reason code ([DEC-19](../design-analysis/design-decisions.md#dec-19)). `ProcessDailyTransfer` turns each domain error into its reason code ([DEC-19](../design-analysis/design-decisions.md#dec-19)); the mapping is in the [errors table on page 6](06-components.md#errors-and-who-raises-them). Why `Account` is the aggregate root is explained on [page 6](06-components.md).
 
 ## Diagram 4: where the results and errors go
 
@@ -134,7 +131,7 @@ flowchart LR
 - **Start checks are done by the `Runner` before the day starts.** Wrong arguments give the usage message; missing input files and an existing output file are reported together. Both exit with status 1 ([DEC-22](../design-analysis/design-decisions.md#dec-22), [DEC-23](../design-analysis/design-decisions.md#dec-23), [DEC-25](../design-analysis/design-decisions.md#dec-25)). The order of the steps is in [How a run starts](07-logical-flow/README.md#how-a-run-starts).
 - **Log lines** go to stderr through Ruby's `Logger`, with account numbers masked (only the last 4 digits shown, as `************6789`) ([DEC-28](../design-analysis/design-decisions.md#dec-28), [DEC-29](../design-analysis/design-decisions.md#dec-29)). `ProcessDailyTransfer` logs them and takes the text of each line from [`LogMessages`](06-components.md#logmessages), except the all-rejected warning, whose text `DayResult` owns (shared with the report).
 - **The output CSV** is written by `FinalBalancesCsvWriter`, never over an existing file ([DEC-27](../design-analysis/design-decisions.md#dec-27)).
-- **The report** is printed on stdout by `ProcessDailyTransfer` through the `ReportPrinter` it was given, once, after the output CSV is written, and only for a completed run, which exits with status 0 ([DEC-25](../design-analysis/design-decisions.md#dec-25), [DEC-26](../design-analysis/design-decisions.md#dec-26)). The `Runner` prints only the plain error messages and sets the exit status.
+- **The report** is printed on stdout by `ProcessDailyTransfer` through the `ReportPrinter` it was given, only for a completed run; the order of the output file, the report and the exit status is on [page 7.9](07-logical-flow/09-run-output-and-exit-code.md) ([DEC-25](../design-analysis/design-decisions.md#dec-25), [DEC-26](../design-analysis/design-decisions.md#dec-26)).
 
 The exact report layout and messages are on [page 2](02-functional-requirements.md); error handling by layer is on [page 9](09-considerations.md).
 

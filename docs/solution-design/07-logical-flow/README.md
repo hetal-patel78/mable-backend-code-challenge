@@ -8,18 +8,7 @@ All examples use the run time 2026-11-07 14:30:05 (local time), run from the pro
 
 ## How a run starts
 
-Every flow on these pages starts the same way. The `Runner`, called by `bin/run`, does these steps in order:
-
-1. checks the number of arguments, and prints the usage message if it is wrong, with no log line ([DEC-22](../../design-analysis/design-decisions.md#dec-22));
-2. reads `LOG_LEVEL` and builds the logger ([DEC-28](../../design-analysis/design-decisions.md#dec-28));
-3. reads the clock once, to get the run time ([DEC-30](../../design-analysis/design-decisions.md#dec-30));
-4. resolves the paths: the sample files against the project root, or the typed paths against the current folder; the output path is the third argument, or the default path for the run time, which it asks `FinalBalancesCsvWriter.default_path` for, before any writer is built ([DEC-27](../../design-analysis/design-decisions.md#dec-27));
-5. runs the start checks together: both input files exist and the output file does not. If any check fails, it prints one `Error:` line for each problem and one error log line, and returns 1 without reading anything ([page 08](08-missing-file.md), [DEC-23](../../design-analysis/design-decisions.md#dec-23), [DEC-25](../../design-analysis/design-decisions.md#dec-25));
-6. builds the real readers, writer, repository and reporter (`ReportPrinter`);
-7. builds `ProcessDailyTransfer` with those parts, the logger and the run time, and runs it with the balances and transfers paths in their shown form and the output path in full;
-8. returns exit status 0, or for a run-stopping error prints its message and one error log line and returns 1.
-
-`ProcessDailyTransfer` writes the output file through the writer, then prints the report through the reporter ([DEC-26](../../design-analysis/design-decisions.md#dec-26)). The `Runner` never prints the report; it prints only error messages and sets the exit status. Because every part is passed in, tests can pass fakes instead ([DEC-34](../../design-analysis/design-decisions.md#dec-34)).
+Every flow on these pages starts the same way: `bin/run` passes the arguments to the `Runner`, which checks them, builds the logger, reads the clock once, resolves the paths and runs the start checks, then builds the real parts and runs `ProcessDailyTransfer`. The steps in order, with their decisions, are under [`Runner` on page 6](../06-components.md#runner); a failed start check is on [page 08](08-missing-file.md).
 
 ## Pages
 
