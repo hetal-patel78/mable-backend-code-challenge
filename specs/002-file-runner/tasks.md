@@ -567,6 +567,35 @@
 
 ---
 
+<a id="phase-16"></a>
+## Phase 16: Each rule tested once (review of the tests)
+
+**Goal**: every rule is tested once, at the lowest layer that owns it ([DEC-34](../../docs/design-analysis/design-decisions.md#dec-34)), with no change in behaviour. The runner scenarios that repeat a rule, a value or a whole run already checked in the spec of the class that owns it, or in an end-to-end spec, are removed. [`runner_spec.rb`](../../spec/infrastructure/runner_spec.rb) keeps what only a run through `Runner` shows: real CSV files read through the readers, a domain or application error turned into a report line, a log line, a stop message and an exit status, the arguments, the start checks and `LOG_LEVEL`. Every reason code and every run-stopping error still runs end to end at least once, in [`spec/acceptance/`](../../spec/acceptance/) or [`runner_spec.rb`](../../spec/infrastructure/runner_spec.rb). Each runner scenario's name reads as the behaviour it checks.
+
+**Independent Test**: for every removed example, the example that asserts the same rule and value at the layer that owns it is named in [T134](#t134) and passes; `bundle exec rspec` passes with 100% line coverage and the same covered lines; `bundle exec rubocop` reports zero offences.
+
+### Tests
+
+- [ ] <a id="t134"></a>T134 Before removing anything, confirm the example that asserts the same rule and value at the layer that owns it, for each runner scenario below; a value that no owning spec asserts is moved there first ([T135](#t135)) [[FR-042](spec.md#fr-042), [FR-045](spec.md#fr-045), [SC-002](spec.md#sc-002); [DEC-34](../../docs/design-analysis/design-decisions.md#dec-34)]:
+  - [AC-01.4](spec.md#ac-01-4): the end-to-end run in [`runner_run_invalid_balances_spec.rb`](../../spec/acceptance/runner_run_invalid_balances_spec.rb) (the same five problems, the stop log line, exit status 1, no output file); the stop reason `balances file invalid: 5 problems`, which names no account number, in [`load_balances_spec.rb`](../../spec/application/load_balances_spec.rb);
+  - [AC-01.5](spec.md#ac-01-5), the four rows of [AC-01.6](spec.md#ac-01-6) and the four of [AC-01.10](spec.md#ac-01-10): the problem lists in [`load_balances_spec.rb`](../../spec/application/load_balances_spec.rb) (field order; an empty balance; `abc`; 3 fields; an empty number and balance; the duplicate before the balance problem; the three known gaps);
+  - [AC-02.3](spec.md#ac-02-3), the header row `from,to,amount`: the end-to-end run in [`runner_run_all_rejected_spec.rb`](../../spec/acceptance/runner_run_all_rejected_spec.rb) (the same report, warn lines, exit status and output file);
+  - [User Story 6](spec.md#us6): the account numbers in [`account_number_spec.rb`](../../spec/domain/account_number_spec.rb); the amounts in [`money_spec.rb`](../../spec/domain/money_spec.rb) (`10`, `10.5`, `10.50`, `007.50`, `1.234`, the empty amount, `abc`, `10.`, `.50`, `+10`, `1e3`, `$10`, `1 0`, `1,000.00`) and [`transfer_spec.rb`](../../spec/domain/transfer_spec.rb) (`0`, `0.00`, `-5.00`, `-0`, `-0.00`; the amount checked before the same account; the same account not loaded); the refusals and exactly `0.00` in [`account_spec.rb`](../../spec/domain/account_spec.rb) and [`transfer_service_spec.rb`](../../spec/domain/transfer_service_spec.rb); each domain error's reason code, the values built in field order and a 4-field row as `malformed_row` in [`process_daily_transfer_spec.rb`](../../spec/application/process_daily_transfer_spec.rb); the report line, an empty value shown as `""` and an applied amount shown with 2 decimal places in [`report_printer_spec.rb`](../../spec/infrastructure/report_printer_spec.rb); the warn line, the 4-field row and the masks in [`log_messages_spec.rb`](../../spec/application/log_messages_spec.rb); a quoted value in [`csv_rows_spec.rb`](../../spec/infrastructure/csv_rows_spec.rb); the leading zeros matched across both files in the runner scenario `leading zeros are matched across both files`;
+  - [AC-07.1](spec.md#ac-07-1): the rows of [AC-07.1](spec.md#ac-07-1) in [`process_daily_transfer_spec.rb`](../../spec/application/process_daily_transfer_spec.rb) (line 1 rejected once, both repeats applied, the final balances);
+  - [AC-08.1](spec.md#ac-08-1) and [AC-08.2](spec.md#ac-08-2): the end-to-end runs in [`runner_run_sample_files_spec.rb`](../../spec/acceptance/runner_run_sample_files_spec.rb) and [`runner_run_mixed_rejections_spec.rb`](../../spec/acceptance/runner_run_mixed_rejections_spec.rb) (the same report, standard error, exit status and output file).
+- [ ] <a id="t135"></a>T135 [P] Move to the `describe '.mask'` table of [`log_messages_spec.rb`](../../spec/application/log_messages_spec.rb) the two masks that only the runner checked: `111123452222678` as `***********2678` and `11112345222267890` as `*************7890`; run the file and confirm both pass with no code change (depends on [T134](#t134)) [[AC-06.1](spec.md#ac-06-1); [DEC-29](../../docs/design-analysis/design-decisions.md#dec-29), [DEC-34](../../docs/design-analysis/design-decisions.md#dec-34)]
+
+### Implementation
+
+- [ ] <a id="t136"></a>T136 Remove from [`runner_spec.rb`](../../spec/infrastructure/runner_spec.rb) the scenarios named in [T134](#t134): [AC-01.4](spec.md#ac-01-4), [AC-01.5](spec.md#ac-01-5), the four of [AC-01.6](spec.md#ac-01-6), the four of [AC-01.10](spec.md#ac-01-10), the [AC-02.3](spec.md#ac-02-3) header row `from,to,amount`, the `FR-03 to FR-06 (owned by 001)` table, `FR-07` ([AC-07.1](spec.md#ac-07-1)), [AC-08.1](spec.md#ac-08-1) and [AC-08.2](spec.md#ac-08-2); add one scenario, `FR-06 a transfer with an amount that is not a number is rejected through the whole run (owned by 001)`, the row `1111234522226789,1212343433335665,abc` giving Template R with `invalid_amount`, its warn line and the all-rejected warn line, exit status 0, the one end-to-end run of `invalid_amount`; remove `sample_output_file` from [`report_templates.rb`](../../spec/support/report_templates.rb), which no spec uses any more (depends on [T135](#t135)) [[FR-042](spec.md#fr-042), [FR-045](spec.md#fr-045), [SC-002](spec.md#sc-002); [DEC-34](../../docs/design-analysis/design-decisions.md#dec-34)]
+- [ ] <a id="t137"></a>T137 Rename the runner scenarios whose name gives only a criterion and a value, so each reads as the behaviour it checks, keeping the criterion ID in front: the two [AC-01.7](spec.md#ac-01-7) rows, the [AC-02.3](spec.md#ac-02-3) row `from,to`, the three [AC-09.1](spec.md#ac-09-1) scenarios, the [AC-09.2](spec.md#ac-09-2) arguments and the [AC-09.5](spec.md#ac-09-5) info levels; no expectation changes (depends on [T136](#t136)) [[FR-048](spec.md#fr-048); [DEC-34](../../docs/design-analysis/design-decisions.md#dec-34)]
+- [ ] <a id="t138"></a>T138 [P] Bring the documents in line: in this spec, the ownership note, [User Story 6](spec.md#us6), [FR-045](spec.md#fr-045), [SC-002](spec.md#sc-002) and [item 1](spec.md#item-1) say where each rule is tested; the plan's test approach; the [quickstart](quickstart.md); [brief rule 4](../../docs/spec-kit/spec-kit-brief.md#4-how-the-tests-are-split) [[FR-042](spec.md#fr-042), [FR-045](spec.md#fr-045), [SC-002](spec.md#sc-002); [DEC-34](../../docs/design-analysis/design-decisions.md#dec-34)]
+- [ ] <a id="t139"></a>T139 Run `bundle exec rspec` until every example passes in random order with 100% line coverage (525 of 525 lines, as before), and `bundle exec rubocop` until it reports zero offences; check that every remaining runner scenario checks something that only a run through `Runner` shows (depends on [T136](#t136) to [T138](#t138)) [[SC-005](spec.md#sc-005), [SC-008](spec.md#sc-008); [DEC-34](../../docs/design-analysis/design-decisions.md#dec-34), [DEC-36](../../docs/design-analysis/design-decisions.md#dec-36)]
+
+**Checkpoint**: each rule is tested once, at the layer that owns it; every reason code and run-stopping error still runs end to end at least once; the runner scenario names read as behaviour; `bundle exec rspec` passes in random order with 100% line coverage; `bundle exec rubocop` reports zero offences.
+
+---
+
 ## Edge cases and their tests
 
 Every edge case in the spec's [Edge Cases](spec.md#edge-cases) list, with the task that tests it.
@@ -638,6 +667,7 @@ Every edge case in the spec's [Edge Cases](spec.md#edge-cases) list, with the ta
 - **[Phase 13](#phase-13) (Refactor ProcessDailyTransfer)**: after [Phase 12](#phase-12).
 - **[Phase 14](#phase-14) (Refactor after the code review)**: after [Phase 13](#phase-13) and `001` [Phase 10](../001-domain/tasks.md#phase-10).
 - **[Phase 15](#phase-15) (Comments on code that is not obvious)**: after [Phase 14](#phase-14) and `001` [Phase 11](../001-domain/tasks.md#phase-11).
+- **[Phase 16](#phase-16) (Each rule tested once)**: after [Phase 15](#phase-15); alongside `001` [Phase 12](../001-domain/tasks.md#phase-12).
 
 ### Within each phase
 
@@ -657,6 +687,7 @@ Every edge case in the spec's [Edge Cases](spec.md#edge-cases) list, with the ta
 - [Phase 6](#phase-6): [T058](#t058) to [T061](#t061) in parallel; [T064](#t064) and [T065](#t065) in parallel.
 - [Phase 7](#phase-7): [T070](#t070) to [T072](#t072) in parallel.
 - [Phase 14](#phase-14): [T116](#t116) and [T117](#t117) in parallel with [T115](#t115); then [T122](#t122), [T123](#t123) and [T124](#t124) in parallel with [T120](#t120) and [T121](#t121); [T125](#t125) alongside the code; [T128](#t128) and [T129](#t129) after [T127](#t127), one after the other (both touch `CsvRows`).
+- [Phase 16](#phase-16): [T135](#t135) after [T134](#t134); [T138](#t138) alongside [T136](#t136) and [T137](#t137), which edit [`runner_spec.rb`](../../spec/infrastructure/runner_spec.rb) one after the other.
 
 ## Parallel example: Phase 3 (User Story 1)
 
@@ -688,6 +719,7 @@ The MVP is the end of [Phase 3](#phase-3): [`bin/run`](../../bin/run) on the cha
 10. [Phase 13](#phase-13): `ProcessDailyTransfer` refactored after the code review; the log text comes from `LogMessages`, the parts come as one `ProcessDailyTransfer::Parts`, and nothing a user sees changes.
 11. [Phase 14](#phase-14): the application and infrastructure refactored after the code review; `TransferResult` is an application `Data` record, and nothing a user sees changes.
 12. [Phase 15](#phase-15): the application and infrastructure code that is not obvious from reading it is commented, and nothing a user sees changes.
+13. [Phase 16](#phase-16): each rule is tested once, at the layer that owns it; the runner keeps only what a run through it shows, and nothing a user sees changes.
 
 ## Notes
 

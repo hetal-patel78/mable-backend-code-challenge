@@ -345,6 +345,22 @@ No shared code blocks the stories beyond [Phase 1](#phase-1). Each domain error 
 
 ---
 
+<a id="phase-12"></a>
+## Phase 12: Each rule tested once (review of the tests)
+
+**Goal**: alongside `002` [Phase 16](../002-file-runner/tasks.md#phase-16), every domain rule is tested once, at the level that owns it ([DEC-34](../../docs/design-analysis/design-decisions.md#dec-34)), with no change in any outcome, message or balance. The sample balances of [DEC-35](../../docs/design-analysis/design-decisions.md#dec-35) are a result of the whole program, which [DEC-35](../../docs/design-analysis/design-decisions.md#dec-35) has the end-to-end test on the sample files check; [`transfer_service_spec.rb`](../../spec/domain/transfer_service_spec.rb) no longer checks them a second time.
+
+**Independent Test**: the end-to-end spec on the sample files and the `TransferService` examples named in [T076](#t076) pass; `bundle exec rspec` passes with 100% line coverage.
+
+- [ ] <a id="t076"></a>T076 Before removing anything, confirm that the sample balances are asserted where [DEC-35](../../docs/design-analysis/design-decisions.md#dec-35) puts them: [`runner_run_sample_files_spec.rb`](../../spec/acceptance/runner_run_sample_files_spec.rb) compares the output file with `4820.50`, `9974.40`, `1550.00`, `1725.60` and `48679.50`, and the report (with `Total before: 66750.00` and `Total after: 66750.00`) exactly; and that the `TransferService` rules the sample uses stay in [`transfer_service_spec.rb`](../../spec/domain/transfer_service_spec.rb) (`moves the amount from one account to the other`, `keeps the total at 150.00 after them`) [[US6](spec.md#us6) scenario 4, [SC-003](spec.md#sc-003); [DEC-34](../../docs/design-analysis/design-decisions.md#dec-34), [DEC-35](../../docs/design-analysis/design-decisions.md#dec-35)]
+- [ ] <a id="t077"></a>T077 Remove the `context 'with the sample accounts and transfers (DEC-35)'` from [`transfer_service_spec.rb`](../../spec/domain/transfer_service_spec.rb) (depends on [T076](#t076)) [[DEC-34](../../docs/design-analysis/design-decisions.md#dec-34)]
+- [ ] <a id="t078"></a>T078 [P] Bring the documents in line: [US6](spec.md#us6) scenario 4 and [SC-003](spec.md#sc-003) say the sample balances are checked by the end-to-end run on the sample files; the edge-case table names [T077](#t077) and the `002` end-to-end spec [[DEC-34](../../docs/design-analysis/design-decisions.md#dec-34), [DEC-35](../../docs/design-analysis/design-decisions.md#dec-35)]
+- [ ] <a id="t079"></a>T079 Run `bundle exec rspec` until every example passes in random order with 100% line coverage, and `bundle exec rubocop` until it reports zero offences (depends on [T077](#t077), [T078](#t078)) [[SC-005](spec.md#sc-005); [DEC-34](../../docs/design-analysis/design-decisions.md#dec-34), [DEC-36](../../docs/design-analysis/design-decisions.md#dec-36)]
+
+**Checkpoint**: the sample balances are checked once, end to end; every domain rule keeps its own example; `bundle exec rspec` passes in random order with 100% line coverage; `bundle exec rubocop` reports zero offences.
+
+---
+
 ## Edge cases and their tests
 
 Every edge case in the [spec](spec.md#edge-cases) that falls in this spec's scope, with the task whose test proves it.
@@ -393,6 +409,7 @@ Edge cases owned by `002` and not tested here: blank lines, header rows and the 
 - **[Phase 9](#phase-9) (Polish)**: after [Phase 8](#phase-8).
 - **[Phase 10](#phase-10) (Domain refactor)**: after [Phase 9](#phase-9); before `002` [Phase 14](../002-file-runner/tasks.md#phase-14), which builds on it.
 - **[Phase 11](#phase-11) (Money review)**: after [Phase 10](#phase-10) and `002` [Phase 14](../002-file-runner/tasks.md#phase-14); before `002` [Phase 15](../002-file-runner/tasks.md#phase-15).
+- **[Phase 12](#phase-12) (Each rule tested once)**: after [Phase 11](#phase-11); alongside `002` [Phase 16](../002-file-runner/tasks.md#phase-16).
 
 ### Within each phase
 
@@ -437,6 +454,7 @@ The MVP is the end of [Phase 8](#phase-8): one transfer applied all or nothing, 
 7. [Phase 9](#phase-9): the measurable outcomes and design reviews pass; `002` can start.
 8. [Phase 10](#phase-10): the domain refactored after the code review; every outcome, message and balance unchanged.
 9. [Phase 11](#phase-11): `Money` reviewed and the domain code commented; every outcome, message and balance unchanged.
+10. [Phase 12](#phase-12): each domain rule tested once; the sample balances checked once, end to end; every outcome, message and balance unchanged.
 
 ## Notes
 
